@@ -19,7 +19,7 @@
     "pinia": "^2.1.0",
     "@vueuse/core": "^14.1.0",
     "axios": "^1.6.0",
-    "date-fns": "^3.0.0"
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
