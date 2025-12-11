@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "vue": "^3.4.0",
-    "vue-router": "^4.2.0",
+    "vue-router": "^4.6.4",
     "pinia": "^2.1.0",
     "@vueuse/core": "^14.1.0",
     "axios": "^1.6.0",
