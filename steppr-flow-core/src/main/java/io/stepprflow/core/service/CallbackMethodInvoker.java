@@ -43,7 +43,7 @@ public class CallbackMethodInvoker {
         } else if (paramTypes.length == 2) {
             invokeWithTwoParams(method, handler, message, error, paramTypes, true);
         } else {
-            log.warn("Callback method {} has unsupported parameter count: {}",
+            log.warn("Callback method {} has unsupported parameter count: {} (invoke with deserialization)",
                      method.getName(), paramTypes.length);
         }
     }
@@ -73,7 +73,7 @@ public class CallbackMethodInvoker {
         } else if (paramTypes.length == 2) {
             invokeWithTwoParams(method, handler, message, error, paramTypes, false);
         } else {
-            log.warn("Callback method {} has unsupported parameter count: {}",
+            log.warn("Callback method {} has unsupported parameter count: {} (invokeRaw without deserialization)",
                      method.getName(), paramTypes.length);
         }
     }

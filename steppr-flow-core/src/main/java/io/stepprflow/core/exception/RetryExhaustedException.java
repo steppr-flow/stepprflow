@@ -1,8 +1,11 @@
 package io.stepprflow.core.exception;
 
+import lombok.Getter;
+
 /**
  * Exception thrown when all retry attempts are exhausted.
  */
+@Getter
 public class RetryExhaustedException extends WorkflowException {
 
     /** The execution ID. */
@@ -60,23 +63,5 @@ public class RetryExhaustedException extends WorkflowException {
                             attemptCount, message));
         this.executionId = null;
         this.attempts = attemptCount;
-    }
-
-    /**
-     * Returns the execution ID.
-     *
-     * @return the execution ID or null
-     */
-    public String getExecutionId() {
-        return executionId;
-    }
-
-    /**
-     * Returns the number of retry attempts made.
-     *
-     * @return the number of attempts
-     */
-    public int getAttempts() {
-        return attempts;
     }
 }

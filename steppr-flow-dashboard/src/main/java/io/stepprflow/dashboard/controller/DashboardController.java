@@ -2,7 +2,7 @@ package io.stepprflow.dashboard.controller;
 
 import io.stepprflow.core.service.WorkflowRegistry;
 import io.stepprflow.monitor.model.RegisteredWorkflow;
-import io.stepprflow.monitor.service.WorkflowMonitorService;
+import io.stepprflow.monitor.service.WorkflowQueryService;
 import io.stepprflow.monitor.service.WorkflowRegistryService;
 import io.stepprflow.dashboard.config.UiProperties;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,18 +38,18 @@ import java.util.Map;
 public class DashboardController {
 
     private final UiProperties properties;
-    private final WorkflowMonitorService monitorService;
+    private final WorkflowQueryService queryService;
     private final WorkflowRegistry workflowRegistry;
     private final WorkflowRegistryService registryService;
 
     @Autowired
     public DashboardController(
             UiProperties properties,
-            WorkflowMonitorService monitorService,
+            WorkflowQueryService queryService,
             @Autowired(required = false) WorkflowRegistry workflowRegistry,
             @Autowired(required = false) WorkflowRegistryService registryService) {
         this.properties = properties;
-        this.monitorService = monitorService;
+        this.queryService = queryService;
         this.workflowRegistry = workflowRegistry;
         this.registryService = registryService;
     }
@@ -75,7 +75,7 @@ public class DashboardController {
         Map<String, Object> overview = new HashMap<>();
 
         // Statistics
-        overview.put("stats", monitorService.getStatistics());
+        overview.put("stats", queryService.getStatistics());
 
         // Available workflows (combined from local registry and registered services)
         overview.put("workflows", getCombinedWorkflows().stream()
@@ -87,7 +87,7 @@ public class DashboardController {
                 .toList());
 
         // Recent executions
-        overview.put("recentExecutions", monitorService.getRecentExecutions());
+        overview.put("recentExecutions", queryService.getRecentExecutions());
 
         return ResponseEntity.ok(overview);
     }

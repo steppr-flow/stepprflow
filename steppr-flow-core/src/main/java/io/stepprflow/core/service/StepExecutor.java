@@ -74,6 +74,7 @@ public class StepExecutor {
 
             // Execute step method
             Method method = step.getMethod();
+            // TODO throw custom exception when private method
             method.setAccessible(true);
             method.invoke(definition.getHandler(), payload);
 

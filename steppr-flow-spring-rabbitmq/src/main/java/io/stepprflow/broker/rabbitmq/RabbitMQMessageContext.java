@@ -2,6 +2,8 @@ package io.stepprflow.broker.rabbitmq;
 
 import com.rabbitmq.client.Channel;
 import io.stepprflow.core.broker.MessageContext;
+import io.stepprflow.core.exception.MessageAcknowledgeException;
+import io.stepprflow.core.exception.MessageRejectException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -73,7 +75,8 @@ public class RabbitMQMessageContext implements MessageContext {
             log.debug("Message acknowledged: deliveryTag={}", deliveryTag);
         } catch (IOException e) {
             log.error("Failed to acknowledge message: deliveryTag={}", deliveryTag, e);
-            throw new RuntimeException("Failed to acknowledge message", e);
+            throw new MessageAcknowledgeException("rabbitmq", String.valueOf(deliveryTag),
+                    e.getMessage(), e);
         }
     }
 
@@ -84,7 +87,8 @@ public class RabbitMQMessageContext implements MessageContext {
             log.debug("Message rejected: deliveryTag={}, requeue={}", deliveryTag, requeue);
         } catch (IOException e) {
             log.error("Failed to reject message: deliveryTag={}", deliveryTag, e);
-            throw new RuntimeException("Failed to reject message", e);
+            throw new MessageRejectException("rabbitmq", String.valueOf(deliveryTag), requeue,
+                    e.getMessage(), e);
         }
     }
 

@@ -57,8 +57,11 @@ class ExceptionHierarchyTest {
         @DisplayName("should contain execution ID in message")
         void shouldContainExecutionIdInMessage() {
             WorkflowNotFoundException exception = new WorkflowNotFoundException("exec-123");
-            assertThat(exception.getMessage()).contains("exec-123");
-            assertThat(exception.getExecutionId()).isEqualTo("exec-123");
+            assertThat(exception)
+                    .extracting(
+                            WorkflowNotFoundException::getExecutionId,
+                            e -> e.getMessage().contains("exec-123"))
+                    .containsExactly("exec-123", true);
         }
     }
 
@@ -80,11 +83,13 @@ class ExceptionHierarchyTest {
             WorkflowStateException exception = new WorkflowStateException(
                     "exec-123", WorkflowStatus.COMPLETED, "resumed");
 
-            assertThat(exception.getExecutionId()).isEqualTo("exec-123");
-            assertThat(exception.getCurrentStatus()).isEqualTo(WorkflowStatus.COMPLETED);
-            assertThat(exception.getOperation()).isEqualTo("resumed");
-            assertThat(exception.getMessage()).contains("COMPLETED");
-            assertThat(exception.getMessage()).contains("resumed");
+            assertThat(exception)
+                    .extracting(
+                            WorkflowStateException::getExecutionId,
+                            WorkflowStateException::getCurrentStatus,
+                            WorkflowStateException::getOperation)
+                    .containsExactly("exec-123", WorkflowStatus.COMPLETED, "resumed");
+            assertThat(exception.getMessage()).contains("COMPLETED", "resumed");
         }
     }
 
@@ -106,12 +111,14 @@ class ExceptionHierarchyTest {
             StepTimeoutException exception = new StepTimeoutException(
                     "processPayment", 2, Duration.ofSeconds(30), Duration.ofSeconds(45));
 
-            assertThat(exception.getStepLabel()).isEqualTo("processPayment");
-            assertThat(exception.getStepId()).isEqualTo(2);
-            assertThat(exception.getTimeout()).isEqualTo(Duration.ofSeconds(30));
-            assertThat(exception.getElapsed()).isEqualTo(Duration.ofSeconds(45));
-            assertThat(exception.getMessage()).contains("processPayment");
-            assertThat(exception.getMessage()).contains("timed out");
+            assertThat(exception)
+                    .extracting(
+                            StepTimeoutException::getStepLabel,
+                            StepTimeoutException::getStepId,
+                            StepTimeoutException::getTimeout,
+                            StepTimeoutException::getElapsed)
+                    .containsExactly("processPayment", 2, Duration.ofSeconds(30), Duration.ofSeconds(45));
+            assertThat(exception.getMessage()).contains("processPayment", "timed out");
         }
     }
 
@@ -133,8 +140,11 @@ class ExceptionHierarchyTest {
             StepExecutionException exception = new StepExecutionException(
                     "validateOrder", 3, "Validation failed", new IllegalArgumentException("bad input"));
 
-            assertThat(exception.getStepLabel()).isEqualTo("validateOrder");
-            assertThat(exception.getStepId()).isEqualTo(3);
+            assertThat(exception)
+                    .extracting(
+                            StepExecutionException::getStepLabel,
+                            StepExecutionException::getStepId)
+                    .containsExactly("validateOrder", 3);
             assertThat(exception.getMessage()).contains("validateOrder");
             assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
         }
@@ -156,8 +166,11 @@ class ExceptionHierarchyTest {
         void shouldIncludeBrokerType() {
             MessageBrokerException exception = new MessageBrokerException(
                     "kafka", "Failed to connect");
-            assertThat(exception.getBrokerType()).isEqualTo("kafka");
-            assertThat(exception.getMessage()).contains("kafka");
+            assertThat(exception)
+                    .extracting(
+                            MessageBrokerException::getBrokerType,
+                            e -> e.getMessage().contains("kafka"))
+                    .containsExactly("kafka", true);
         }
     }
 
@@ -179,9 +192,12 @@ class ExceptionHierarchyTest {
             BrokerConnectionException exception = new BrokerConnectionException(
                     "kafka", "localhost:9092", "Connection refused");
 
-            assertThat(exception.getBrokerType()).isEqualTo("kafka");
-            assertThat(exception.getBootstrapServers()).isEqualTo("localhost:9092");
-            assertThat(exception.getMessage()).contains("localhost:9092");
+            assertThat(exception)
+                    .extracting(
+                            BrokerConnectionException::getBrokerType,
+                            BrokerConnectionException::getBootstrapServers,
+                            e -> e.getMessage().contains("localhost:9092"))
+                    .containsExactly("kafka", "localhost:9092", true);
         }
     }
 
@@ -203,9 +219,12 @@ class ExceptionHierarchyTest {
             MessageSendException exception = new MessageSendException(
                     "rabbitmq", "payment-queue", "Queue full");
 
-            assertThat(exception.getBrokerType()).isEqualTo("rabbitmq");
-            assertThat(exception.getTopic()).isEqualTo("payment-queue");
-            assertThat(exception.getMessage()).contains("payment-queue");
+            assertThat(exception)
+                    .extracting(
+                            MessageSendException::getBrokerType,
+                            MessageSendException::getTopic,
+                            e -> e.getMessage().contains("payment-queue"))
+                    .containsExactly("rabbitmq", "payment-queue", true);
         }
     }
 
@@ -227,8 +246,11 @@ class ExceptionHierarchyTest {
             WorkflowDefinitionException exception = new WorkflowDefinitionException(
                     "order-workflow", "No steps defined");
 
-            assertThat(exception.getTopic()).isEqualTo("order-workflow");
-            assertThat(exception.getMessage()).contains("order-workflow");
+            assertThat(exception)
+                    .extracting(
+                            WorkflowDefinitionException::getTopic,
+                            e -> e.getMessage().contains("order-workflow"))
+                    .containsExactly("order-workflow", true);
         }
     }
 
@@ -250,10 +272,225 @@ class ExceptionHierarchyTest {
             RetryExhaustedException exception = new RetryExhaustedException(
                     "exec-456", 5, "Database unavailable");
 
+            assertThat(exception)
+                    .extracting(
+                            RetryExhaustedException::getExecutionId,
+                            RetryExhaustedException::getAttempts)
+                    .containsExactly("exec-456", 5);
+            assertThat(exception.getMessage()).contains("exec-456", "5");
+        }
+    }
+
+    @Nested
+    @DisplayName("MessageAcknowledgeException")
+    class MessageAcknowledgeExceptionTests {
+
+        @Test
+        @DisplayName("should extend MessageBrokerException")
+        void shouldExtendMessageBrokerException() {
+            MessageAcknowledgeException exception = new MessageAcknowledgeException(
+                    "rabbitmq", "12345", "IO error");
+            assertThat(exception).isInstanceOf(MessageBrokerException.class);
+        }
+
+        @Test
+        @DisplayName("should contain delivery tag information")
+        void shouldContainDeliveryTagInformation() {
+            MessageAcknowledgeException exception = new MessageAcknowledgeException(
+                    "rabbitmq", "12345", "Channel closed");
+
+            assertThat(exception)
+                    .extracting(
+                            MessageAcknowledgeException::getBrokerType,
+                            MessageAcknowledgeException::getDeliveryTag)
+                    .containsExactly("rabbitmq", "12345");
+            assertThat(exception.getMessage()).contains("12345", "acknowledge");
+        }
+
+        @Test
+        @DisplayName("should preserve cause when provided")
+        void shouldPreserveCause() {
+            Exception cause = new java.io.IOException("Connection lost");
+            MessageAcknowledgeException exception = new MessageAcknowledgeException(
+                    "rabbitmq", "12345", "IO error", cause);
+
+            assertThat(exception.getCause()).isEqualTo(cause);
+        }
+    }
+
+    @Nested
+    @DisplayName("MessageRejectException")
+    class MessageRejectExceptionTests {
+
+        @Test
+        @DisplayName("should extend MessageBrokerException")
+        void shouldExtendMessageBrokerException() {
+            MessageRejectException exception = new MessageRejectException(
+                    "rabbitmq", "12345", true, "IO error");
+            assertThat(exception).isInstanceOf(MessageBrokerException.class);
+        }
+
+        @Test
+        @DisplayName("should contain delivery tag and requeue information")
+        void shouldContainDeliveryTagAndRequeueInformation() {
+            MessageRejectException exception = new MessageRejectException(
+                    "rabbitmq", "67890", false, "Channel closed");
+
+            assertThat(exception)
+                    .extracting(
+                            MessageRejectException::getBrokerType,
+                            MessageRejectException::getDeliveryTag,
+                            MessageRejectException::isRequeue)
+                    .containsExactly("rabbitmq", "67890", false);
+            assertThat(exception.getMessage()).contains("67890", "reject");
+        }
+
+        @Test
+        @DisplayName("should preserve cause when provided")
+        void shouldPreserveCause() {
+            Exception cause = new java.io.IOException("Connection lost");
+            MessageRejectException exception = new MessageRejectException(
+                    "rabbitmq", "12345", true, "IO error", cause);
+
+            assertThat(exception)
+                    .extracting(
+                            MessageRejectException::getCause,
+                            MessageRejectException::isRequeue)
+                    .containsExactly(cause, true);
+        }
+    }
+
+    @Nested
+    @DisplayName("CircuitBreakerOpenException")
+    class CircuitBreakerOpenExceptionTests {
+
+        @Test
+        @DisplayName("should extend MessageBrokerException")
+        void shouldExtendMessageBrokerException() {
+            CircuitBreakerOpenException exception = new CircuitBreakerOpenException(
+                    "order-broker", io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN);
+            assertThat(exception).isInstanceOf(MessageBrokerException.class);
+        }
+
+        @Test
+        @DisplayName("should contain circuit breaker name and state")
+        void shouldContainCircuitBreakerNameAndState() {
+            CircuitBreakerOpenException exception = new CircuitBreakerOpenException(
+                    "payment-broker", io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN);
+
+            assertThat(exception)
+                    .extracting(
+                            CircuitBreakerOpenException::getCircuitBreakerName,
+                            CircuitBreakerOpenException::getState)
+                    .containsExactly("payment-broker", io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN);
+            assertThat(exception.getMessage()).contains("payment-broker", "OPEN");
+        }
+
+        @Test
+        @DisplayName("should preserve cause when provided")
+        void shouldPreserveCauseWhenProvided() {
+            Exception cause = new RuntimeException("Original error");
+            CircuitBreakerOpenException exception = new CircuitBreakerOpenException(
+                    "inventory-broker", io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN, cause);
+
+            assertThat(exception.getCause()).isEqualTo(cause);
+            assertThat(exception.getState()).isEqualTo(io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN);
+        }
+
+        @Test
+        @DisplayName("should handle different circuit breaker states")
+        void shouldHandleDifferentCircuitBreakerStates() {
+            CircuitBreakerOpenException openException = new CircuitBreakerOpenException(
+                    "test-broker", io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN);
+            CircuitBreakerOpenException halfOpenException = new CircuitBreakerOpenException(
+                    "test-broker", io.github.resilience4j.circuitbreaker.CircuitBreaker.State.HALF_OPEN);
+            CircuitBreakerOpenException forcedOpenException = new CircuitBreakerOpenException(
+                    "test-broker", io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN);
+
+            assertThat(openException.getMessage()).contains("OPEN");
+            assertThat(halfOpenException.getMessage()).contains("HALF_OPEN");
+            assertThat(forcedOpenException.getMessage()).contains("FORCED_OPEN");
+        }
+    }
+
+    @Nested
+    @DisplayName("MessageSendException extended tests")
+    class MessageSendExceptionExtendedTests {
+
+        @Test
+        @DisplayName("should include execution ID when provided with cause")
+        void shouldIncludeExecutionIdWhenProvidedWithCause() {
+            Exception cause = new RuntimeException("Send timeout");
+            MessageSendException exception = new MessageSendException(
+                    "kafka", "order-topic", "exec-123", "Send timeout", cause);
+
+            assertThat(exception)
+                    .extracting(
+                            MessageSendException::getBrokerType,
+                            MessageSendException::getTopic,
+                            MessageSendException::getExecutionId)
+                    .containsExactly("kafka", "order-topic", "exec-123");
+            assertThat(exception.getMessage()).contains("exec-123");
+        }
+
+        @Test
+        @DisplayName("should preserve cause with execution ID")
+        void shouldPreserveCauseWithExecutionId() {
+            Exception cause = new java.io.IOException("Network error");
+            MessageSendException exception = new MessageSendException(
+                    "rabbitmq", "payment-queue", "exec-456", "Failed to send", cause);
+
+            assertThat(exception.getCause()).isEqualTo(cause);
             assertThat(exception.getExecutionId()).isEqualTo("exec-456");
+        }
+    }
+
+    @Nested
+    @DisplayName("RetryExhaustedException extended tests")
+    class RetryExhaustedExceptionExtendedTests {
+
+        @Test
+        @DisplayName("should preserve cause when provided")
+        void shouldPreserveCauseWhenProvided() {
+            Exception cause = new RuntimeException("Database unavailable");
+            RetryExhaustedException exception = new RetryExhaustedException(
+                    "exec-789", 5, "All retries failed", cause);
+
+            assertThat(exception.getCause()).isEqualTo(cause);
+            assertThat(exception.getExecutionId()).isEqualTo("exec-789");
             assertThat(exception.getAttempts()).isEqualTo(5);
-            assertThat(exception.getMessage()).contains("exec-456");
-            assertThat(exception.getMessage()).contains("5");
+        }
+    }
+
+    @Nested
+    @DisplayName("BrokerConnectionException extended tests")
+    class BrokerConnectionExceptionExtendedTests {
+
+        @Test
+        @DisplayName("should preserve cause when provided")
+        void shouldPreserveCauseWhenProvided() {
+            Exception cause = new java.net.ConnectException("Connection refused");
+            BrokerConnectionException exception = new BrokerConnectionException(
+                    "kafka", "localhost:9092", "Connection refused", cause);
+
+            assertThat(exception.getCause()).isEqualTo(cause);
+            assertThat(exception.getBootstrapServers()).isEqualTo("localhost:9092");
+        }
+    }
+
+    @Nested
+    @DisplayName("WorkflowDefinitionException extended tests")
+    class WorkflowDefinitionExceptionExtendedTests {
+
+        @Test
+        @DisplayName("should preserve cause when provided")
+        void shouldPreserveCauseWhenProvided() {
+            Exception cause = new IllegalArgumentException("Invalid step configuration");
+            WorkflowDefinitionException exception = new WorkflowDefinitionException(
+                    "order-workflow", "Invalid step", cause);
+
+            assertThat(exception.getCause()).isEqualTo(cause);
+            assertThat(exception.getTopic()).isEqualTo("order-workflow");
         }
     }
 }

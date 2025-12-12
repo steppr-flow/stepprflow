@@ -2,7 +2,9 @@ package io.stepprflow.monitor.controller;
 
 import io.stepprflow.core.model.WorkflowStatus;
 import io.stepprflow.monitor.model.WorkflowExecution;
-import io.stepprflow.monitor.service.WorkflowMonitorService;
+import io.stepprflow.monitor.service.PayloadManagementService;
+import io.stepprflow.monitor.service.WorkflowCommandService;
+import io.stepprflow.monitor.service.WorkflowQueryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -34,7 +36,13 @@ import static org.mockito.Mockito.*;
 class WorkflowControllerTest {
 
     @Mock
-    private WorkflowMonitorService monitorService;
+    private WorkflowQueryService queryService;
+
+    @Mock
+    private WorkflowCommandService commandService;
+
+    @Mock
+    private PayloadManagementService payloadService;
 
     @InjectMocks
     private WorkflowController controller;
@@ -61,7 +69,7 @@ class WorkflowControllerTest {
         @Test
         @DisplayName("Should return 200 with execution when found")
         void shouldReturn200WhenFound() {
-            when(monitorService.getExecution("exec-123")).thenReturn(Optional.of(testExecution));
+            when(queryService.getExecution("exec-123")).thenReturn(Optional.of(testExecution));
 
             ResponseEntity<WorkflowExecution> response = controller.getExecution("exec-123");
 
@@ -73,7 +81,7 @@ class WorkflowControllerTest {
         @Test
         @DisplayName("Should return 404 when not found")
         void shouldReturn404WhenNotFound() {
-            when(monitorService.getExecution("unknown")).thenReturn(Optional.empty());
+            when(queryService.getExecution("unknown")).thenReturn(Optional.empty());
 
             ResponseEntity<WorkflowExecution> response = controller.getExecution("unknown");
 
@@ -90,7 +98,7 @@ class WorkflowControllerTest {
         @DisplayName("Should return paginated executions with default params")
         void shouldReturnPaginatedExecutionsWithDefaultParams() {
             Page<WorkflowExecution> page = new PageImpl<>(List.of(testExecution));
-            when(monitorService.findExecutions(eq(null), eq(null), any(PageRequest.class)))
+            when(queryService.findExecutions(eq(null), eq(null), any(PageRequest.class)))
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
@@ -105,51 +113,51 @@ class WorkflowControllerTest {
         @DisplayName("Should filter by topic")
         void shouldFilterByTopic() {
             Page<WorkflowExecution> page = new PageImpl<>(List.of(testExecution));
-            when(monitorService.findExecutions(eq("test-topic"), eq(null), any(PageRequest.class)))
+            when(queryService.findExecutions(eq("test-topic"), eq(null), any(PageRequest.class)))
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
                     "test-topic", null, 0, 20, "createdAt", Sort.Direction.DESC);
 
-            verify(monitorService).findExecutions(eq("test-topic"), eq(null), any(PageRequest.class));
+            verify(queryService).findExecutions(eq("test-topic"), eq(null), any(PageRequest.class));
         }
 
         @Test
         @DisplayName("Should filter by status")
         void shouldFilterByStatus() {
             Page<WorkflowExecution> page = new PageImpl<>(List.of(testExecution));
-            when(monitorService.findExecutions(eq(null), eq(List.of(WorkflowStatus.FAILED)), any(PageRequest.class)))
+            when(queryService.findExecutions(eq(null), eq(List.of(WorkflowStatus.FAILED)), any(PageRequest.class)))
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
                     null, "FAILED", 0, 20, "createdAt", Sort.Direction.DESC);
 
-            verify(monitorService).findExecutions(eq(null), eq(List.of(WorkflowStatus.FAILED)), any(PageRequest.class));
+            verify(queryService).findExecutions(eq(null), eq(List.of(WorkflowStatus.FAILED)), any(PageRequest.class));
         }
 
         @Test
         @DisplayName("Should filter by topic and status")
         void shouldFilterByTopicAndStatus() {
             Page<WorkflowExecution> page = new PageImpl<>(List.of(testExecution));
-            when(monitorService.findExecutions(eq("test-topic"), eq(List.of(WorkflowStatus.COMPLETED)), any(PageRequest.class)))
+            when(queryService.findExecutions(eq("test-topic"), eq(List.of(WorkflowStatus.COMPLETED)), any(PageRequest.class)))
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
                     "test-topic", "COMPLETED", 0, 20, "createdAt", Sort.Direction.DESC);
 
-            verify(monitorService).findExecutions(eq("test-topic"), eq(List.of(WorkflowStatus.COMPLETED)), any(PageRequest.class));
+            verify(queryService).findExecutions(eq("test-topic"), eq(List.of(WorkflowStatus.COMPLETED)), any(PageRequest.class));
         }
 
         @Test
         @DisplayName("Should apply pagination params")
         void shouldApplyPaginationParams() {
             Page<WorkflowExecution> page = new PageImpl<>(List.of(testExecution));
-            when(monitorService.findExecutions(any(), any(), any(PageRequest.class)))
+            when(queryService.findExecutions(any(), any(), any(PageRequest.class)))
                     .thenReturn(page);
 
             controller.listExecutions(null, null, 2, 50, "updatedAt", Sort.Direction.ASC);
 
-            verify(monitorService).findExecutions(eq(null), eq(null),
+            verify(queryService).findExecutions(eq(null), eq(null),
                     eq(PageRequest.of(2, 50, Sort.by(Sort.Direction.ASC, "updatedAt"))));
         }
     }
@@ -165,7 +173,7 @@ class WorkflowControllerTest {
                     testExecution,
                     WorkflowExecution.builder().executionId("exec-456").build()
             );
-            when(monitorService.getRecentExecutions()).thenReturn(recentExecutions);
+            when(queryService.getRecentExecutions()).thenReturn(recentExecutions);
 
             ResponseEntity<List<WorkflowExecution>> response = controller.getRecentExecutions();
 
@@ -176,7 +184,7 @@ class WorkflowControllerTest {
         @Test
         @DisplayName("Should return empty list when no recent executions")
         void shouldReturnEmptyListWhenNoRecentExecutions() {
-            when(monitorService.getRecentExecutions()).thenReturn(List.of());
+            when(queryService.getRecentExecutions()).thenReturn(List.of());
 
             ResponseEntity<List<WorkflowExecution>> response = controller.getRecentExecutions();
 
@@ -199,7 +207,7 @@ class WorkflowControllerTest {
                     "failed", 2L,
                     "total", 110L
             );
-            when(monitorService.getStatistics()).thenReturn(stats);
+            when(queryService.getStatistics()).thenReturn(stats);
 
             ResponseEntity<Map<String, Object>> response = controller.getStatistics();
 
@@ -216,29 +224,29 @@ class WorkflowControllerTest {
         @Test
         @DisplayName("Should return 202 Accepted on successful resume")
         void shouldReturn202OnSuccessfulResume() {
-            doNothing().when(monitorService).resume("exec-123", null);
+            doNothing().when(commandService).resume("exec-123", null, "UI User");
 
             ResponseEntity<Void> response = controller.resume("exec-123", null);
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
-            verify(monitorService).resume("exec-123", null);
+            verify(commandService).resume("exec-123", null, "UI User");
         }
 
         @Test
         @DisplayName("Should resume from specified step")
         void shouldResumeFromSpecifiedStep() {
-            doNothing().when(monitorService).resume("exec-123", 1);
+            doNothing().when(commandService).resume("exec-123", 1, "UI User");
 
             controller.resume("exec-123", 1);
 
-            verify(monitorService).resume("exec-123", 1);
+            verify(commandService).resume("exec-123", 1, "UI User");
         }
 
         @Test
         @DisplayName("Should propagate IllegalArgumentException")
         void shouldPropagateIllegalArgumentException() {
             doThrow(new IllegalArgumentException("Execution not found"))
-                    .when(monitorService).resume("unknown", null);
+                    .when(commandService).resume("unknown", null, "UI User");
 
             assertThatThrownBy(() -> controller.resume("unknown", null))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -249,7 +257,7 @@ class WorkflowControllerTest {
         @DisplayName("Should propagate IllegalStateException")
         void shouldPropagateIllegalStateException() {
             doThrow(new IllegalStateException("Cannot resume execution"))
-                    .when(monitorService).resume("exec-123", null);
+                    .when(commandService).resume("exec-123", null, "UI User");
 
             assertThatThrownBy(() -> controller.resume("exec-123", null))
                     .isInstanceOf(IllegalStateException.class)
@@ -264,19 +272,19 @@ class WorkflowControllerTest {
         @Test
         @DisplayName("Should return 204 No Content on successful cancel")
         void shouldReturn204OnSuccessfulCancel() {
-            doNothing().when(monitorService).cancel("exec-123");
+            doNothing().when(commandService).cancel("exec-123");
 
             ResponseEntity<Void> response = controller.cancel("exec-123");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-            verify(monitorService).cancel("exec-123");
+            verify(commandService).cancel("exec-123");
         }
 
         @Test
         @DisplayName("Should propagate IllegalArgumentException for not found")
         void shouldPropagateIllegalArgumentExceptionForNotFound() {
             doThrow(new IllegalArgumentException("Execution not found"))
-                    .when(monitorService).cancel("unknown");
+                    .when(commandService).cancel("unknown");
 
             assertThatThrownBy(() -> controller.cancel("unknown"))
                     .isInstanceOf(IllegalArgumentException.class)
@@ -287,7 +295,7 @@ class WorkflowControllerTest {
         @DisplayName("Should propagate IllegalStateException for invalid status")
         void shouldPropagateIllegalStateExceptionForInvalidStatus() {
             doThrow(new IllegalStateException("Cannot cancel execution"))
-                    .when(monitorService).cancel("exec-123");
+                    .when(commandService).cancel("exec-123");
 
             assertThatThrownBy(() -> controller.cancel("exec-123"))
                     .isInstanceOf(IllegalStateException.class)

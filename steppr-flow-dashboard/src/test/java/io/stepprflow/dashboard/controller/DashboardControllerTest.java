@@ -4,8 +4,10 @@ import io.stepprflow.core.model.StepDefinition;
 import io.stepprflow.core.model.WorkflowDefinition;
 import io.stepprflow.core.model.WorkflowStatus;
 import io.stepprflow.core.service.WorkflowRegistry;
+import io.stepprflow.monitor.model.RegisteredWorkflow;
 import io.stepprflow.monitor.model.WorkflowExecution;
-import io.stepprflow.monitor.service.WorkflowMonitorService;
+import io.stepprflow.monitor.service.WorkflowQueryService;
+import io.stepprflow.monitor.service.WorkflowRegistryService;
 import io.stepprflow.dashboard.config.UiProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +19,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.time.Instant;
 import java.util.List;
@@ -33,7 +39,7 @@ class DashboardControllerTest {
     private UiProperties properties;
 
     @Mock
-    private WorkflowMonitorService monitorService;
+    private WorkflowQueryService queryService;
 
     @Mock
     private WorkflowRegistry workflowRegistry;
@@ -108,14 +114,14 @@ class DashboardControllerTest {
                     "failed", 2L,
                     "total", 110L
             );
-            when(monitorService.getStatistics()).thenReturn(stats);
+            when(queryService.getStatistics()).thenReturn(stats);
         }
 
         @Test
         @DisplayName("Should return 200 with overview data")
         void shouldReturn200WithOverviewData() {
             when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
-            when(monitorService.getRecentExecutions()).thenReturn(List.of());
+            when(queryService.getRecentExecutions()).thenReturn(List.of());
 
             ResponseEntity<Map<String, Object>> response = controller.getOverview();
 
@@ -127,7 +133,7 @@ class DashboardControllerTest {
         @DisplayName("Should include statistics")
         void shouldIncludeStatistics() {
             when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
-            when(monitorService.getRecentExecutions()).thenReturn(List.of());
+            when(queryService.getRecentExecutions()).thenReturn(List.of());
 
             ResponseEntity<Map<String, Object>> response = controller.getOverview();
 
@@ -149,7 +155,7 @@ class DashboardControllerTest {
                     ))
                     .build();
             when(workflowRegistry.getAllDefinitions()).thenReturn(List.of(definition));
-            when(monitorService.getRecentExecutions()).thenReturn(List.of());
+            when(queryService.getRecentExecutions()).thenReturn(List.of());
 
             ResponseEntity<Map<String, Object>> response = controller.getOverview();
 
@@ -171,7 +177,7 @@ class DashboardControllerTest {
                     .steps(List.of())
                     .build();
             when(workflowRegistry.getAllDefinitions()).thenReturn(List.of(definition));
-            when(monitorService.getRecentExecutions()).thenReturn(List.of());
+            when(queryService.getRecentExecutions()).thenReturn(List.of());
 
             ResponseEntity<Map<String, Object>> response = controller.getOverview();
 
@@ -193,7 +199,7 @@ class DashboardControllerTest {
                             .createdAt(Instant.now())
                             .build()
             );
-            when(monitorService.getRecentExecutions()).thenReturn(recentExecutions);
+            when(queryService.getRecentExecutions()).thenReturn(recentExecutions);
 
             ResponseEntity<Map<String, Object>> response = controller.getOverview();
 
@@ -399,6 +405,261 @@ class DashboardControllerTest {
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> otherWorkflows = (List<Map<String, Object>>) responseOther.getBody();
             assertThat(otherWorkflows).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("With WorkflowRegistryService")
+    class WithRegistryServiceTests {
+
+        @Mock
+        private WorkflowRegistryService registryService;
+
+        private DashboardController controllerWithRegistryService;
+
+        @BeforeEach
+        void setUp() {
+            controllerWithRegistryService = new DashboardController(
+                    properties, queryService, workflowRegistry, registryService);
+        }
+
+        @Test
+        @DisplayName("Should return workflows from registry service")
+        void shouldReturnWorkflowsFromRegistryService() {
+            // Set up registered workflow
+            List<RegisteredWorkflow.StepInfo> steps = new ArrayList<>();
+            steps.add(RegisteredWorkflow.StepInfo.builder()
+                    .id(1)
+                    .label("Step 1")
+                    .description("First step")
+                    .skippable(false)
+                    .continueOnFailure(false)
+                    .build());
+
+            Set<RegisteredWorkflow.ServiceInstance> instances = new HashSet<>();
+            instances.add(RegisteredWorkflow.ServiceInstance.builder()
+                    .serviceName("order-service")
+                    .instanceId("instance-1")
+                    .host("localhost")
+                    .port(8080)
+                    .build());
+
+            RegisteredWorkflow registeredWorkflow = RegisteredWorkflow.builder()
+                    .topic("order-workflow")
+                    .serviceName("order-service")
+                    .description("Order processing")
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .partitions(3)
+                    .replication((short) 2)
+                    .build();
+            registeredWorkflow.setSteps(steps);
+            registeredWorkflow.setRegisteredBy(instances);
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(registeredWorkflow));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows(null, null, null);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            assertThat(workflows).hasSize(1);
+            assertThat(workflows.get(0)).containsEntry("topic", "order-workflow");
+            assertThat(workflows.get(0)).containsEntry("serviceName", "order-service");
+        }
+
+        @Test
+        @DisplayName("Should handle registered workflow with null description")
+        void shouldHandleRegisteredWorkflowWithNullDescription() {
+            RegisteredWorkflow registeredWorkflow = RegisteredWorkflow.builder()
+                    .topic("simple-workflow")
+                    .serviceName("simple-service")
+                    .description(null)
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .build();
+            registeredWorkflow.setSteps(new ArrayList<>());
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(registeredWorkflow));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows(null, null, null);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            assertThat(workflows.get(0)).containsEntry("description", "");
+        }
+
+        @Test
+        @DisplayName("Should handle registered workflow with null status")
+        void shouldHandleRegisteredWorkflowWithNullStatus() {
+            RegisteredWorkflow registeredWorkflow = RegisteredWorkflow.builder()
+                    .topic("test-workflow")
+                    .serviceName("test-service")
+                    .description("Test")
+                    .status(null)
+                    .build();
+            registeredWorkflow.setSteps(new ArrayList<>());
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(registeredWorkflow));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows(null, null, null);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            assertThat(workflows.get(0)).containsEntry("status", "ACTIVE");
+        }
+
+        @Test
+        @DisplayName("Should handle registered workflow with null registeredBy")
+        void shouldHandleRegisteredWorkflowWithNullRegisteredBy() {
+            RegisteredWorkflow registeredWorkflow = RegisteredWorkflow.builder()
+                    .topic("test-workflow")
+                    .serviceName("test-service")
+                    .description("Test")
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .build();
+            registeredWorkflow.setSteps(new ArrayList<>());
+            registeredWorkflow.setRegisteredBy(null);
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(registeredWorkflow));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows(null, null, null);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            @SuppressWarnings("unchecked")
+            List<?> registeredBy = (List<?>) workflows.get(0).get("registeredBy");
+            assertThat(registeredBy).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should filter registered workflows by topic")
+        void shouldFilterRegisteredWorkflowsByTopic() {
+            RegisteredWorkflow rw1 = RegisteredWorkflow.builder()
+                    .topic("order-workflow")
+                    .serviceName("order-service")
+                    .description("Order")
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .build();
+            rw1.setSteps(new ArrayList<>());
+
+            RegisteredWorkflow rw2 = RegisteredWorkflow.builder()
+                    .topic("payment-workflow")
+                    .serviceName("payment-service")
+                    .description("Payment")
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .build();
+            rw2.setSteps(new ArrayList<>());
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(rw1, rw2));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows("order", null, null);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            assertThat(workflows).hasSize(1);
+            assertThat(workflows.get(0)).containsEntry("topic", "order-workflow");
+        }
+
+        @Test
+        @DisplayName("Should filter registered workflows by INACTIVE status")
+        void shouldFilterRegisteredWorkflowsByInactiveStatus() {
+            RegisteredWorkflow rw = RegisteredWorkflow.builder()
+                    .topic("inactive-workflow")
+                    .serviceName("inactive-service")
+                    .description("Inactive")
+                    .status(RegisteredWorkflow.Status.INACTIVE)
+                    .build();
+            rw.setSteps(new ArrayList<>());
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(rw));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows(null, null, "INACTIVE");
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            assertThat(workflows).hasSize(1);
+            assertThat(workflows.get(0)).containsEntry("status", "INACTIVE");
+        }
+
+        @Test
+        @DisplayName("Should get overview with registered workflows")
+        void shouldGetOverviewWithRegisteredWorkflows() {
+            Map<String, Object> stats = Map.of("total", 10L);
+            when(queryService.getStatistics()).thenReturn(stats);
+            when(queryService.getRecentExecutions()).thenReturn(List.of());
+
+            RegisteredWorkflow rw = RegisteredWorkflow.builder()
+                    .topic("test-workflow")
+                    .serviceName("test-service")
+                    .description("Test")
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .build();
+            rw.setSteps(new ArrayList<>());
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(rw));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<Map<String, Object>> response = controllerWithRegistryService.getOverview();
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody().get("workflows");
+            assertThat(workflows).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("Should handle null serviceName in registered workflow")
+        void shouldHandleNullServiceNameInRegisteredWorkflow() {
+            RegisteredWorkflow rw = RegisteredWorkflow.builder()
+                    .topic("test-workflow")
+                    .serviceName(null)
+                    .description("Test")
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .build();
+            rw.setSteps(new ArrayList<>());
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(rw));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows(null, null, null);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            assertThat(workflows).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("Should handle step with null description in registered workflow")
+        void shouldHandleStepWithNullDescriptionInRegisteredWorkflow() {
+            List<RegisteredWorkflow.StepInfo> steps = new ArrayList<>();
+            steps.add(RegisteredWorkflow.StepInfo.builder()
+                    .id(1)
+                    .label("Step 1")
+                    .description(null)
+                    .build());
+
+            RegisteredWorkflow rw = RegisteredWorkflow.builder()
+                    .topic("test-workflow")
+                    .serviceName("test-service")
+                    .description("Test")
+                    .status(RegisteredWorkflow.Status.ACTIVE)
+                    .build();
+            rw.setSteps(steps);
+
+            when(registryService.getAllWorkflows()).thenReturn(List.of(rw));
+            when(workflowRegistry.getAllDefinitions()).thenReturn(List.of());
+
+            ResponseEntity<?> response = controllerWithRegistryService.getWorkflows(null, null, null);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> workflows = (List<Map<String, Object>>) response.getBody();
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> stepsResult = (List<Map<String, Object>>) workflows.get(0).get("steps");
+            assertThat(stepsResult.get(0)).containsEntry("description", "");
         }
     }
 }

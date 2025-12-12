@@ -6,7 +6,11 @@ import io.stepprflow.core.model.WorkflowStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -14,6 +18,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +31,10 @@ import java.util.Map;
 @CompoundIndex(name = "status_createdAt", def = "{'status': 1, 'createdAt': -1}")
 @CompoundIndex(name = "status_completedAt", def = "{'status': 1, 'completedAt': 1}")
 @CompoundIndex(name = "status_nextRetry", def = "{'status': 1, 'retryInfo.nextRetryAt': 1}")
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -59,6 +68,8 @@ public class WorkflowExecution {
 
     private String securityContext;
 
+    @Getter(lombok.AccessLevel.NONE)
+    @Setter(lombok.AccessLevel.NONE)
     private Map<String, Object> metadata;
 
     private RetryInfo retryInfo;
@@ -68,16 +79,22 @@ public class WorkflowExecution {
     /**
      * History of step executions.
      */
+    @Getter(lombok.AccessLevel.NONE)
+    @Setter(lombok.AccessLevel.NONE)
     private List<StepExecution> stepHistory;
 
     /**
      * History of payload changes (pending changes before next resume).
      */
+    @Getter(lombok.AccessLevel.NONE)
+    @Setter(lombok.AccessLevel.NONE)
     private List<PayloadChange> payloadHistory;
 
     /**
      * History of execution attempts.
      */
+    @Getter(lombok.AccessLevel.NONE)
+    @Setter(lombok.AccessLevel.NONE)
     private List<ExecutionAttempt> executionAttempts;
 
     @Indexed
@@ -96,6 +113,98 @@ public class WorkflowExecution {
      * Duration in milliseconds.
      */
     private Long durationMs;
+
+    // Defensive copy getters and setters for mutable objects
+
+    /**
+     * Returns a defensive copy of metadata, or null if not set.
+     */
+    public Map<String, Object> getMetadata() {
+        return metadata == null ? null : new HashMap<>(metadata);
+    }
+
+    /**
+     * Sets metadata with a defensive copy.
+     */
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata == null ? null : new HashMap<>(metadata);
+    }
+
+
+    /**
+     * Returns a defensive copy of step history.
+     */
+    public List<StepExecution> getStepHistory() {
+        return stepHistory == null ? List.of() : new ArrayList<>(stepHistory);
+    }
+
+    /**
+     * Sets step history with a defensive copy.
+     */
+    public void setStepHistory(List<StepExecution> stepHistory) {
+        this.stepHistory = stepHistory == null ? null : new ArrayList<>(stepHistory);
+    }
+
+    /**
+     * Returns a mutable list for modifying step history.
+     * Creates the list if null.
+     */
+    public List<StepExecution> getStepHistoryMutable() {
+        if (this.stepHistory == null) {
+            this.stepHistory = new ArrayList<>();
+        }
+        return this.stepHistory;
+    }
+
+    /**
+     * Returns a defensive copy of payload history.
+     */
+    public List<PayloadChange> getPayloadHistory() {
+        return payloadHistory == null ? List.of() : new ArrayList<>(payloadHistory);
+    }
+
+    /**
+     * Sets payload history with a defensive copy.
+     */
+    public void setPayloadHistory(List<PayloadChange> payloadHistory) {
+        this.payloadHistory = payloadHistory == null ? null : new ArrayList<>(payloadHistory);
+    }
+
+    /**
+     * Returns a mutable list for adding payload changes.
+     * Creates the list if null.
+     */
+    public List<PayloadChange> getPayloadHistoryMutable() {
+        if (this.payloadHistory == null) {
+            this.payloadHistory = new ArrayList<>();
+        }
+        return this.payloadHistory;
+    }
+
+    /**
+     * Returns a defensive copy of execution attempts.
+     */
+    public List<ExecutionAttempt> getExecutionAttempts() {
+        return executionAttempts == null ? List.of() : new ArrayList<>(executionAttempts);
+    }
+
+    /**
+     * Sets execution attempts with a defensive copy.
+     */
+    public void setExecutionAttempts(List<ExecutionAttempt> executionAttempts) {
+        this.executionAttempts = executionAttempts == null ? null : new ArrayList<>(executionAttempts);
+    }
+
+    /**
+     * Returns a mutable list for modifying execution attempts.
+     * Creates the list if null.
+     */
+    public List<ExecutionAttempt> getExecutionAttemptsMutable() {
+        if (this.executionAttempts == null) {
+            this.executionAttempts = new ArrayList<>();
+        }
+        return this.executionAttempts;
+    }
 
     @Data
     @Builder
@@ -131,7 +240,10 @@ public class WorkflowExecution {
     /**
      * Record of an execution attempt.
      */
-    @Data
+    @Getter
+    @Setter
+    @EqualsAndHashCode
+    @ToString
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
@@ -147,6 +259,22 @@ public class WorkflowExecution {
         /**
          * Payload changes applied before this attempt.
          */
+        @Getter(lombok.AccessLevel.NONE)
+        @Setter(lombok.AccessLevel.NONE)
         private List<PayloadChange> payloadChanges;
+
+        /**
+         * Returns a defensive copy of payload changes.
+         */
+        public List<PayloadChange> getPayloadChanges() {
+            return payloadChanges == null ? List.of() : new ArrayList<>(payloadChanges);
+        }
+
+        /**
+         * Sets payload changes with a defensive copy.
+         */
+        public void setPayloadChanges(List<PayloadChange> payloadChanges) {
+            this.payloadChanges = payloadChanges == null ? null : new ArrayList<>(payloadChanges);
+        }
     }
 }

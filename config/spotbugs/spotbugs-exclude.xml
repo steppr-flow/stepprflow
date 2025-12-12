@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--
+        SpotBugs exclusion filter for steppr-flow
+
+        This filter excludes false positives that occur in Spring-managed beans
+        where dependency injection is the standard pattern, and for DTOs/models
+        used in message passing and configuration.
+    -->
+
+    <!--
+        =====================================================================
+        SPRING CONFIGURATION PROPERTIES
+        Spring Boot @ConfigurationProperties requires direct field access
+        for binding to work correctly. Defensive copies would break binding.
+        =====================================================================
+    -->
+    <Match>
+        <Class name="~io\.stepprflow\.core\.StepprFlowProperties(\$.*)?"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="io.stepprflow.dashboard.config.UiProperties"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.dashboard\.config\.UiProperties(\$.*)?"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.monitor\.MonitorProperties(\$.*)?"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.agent\.AgentProperties(\$.*)?"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <!--
+        =====================================================================
+        SPRING SERVICE CLASSES WITH DEPENDENCY INJECTION
+        @RequiredArgsConstructor/@Autowired inject Spring-managed beans.
+        These are not externally mutable in practice.
+        =====================================================================
+    -->
+    <Match>
+        <Class name="~io\.stepprflow\.core\.service\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.core\.tracing\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.core\.metrics\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.monitor\.service\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.monitor\.websocket\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.monitor\.config\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.monitor\.controller\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.monitor\.dto\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.monitor\.model\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.agent\.registration\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.dashboard\.config\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.dashboard\.controller\..*"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.broker\.kafka\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.broker\.rabbitmq\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <!--
+        =====================================================================
+        DATA TRANSFER OBJECTS AND MODELS
+        DTOs and message models are designed to carry data across boundaries.
+        Defensive copies are impractical and would hurt performance.
+        =====================================================================
+    -->
+    <Match>
+        <Class name="~io\.stepprflow\.core\.model\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="~io\.stepprflow\.core\.event\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+            <Bug pattern="SE_BAD_FIELD"/>
+        </Or>
+    </Match>
+
+    <!--
+        =====================================================================
+        LOMBOK GENERATED CODE
+        Builder classes store mutable objects by design for fluent API.
+        =====================================================================
+    -->
+    <Match>
+        <Class name="~.*\$.*Builder"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!--
+        =====================================================================
+        DEAD LOCAL STORE IN METRICS
+        These are intentional - recording metrics returns a value that is
+        used for chaining but not always needed at call site.
+        =====================================================================
+    -->
+    <Match>
+        <Class name="io.stepprflow.core.metrics.WorkflowMetrics"/>
+        <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
+    </Match>
+
+</FindBugsFilter>
