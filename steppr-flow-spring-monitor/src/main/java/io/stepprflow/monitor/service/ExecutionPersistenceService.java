@@ -145,8 +145,8 @@ public class ExecutionPersistenceService {
      * Finalize the current execution attempt with result information.
      */
     private void finalizeCurrentAttempt(WorkflowExecution execution, WorkflowMessage message) {
-        List<WorkflowExecution.ExecutionAttempt> attempts = execution.getExecutionAttempts();
-        if (attempts == null || attempts.isEmpty()) {
+        List<WorkflowExecution.ExecutionAttempt> attempts = execution.getExecutionAttemptsMutable();
+        if (attempts.isEmpty()) {
             return;
         }
 
@@ -166,11 +166,7 @@ public class ExecutionPersistenceService {
     }
 
     private void addStepToHistory(WorkflowExecution execution, WorkflowMessage message) {
-        List<WorkflowExecution.StepExecution> history = execution.getStepHistory();
-        if (history == null) {
-            history = new ArrayList<>();
-            execution.setStepHistory(history);
-        }
+        List<WorkflowExecution.StepExecution> history = execution.getStepHistoryMutable();
 
         int currentStepId = message.getCurrentStep();
 

@@ -28,7 +28,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * For monitoring capabilities, deploy the stepprflow-dashboard container separately.
  *
  * To enable auto-registration, set:
- *   stepprflow.agent.dashboard-url=http://stepprflow-dashboard:8090
+ * {@code stepprflow.agent.dashboard-url=http://stepprflow-dashboard:8090}
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "stepprflow", name = "enabled", havingValue = "true", matchIfMissing = true)

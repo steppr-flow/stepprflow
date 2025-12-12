@@ -258,6 +258,24 @@
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco.version}</version>
+                    <configuration>
+                        <excludes>
+                            <!-- Exclude configuration classes -->
+                            <exclude>**/*Properties.class</exclude>
+                            <exclude>**/*Properties$*.class</exclude>
+                            <exclude>**/*Config.class</exclude>
+                            <exclude>**/*Configuration.class</exclude>
+                            <exclude>**/*AutoConfiguration.class</exclude>
+                            <!-- Exclude DTOs and models (simple data carriers) -->
+                            <exclude>**/model/*Info.class</exclude>
+                            <exclude>**/dto/*.class</exclude>
+                            <!-- Exclude generated Lombok code -->
+                            <exclude>**/*$Builder.class</exclude>
+                            <exclude>**/*$Builder$*.class</exclude>
+                            <!-- Exclude Spring Boot application classes -->
+                            <exclude>**/*Application.class</exclude>
+                        </excludes>
+                    </configuration>
                     <executions>
                         <execution>
                             <id>prepare-agent</id>
@@ -271,6 +289,71 @@
                             <goals>
                                 <goal>report</goal>
                             </goals>
+                        </execution>
+                        <execution>
+                            <id>check</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <!-- Bundle-level coverage thresholds -->
+                                    <rule>
+                                        <element>BUNDLE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>INSTRUCTION</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <!-- Target: 60% - can increase to 80% with more tests -->
+                                                <minimum>0.35</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.30</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                    <!-- Class-level coverage thresholds -->
+                                    <rule>
+                                        <element>CLASS</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.30</minimum>
+                                            </limit>
+                                        </limits>
+                                        <excludes>
+                                            <!-- Exclude interfaces and abstract classes -->
+                                            <exclude>io.stepprflow.core.broker.MessageBroker</exclude>
+                                            <exclude>io.stepprflow.core.broker.MessageContext</exclude>
+                                            <exclude>io.stepprflow.core.service.WorkflowExecutionStore</exclude>
+                                            <exclude>io.stepprflow.core.service.WorkflowStarter</exclude>
+                                            <!-- Exclude event records (no executable code) -->
+                                            <exclude>io.stepprflow.core.event.*</exclude>
+                                            <!-- Exclude metrics summary records -->
+                                            <exclude>io.stepprflow.core.metrics.MetricsSummary</exclude>
+                                            <!-- Exclude exception classes -->
+                                            <exclude>*Exception</exclude>
+                                            <!-- Exclude listener classes -->
+                                            <exclude>*Listener</exclude>
+                                            <!-- Exclude WebSocket handlers (hard to unit test) -->
+                                            <exclude>*WebSocketHandler</exclude>
+                                            <!-- Exclude controllers (tested via integration tests) -->
+                                            <exclude>*Controller</exclude>
+                                            <!-- Exclude all inner classes -->
+                                            <exclude>io.stepprflow.monitor.websocket.WorkflowWebSocketHandler.WorkflowUpdateDTO</exclude>
+                                            <exclude>io.stepprflow.monitor.model.WorkflowExecution.ExecutionAttempt</exclude>
+                                            <exclude>io.stepprflow.monitor.model.WorkflowExecution.StepExecution</exclude>
+                                            <exclude>io.stepprflow.monitor.model.WorkflowExecution.PayloadChange</exclude>
+                                            <exclude>io.stepprflow.monitor.model.RegisteredWorkflow.StepInfo</exclude>
+                                            <exclude>io.stepprflow.monitor.model.RegisteredWorkflow.ServiceInstance</exclude>
+                                        </excludes>
+                                    </rule>
+                                </rules>
+                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
@@ -345,7 +428,8 @@
                         <effort>Max</effort>
                         <threshold>Medium</threshold>
                         <xmlOutput>true</xmlOutput>
-                        <failOnError>false</failOnError>
+                        <failOnError>true</failOnError>
+                        <excludeFilterFile>${main.basedir}/config/spotbugs/spotbugs-exclude.xml</excludeFilterFile>
                     </configuration>
                 </plugin>
                 <plugin>

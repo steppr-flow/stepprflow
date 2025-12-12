@@ -1,5 +1,6 @@
 package io.stepprflow.sample.service;
 
+import io.stepprflow.sample.exception.PaymentDeclinedException;
 import io.stepprflow.sample.model.OrderPayload;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class PaymentService {
 
         // Simulate occasional failures (10% chance)
         if (Math.random() < 0.1) {
-            throw new RuntimeException("Payment declined: Insufficient funds");
+            throw new PaymentDeclinedException("Insufficient funds", amount);
         }
 
         String transactionId = "TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();

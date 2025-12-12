@@ -3,7 +3,9 @@ package io.stepprflow.monitor.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.stepprflow.core.model.WorkflowStatus;
 import io.stepprflow.monitor.model.WorkflowExecution;
-import io.stepprflow.monitor.service.WorkflowMonitorService;
+import io.stepprflow.monitor.service.PayloadManagementService;
+import io.stepprflow.monitor.service.WorkflowCommandService;
+import io.stepprflow.monitor.service.WorkflowQueryService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -41,7 +42,13 @@ class WorkflowControllerValidationTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private WorkflowMonitorService monitorService;
+    private WorkflowQueryService queryService;
+
+    @MockBean
+    private WorkflowCommandService commandService;
+
+    @MockBean
+    private PayloadManagementService payloadService;
 
     @Nested
     @DisplayName("Payload Update Validation")
@@ -129,7 +136,7 @@ class WorkflowControllerValidationTest {
         @DisplayName("Should accept valid fieldPath with dots")
         void shouldAcceptValidFieldPathWithDots() throws Exception {
             var execution = createTestExecution();
-            when(monitorService.updatePayloadField(anyString(), anyString(), any(), anyString(), anyString()))
+            when(payloadService.updatePayloadField(anyString(), anyString(), any(), anyString(), anyString()))
                     .thenReturn(execution);
 
             var request = Map.of(
@@ -148,7 +155,7 @@ class WorkflowControllerValidationTest {
         @DisplayName("Should accept valid fieldPath with array notation")
         void shouldAcceptValidFieldPathWithArrayNotation() throws Exception {
             var execution = createTestExecution();
-            when(monitorService.updatePayloadField(anyString(), anyString(), any(), anyString(), anyString()))
+            when(payloadService.updatePayloadField(anyString(), anyString(), any(), anyString(), anyString()))
                     .thenReturn(execution);
 
             var request = Map.of(
@@ -229,7 +236,7 @@ class WorkflowControllerValidationTest {
         @Test
         @DisplayName("Should accept valid page and size")
         void shouldAcceptValidPageAndSize() throws Exception {
-            when(monitorService.findExecutions(any(), any(), any()))
+            when(queryService.findExecutions(any(), any(), any()))
                     .thenReturn(org.springframework.data.domain.Page.empty());
 
             mockMvc.perform(get("/api/workflows")
@@ -242,7 +249,7 @@ class WorkflowControllerValidationTest {
         @Test
         @DisplayName("Should use default values when not specified")
         void shouldUseDefaultValues() throws Exception {
-            when(monitorService.findExecutions(any(), any(), any()))
+            when(queryService.findExecutions(any(), any(), any()))
                     .thenReturn(org.springframework.data.domain.Page.empty());
 
             mockMvc.perform(get("/api/workflows"))
@@ -260,7 +267,7 @@ class WorkflowControllerValidationTest {
         @Test
         @DisplayName("Should accept valid sortBy fields")
         void shouldAcceptValidSortByFields() throws Exception {
-            when(monitorService.findExecutions(any(), any(), any()))
+            when(queryService.findExecutions(any(), any(), any()))
                     .thenReturn(org.springframework.data.domain.Page.empty());
 
             // Test valid sortBy values

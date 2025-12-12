@@ -28,12 +28,16 @@ jobs:
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
         with:
-          # When pr-mode is set to true, Qodana analyzes only the files that have been changed
-          pr-mode: false
+          # Analyze only changed files in PRs for faster feedback
+          pr-mode: ${{ github.event_name == 'pull_request' }}
           use-caches: true
+          # Post comments on PRs with findings
           post-pr-comment: true
+          # Add annotations to code
           use-annotations: true
-          # Upload Qodana results (SARIF, other artifacts, logs) as an artifact to the job
-          upload-result: false
+          # Upload Qodana results as artifacts
+          upload-result: true
+          # Fail the build if quality gate fails
+          fail-fast: false
           # quick-fixes available in Ultimate and Ultimate Plus plans
           push-fixes: 'none'

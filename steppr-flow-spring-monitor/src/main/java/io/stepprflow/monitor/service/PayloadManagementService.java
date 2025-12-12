@@ -62,11 +62,8 @@ public class PayloadManagementService {
                 .reason(reason)
                 .build();
 
-        // Initialize history list if null
-        if (execution.getPayloadHistory() == null) {
-            execution.setPayloadHistory(new ArrayList<>());
-        }
-        execution.getPayloadHistory().add(change);
+        // Add change to payload history
+        execution.getPayloadHistoryMutable().add(change);
 
         execution.setPayload(payloadMap);
         execution.setUpdatedAt(Instant.now());
@@ -74,7 +71,7 @@ public class PayloadManagementService {
         try {
             repository.save(execution);
         } catch (OptimisticLockingFailureException e) {
-            log.warn("Concurrent modification detected for workflow {}", executionId);
+            log.warn("Concurrent modification detected while updating payload field for workflow {}", executionId);
             throw new ConcurrentModificationException(executionId, e);
         }
 
@@ -112,7 +109,7 @@ public class PayloadManagementService {
         try {
             repository.save(execution);
         } catch (OptimisticLockingFailureException e) {
-            log.warn("Concurrent modification detected for workflow {}", executionId);
+            log.warn("Concurrent modification detected while restoring payload for workflow {}", executionId);
             throw new ConcurrentModificationException(executionId, e);
         }
 

@@ -2,7 +2,9 @@ package io.stepprflow.monitor.controller;
 
 import io.stepprflow.core.model.WorkflowStatus;
 import io.stepprflow.monitor.model.WorkflowExecution;
-import io.stepprflow.monitor.service.WorkflowMonitorService;
+import io.stepprflow.monitor.service.PayloadManagementService;
+import io.stepprflow.monitor.service.WorkflowCommandService;
+import io.stepprflow.monitor.service.WorkflowQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -52,7 +54,9 @@ public class WorkflowController {
             "createdAt", "updatedAt", "status", "topic", "currentStep"
     );
 
-    private final WorkflowMonitorService monitorService;
+    private final WorkflowQueryService queryService;
+    private final WorkflowCommandService commandService;
+    private final PayloadManagementService payloadService;
 
     @Operation(summary = "Get execution by ID",
             description = "Retrieve a specific workflow execution by its unique identifier")
@@ -64,7 +68,7 @@ public class WorkflowController {
     @GetMapping("/{executionId}")
     public ResponseEntity<WorkflowExecution> getExecution(
             @Parameter(description = "Unique execution identifier") @PathVariable String executionId) {
-        return monitorService.getExecution(executionId)
+        return queryService.getExecution(executionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -106,7 +110,7 @@ public class WorkflowController {
                     .toList();
         }
 
-        return ResponseEntity.ok(monitorService.findExecutions(topic, statusList, pageable));
+        return ResponseEntity.ok(queryService.findExecutions(topic, statusList, pageable));
     }
 
     @Operation(summary = "Get recent executions",
@@ -114,14 +118,14 @@ public class WorkflowController {
     @ApiResponse(responseCode = "200", description = "List of recent executions")
     @GetMapping("/recent")
     public ResponseEntity<List<WorkflowExecution>> getRecentExecutions() {
-        return ResponseEntity.ok(monitorService.getRecentExecutions());
+        return ResponseEntity.ok(queryService.getRecentExecutions());
     }
 
     @Operation(summary = "Get statistics", description = "Get aggregated workflow execution statistics")
     @ApiResponse(responseCode = "200", description = "Statistics map with counts by status")
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStatistics() {
-        return ResponseEntity.ok(monitorService.getStatistics());
+        return ResponseEntity.ok(queryService.getStatistics());
     }
 
     @Operation(summary = "Resume execution",
@@ -139,7 +143,7 @@ public class WorkflowController {
             @PathVariable String executionId,
             @Parameter(description = "Step number to resume from (optional)")
             @RequestParam(required = false) Integer fromStep) {
-        monitorService.resume(executionId, fromStep);
+        commandService.resume(executionId, fromStep, "UI User");
         return ResponseEntity.accepted().build();
     }
 
@@ -152,7 +156,7 @@ public class WorkflowController {
     @DeleteMapping("/{executionId}")
     public ResponseEntity<Void> cancel(
             @Parameter(description = "Execution ID to cancel") @PathVariable String executionId) {
-        monitorService.cancel(executionId);
+        commandService.cancel(executionId);
         return ResponseEntity.noContent().build();
     }
 
@@ -170,7 +174,7 @@ public class WorkflowController {
     public ResponseEntity<WorkflowExecution> updatePayloadField(
             @Parameter(description = "Execution ID") @PathVariable String executionId,
             @Valid @RequestBody PayloadFieldUpdateRequest request) {
-        WorkflowExecution updated = monitorService.updatePayloadField(
+        WorkflowExecution updated = payloadService.updatePayloadField(
                 executionId,
                 request.getFieldPath(),
                 request.getNewValue(),
@@ -193,7 +197,7 @@ public class WorkflowController {
     @PostMapping("/{executionId}/payload/restore")
     public ResponseEntity<WorkflowExecution> restorePayload(
             @Parameter(description = "Execution ID") @PathVariable String executionId) {
-        WorkflowExecution restored = monitorService.restorePayload(executionId);
+        WorkflowExecution restored = payloadService.restorePayload(executionId);
         return ResponseEntity.ok(restored);
     }
 

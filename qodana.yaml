@@ -17,11 +17,24 @@ profile:
 #include:
 #  - name: <SomeEnabledInspectionId>
 
-#Disable inspections
-#exclude:
-#  - name: <SomeDisabledInspectionId>
-#    paths:
-#      - <path/where/not/run/inspection>
+# Disable inspections for specific paths or globally
+exclude:
+  # Exclude generated code and sample applications from strict analysis
+  - name: All
+    paths:
+      - "**/target/**"
+      - "**/node_modules/**"
+      - "**/.flattened-pom.xml"
+  # Exclude specific inspections that create noise
+  - name: MissedJavadoc
+    paths:
+      - "**/test/**"
+  - name: JavadocDeclaration
+    paths:
+      - "**/test/**"
+  # Lombok-generated code warnings
+  - name: LombokGetterMayBeUsed
+  - name: LombokSetterMayBeUsed
 
 projectJDK: "21" #(Applied in CI/CD pipeline)
 
@@ -35,14 +48,18 @@ projectJDK: "21" #(Applied in CI/CD pipeline)
 # Quality gate. Will fail the CI/CD pipeline if any condition is not met
 # severityThresholds - configures maximum thresholds for different problem severities
 # testCoverageThresholds - configures minimum code coverage on a whole project and newly added code
-# Code Coverage is available in Ultimate and Ultimate Plus plans
-#failureConditions:
-#  severityThresholds:
-#    any: 15
-#    critical: 5
-#  testCoverageThresholds:
-#    fresh: 70
-#    total: 50
+failureConditions:
+  severityThresholds:
+    # Maximum number of problems allowed by severity
+    any: 100        # Total problems threshold (start high, reduce over time)
+    critical: 0     # No critical issues allowed
+    high: 10        # Few high-severity issues allowed
+    moderate: 50    # Moderate issues threshold
+    low: 100        # Low severity threshold
+  # Note: testCoverageThresholds requires Ultimate/Ultimate Plus plan
+  # testCoverageThresholds:
+  #   fresh: 70     # New code must have 70% coverage
+  #   total: 50     # Overall project coverage
   
 #Qodana supports other languages, for example, Python, JavaScript, TypeScript, Go, C#, PHP
 #For all supported languages see https://www.jetbrains.com/help/qodana/linters.html

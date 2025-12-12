@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,7 @@ import java.util.Optional;
  *             - {@link WorkflowCommandService} for state changes
  *             - {@link PayloadManagementService} for payload updates
  */
-@Service
+@Deprecated
 @RequiredArgsConstructor
 @Slf4j
 public class WorkflowMonitorService {

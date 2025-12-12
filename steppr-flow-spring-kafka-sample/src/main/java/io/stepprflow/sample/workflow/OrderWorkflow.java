@@ -7,6 +7,7 @@ import io.stepprflow.core.annotation.Timeout;
 import io.stepprflow.core.annotation.Topic;
 import io.stepprflow.core.model.WorkflowMessage;
 import io.stepprflow.core.StepprFlow;
+import io.stepprflow.sample.exception.InsufficientInventoryException;
 import io.stepprflow.sample.model.OrderPayload;
 import io.stepprflow.sample.service.InventoryService;
 import io.stepprflow.sample.service.NotificationService;
@@ -67,10 +68,7 @@ public class OrderWorkflow implements StepprFlow {
             boolean reserved = inventoryService.reserve(item.getProductId(), item.getQuantity());
 
             if (!reserved) {
-                throw new RuntimeException(
-                    String.format("Insufficient inventory for product %s (requested: %d)",
-                        item.getProductId(), item.getQuantity())
-                );
+                throw new InsufficientInventoryException(item.getProductId(), item.getQuantity());
             }
 
             log.info("[Step 2] Reserved {} units of product {}", item.getQuantity(), item.getProductId());

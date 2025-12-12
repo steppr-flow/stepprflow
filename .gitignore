@@ -96,4 +96,4 @@ yarn-error.log*
 
 # Docker
 *.tar
-docker-compose.override.yml
+docker-compose.override.ymlqodana-results/

@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -127,15 +128,10 @@ public class WorkflowRegistryService {
         existing.setTimeoutMs(workflowInfo.getTimeoutMs());
         existing.setUpdatedAt(Instant.now());
 
-        // Add or update service instance
-        if (existing.getRegisteredBy() == null) {
-            existing.setRegisteredBy(new HashSet<>());
-        }
-
         // Remove old entry for this instance and add new one
-        existing.getRegisteredBy().removeIf(
+        existing.removeServiceInstancesIf(
                 si -> si.getInstanceId().equals(serviceInstance.getInstanceId()));
-        existing.getRegisteredBy().add(serviceInstance);
+        existing.addServiceInstance(serviceInstance);
 
         // Reactivate workflow if it was inactive
         if (existing.getStatus() == RegisteredWorkflow.Status.INACTIVE) {
@@ -170,14 +166,12 @@ public class WorkflowRegistryService {
 
         List<RegisteredWorkflow> workflows = repository.findAll();
         for (RegisteredWorkflow workflow : workflows) {
-            if (workflow.getRegisteredBy() != null) {
-                boolean removed = workflow.getRegisteredBy().removeIf(
-                        si -> si.getServiceName().equals(serviceName) &&
-                                si.getInstanceId().equals(instanceId));
-                if (removed) {
-                    workflow.setUpdatedAt(Instant.now());
-                    repository.save(workflow);
-                }
+            boolean removed = workflow.removeServiceInstancesIf(
+                    si -> si.getServiceName().equals(serviceName) &&
+                            si.getInstanceId().equals(instanceId));
+            if (removed) {
+                workflow.setUpdatedAt(Instant.now());
+                repository.save(workflow);
             }
         }
     }
@@ -190,8 +184,9 @@ public class WorkflowRegistryService {
         Instant now = Instant.now();
 
         for (RegisteredWorkflow workflow : workflows) {
-            if (workflow.getRegisteredBy() != null) {
-                for (RegisteredWorkflow.ServiceInstance instance : workflow.getRegisteredBy()) {
+            Set<RegisteredWorkflow.ServiceInstance> instances = workflow.getRegisteredByInternal();
+            if (instances != null) {
+                for (RegisteredWorkflow.ServiceInstance instance : instances) {
                     if (instance.getServiceName().equals(serviceName) &&
                             instance.getInstanceId().equals(instanceId)) {
                         instance.setLastHeartbeat(now);
@@ -221,16 +216,17 @@ public class WorkflowRegistryService {
             boolean needsSave = false;
             int removedCount;
 
-            if (workflow.getRegisteredBy() != null && !workflow.getRegisteredBy().isEmpty()) {
-                int sizeBefore = workflow.getRegisteredBy().size();
+            Set<RegisteredWorkflow.ServiceInstance> instances = workflow.getRegisteredByInternal();
+            if (instances != null && !instances.isEmpty()) {
+                int sizeBefore = instances.size();
 
                 // Remove instances with stale or null heartbeat
-                boolean removed = workflow.getRegisteredBy().removeIf(instance ->
+                boolean removed = instances.removeIf(instance ->
                         instance.getLastHeartbeat() == null ||
                         !instance.getLastHeartbeat().isAfter(cutoff));
 
                 if (removed) {
-                    removedCount = sizeBefore - workflow.getRegisteredBy().size();
+                    removedCount = sizeBefore - instances.size();
                     totalRemoved += removedCount;
                     needsSave = true;
                     log.info("Removed {} stale instance(s) from workflow {}", removedCount, workflow.getTopic());
@@ -238,8 +234,7 @@ public class WorkflowRegistryService {
             }
 
             // Check if workflow should be marked as INACTIVE
-            boolean hasActiveInstances = workflow.getRegisteredBy() != null && !workflow.getRegisteredBy().isEmpty();
-            if (!hasActiveInstances && workflow.getStatus() == RegisteredWorkflow.Status.ACTIVE) {
+            if (workflow.hasNoServiceInstances() && workflow.getStatus() == RegisteredWorkflow.Status.ACTIVE) {
                 workflow.setStatus(RegisteredWorkflow.Status.INACTIVE);
                 needsSave = true;
                 log.info("Workflow {} marked as INACTIVE (no active instances)", workflow.getTopic());

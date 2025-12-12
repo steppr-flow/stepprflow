@@ -1,11 +1,13 @@
 package io.stepprflow.core.exception;
 
 import io.stepprflow.core.model.WorkflowStatus;
+import lombok.Getter;
 
 /**
  * Exception thrown when a workflow operation is not allowed
  * due to its current state.
  */
+@Getter
 public class WorkflowStateException extends WorkflowException {
 
     /** The execution ID. */
@@ -35,32 +37,5 @@ public class WorkflowStateException extends WorkflowException {
         this.executionId = execId;
         this.currentStatus = status;
         this.operation = op;
-    }
-
-    /**
-     * Returns the execution ID.
-     *
-     * @return the execution ID
-     */
-    public String getExecutionId() {
-        return executionId;
-    }
-
-    /**
-     * Returns the current workflow status.
-     *
-     * @return the current status
-     */
-    public WorkflowStatus getCurrentStatus() {
-        return currentStatus;
-    }
-
-    /**
-     * Returns the operation that was attempted.
-     *
-     * @return the operation
-     */
-    public String getOperation() {
-        return operation;
     }
 }

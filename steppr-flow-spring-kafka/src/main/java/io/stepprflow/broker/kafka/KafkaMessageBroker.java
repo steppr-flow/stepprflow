@@ -1,6 +1,7 @@
 package io.stepprflow.broker.kafka;
 
 import io.stepprflow.core.broker.MessageBroker;
+import io.stepprflow.core.exception.MessageSendException;
 import io.stepprflow.core.model.WorkflowMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,8 @@ public class KafkaMessageBroker implements MessageBroker {
                     result.getRecordMetadata().offset());
         } catch (Exception e) {
             log.error("Failed to send sync message to topic {}: {}", destination, e.getMessage(), e);
-            throw new RuntimeException("Failed to send workflow message", e);
+            throw new MessageSendException("kafka", destination, message.getExecutionId(),
+                    e.getMessage(), e);
         }
     }
 

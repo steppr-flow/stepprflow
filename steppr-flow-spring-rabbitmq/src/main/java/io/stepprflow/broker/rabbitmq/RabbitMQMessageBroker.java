@@ -1,6 +1,7 @@
 package io.stepprflow.broker.rabbitmq;
 
 import io.stepprflow.core.broker.MessageBroker;
+import io.stepprflow.core.exception.MessageSendException;
 import io.stepprflow.core.model.WorkflowMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,8 @@ public class RabbitMQMessageBroker implements MessageBroker {
         } catch (Exception e) {
             log.error("Failed to send message to exchange {} with routing key {}: {}",
                     exchange, destination, e.getMessage(), e);
-            throw new RuntimeException("Failed to send workflow message", e);
+            throw new MessageSendException("rabbitmq", destination, message.getExecutionId(),
+                    e.getMessage(), e);
         }
     }
 
@@ -59,7 +61,8 @@ public class RabbitMQMessageBroker implements MessageBroker {
             } catch (Exception e) {
                 log.error("Failed to send async message to exchange {} with routing key {}: {}",
                         exchange, destination, e.getMessage(), e);
-                throw new RuntimeException("Failed to send workflow message", e);
+                throw new MessageSendException("rabbitmq", destination, message.getExecutionId(),
+                        e.getMessage(), e);
             }
         });
     }
@@ -84,7 +87,8 @@ public class RabbitMQMessageBroker implements MessageBroker {
         } catch (Exception e) {
             log.error("Failed to send sync message to exchange {} with routing key {}: {}",
                     exchange, destination, e.getMessage(), e);
-            throw new RuntimeException("Failed to send workflow message", e);
+            throw new MessageSendException("rabbitmq", destination, message.getExecutionId(),
+                    e.getMessage(), e);
         }
     }
 
