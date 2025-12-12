@@ -230,7 +230,6 @@ class RabbitMQMessageBrokerTest {
             WorkflowMessage message = createWorkflowMessage("exec-sync", "sync-workflow");
             when(messageConverter.toMessage(eq(message), any(MessageProperties.class))).thenReturn(amqpMessage);
             doAnswer(invocation -> {
-                RabbitOperations.OperationsCallback<?> callback = invocation.getArgument(0);
                 // Simulate callback execution - the actual operations are mocked
                 return null;
             }).when(rabbitTemplate).invoke(any());

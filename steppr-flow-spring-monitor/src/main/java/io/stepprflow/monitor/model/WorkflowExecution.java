@@ -171,14 +171,16 @@ public class WorkflowExecution {
     }
 
     /**
-     * Returns a mutable list for adding payload changes.
-     * Creates the list if null.
+     * Adds a payload change to the history.
+     * Initializes the list if null.
+     *
+     * @param change the payload change to add
      */
-    public List<PayloadChange> getPayloadHistoryMutable() {
+    public void addPayloadChange(PayloadChange change) {
         if (this.payloadHistory == null) {
             this.payloadHistory = new ArrayList<>();
         }
-        return this.payloadHistory;
+        this.payloadHistory.add(change);
     }
 
     /**
