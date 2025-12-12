@@ -95,9 +95,8 @@ public class RabbitMQMessageBroker implements MessageBroker {
 
     @Override
     public boolean isAvailable() {
-        try {
-            return rabbitTemplate.getConnectionFactory() != null &&
-                   rabbitTemplate.getConnectionFactory().createConnection().isOpen();
+        try (var createdConnection = rabbitTemplate.getConnectionFactory().createConnection()) {
+            return createdConnection.isOpen();
         } catch (Exception e) {
             log.warn("RabbitMQ connection check failed: {}", e.getMessage());
             return false;

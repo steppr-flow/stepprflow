@@ -28,32 +28,15 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 
 ### 1. Add Dependencies
 
-**Maven (with Kafka):**
+**Maven :**
 ```xml
 <dependency>
     <groupId>io.stepprflow</groupId>
     <artifactId>steppr-flow-spring-boot-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-<dependency>
-    <groupId>io.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-kafka</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
-**Maven (with RabbitMQ):**
-```xml
-<dependency>
-    <groupId>io.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-boot-starter</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-<dependency>
-    <groupId>io.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-rabbitmq</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
 ```
 
 ### 2. Define a Workflow
@@ -222,9 +205,9 @@ public void onFailed(WorkflowMessage message) {
 │  WorkflowStarter  │  @Topic Workflows  │  Step Handlers     │
 ├─────────────────────────────────────────────────────────────┤
 │                    steppr-flow-core                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │ StepExecutor │  │WorkflowRegistry│ │MessageBroker │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘       │
+│  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐     │
+│  │ StepExecutor │  │WorkflowRegistry│  │MessageBroker │     │
+│  └──────────────┘  └────────────────┘  └──────────────┘     │
 ├─────────────────────────────────────────────────────────────┤
 │  steppr-flow-spring-kafka  │  steppr-flow-spring-rabbitmq   │
 ├─────────────────────────────────────────────────────────────┤

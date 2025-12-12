@@ -38,14 +38,8 @@ public class RabbitMQMessageListener {
     )
     public void onMessage(Message message, Channel channel) {
         try {
-            WorkflowMessage workflowMessage = (WorkflowMessage) messageConverter.fromMessage(message);
-            String queueName = message.getMessageProperties().getConsumerQueue();
-
-            if (workflowMessage == null) {
-                log.warn("Received null message on queue {}", queueName);
-                acknowledgeMessage(channel, message);
-                return;
-            }
+            var workflowMessage = (WorkflowMessage) messageConverter.fromMessage(message);
+            var queueName = message.getMessageProperties().getConsumerQueue();
 
             log.info("Received workflow message: queue={}, executionId={}, step={}, status={}",
                     queueName, workflowMessage.getExecutionId(),

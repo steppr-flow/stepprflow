@@ -199,6 +199,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Install project (required for analysis)
+        run: mvn -B install -DskipTests --file pom.xml
+
       - name: Check code style (Checkstyle)
         run: mvn -B checkstyle:check --file pom.xml
 
@@ -255,7 +258,7 @@ jobs:
           echo "Services ready!"
 
       - name: Run Kafka integration tests
-        run: mvn -B verify -DskipUnitTests -pl steppr-flow-spring-kafka --file pom.xml
+        run: mvn -B verify -DskipUnitTests -pl steppr-flow-spring-kafka -am --file pom.xml
         env:
           SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/stepprflow-test
           SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
@@ -304,7 +307,7 @@ jobs:
           echo "Services ready!"
 
       - name: Run RabbitMQ integration tests
-        run: mvn -B verify -DskipUnitTests -pl steppr-flow-spring-rabbitmq --file pom.xml
+        run: mvn -B verify -DskipUnitTests -pl steppr-flow-spring-rabbitmq -am --file pom.xml
         env:
           SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/stepprflow-test
           SPRING_RABBITMQ_HOST: localhost

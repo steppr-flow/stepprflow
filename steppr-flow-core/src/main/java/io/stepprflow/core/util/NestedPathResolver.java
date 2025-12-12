@@ -3,6 +3,8 @@ package io.stepprflow.core.util;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,7 +32,6 @@ public class NestedPathResolver {
      *             or "items[0].name")
      * @return the value at the path, or null if not found
      */
-    @SuppressWarnings("unchecked")
     public Object getValue(final Map<String, Object> map,
                           final String path) {
         if (map == null || path == null || path.isEmpty()) {
@@ -60,7 +61,6 @@ public class NestedPathResolver {
      *              or "items[0].name")
      * @param value the value to set
      */
-    @SuppressWarnings("unchecked")
     public void setValue(final Map<String, Object> map,
                         final String path,
                         final Object value) {
@@ -116,11 +116,10 @@ public class NestedPathResolver {
 
                 Object arrayOrList =
                         ((Map<String, Object>) current).get(segment.name);
-                if (!(arrayOrList instanceof List)) {
+                if (!(arrayOrList instanceof List<?> list)) {
                     return false;
                 }
 
-                List<?> list = (List<?>) arrayOrList;
                 if (segment.index < 0 || segment.index >= list.size()) {
                     return false;
                 }
@@ -165,8 +164,7 @@ public class NestedPathResolver {
                 obj = ((Map<String, Object>) current).get(segment.name);
             }
 
-            if (obj instanceof List) {
-                List<?> list = (List<?>) obj;
+            if (obj instanceof List<?> list) {
                 obj = list.get(segment.index);
             }
 
@@ -201,21 +199,20 @@ public class NestedPathResolver {
                 return ((List<?>) obj).get(segment.index);
             }
 
-            return null;
         } else {
             if (current instanceof Map) {
                 Map<String, Object> mapCurrent = (Map<String, Object>) current;
                 Object next = mapCurrent.get(part);
 
-                if (next == null) {
+                if (Objects.isNull(next)) {
                     next = new LinkedHashMap<String, Object>();
                     mapCurrent.put(part, next);
                 }
 
                 return next;
             }
-            return null;
         }
+        return null;
     }
 
     /**

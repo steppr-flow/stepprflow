@@ -65,6 +65,7 @@ public class WorkflowTracing {
                 }
             });
         } catch (RuntimeException e) {
+            log.error(String.format("Error occurred while observing step %s", step.getId()), e);
             throw e;
         }
     }

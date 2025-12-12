@@ -159,21 +159,6 @@ class RabbitMQMessageListenerTest {
         }
 
         @Test
-        @DisplayName("Should acknowledge null message")
-        void shouldAcknowledgeNullMessage() throws IOException {
-            // Given
-            Message message = createAmqpMessage();
-            when(messageConverter.fromMessage(message)).thenReturn(null);
-
-            // When
-            listener.onMessage(message, channel);
-
-            // Then
-            verify(stepExecutor, never()).execute(any());
-            verify(channel).basicAck(1L, false);
-        }
-
-        @Test
         @DisplayName("Should reject and requeue when executor throws exception")
         void shouldRejectAndRequeueOnExecutorException() throws IOException {
             // Given

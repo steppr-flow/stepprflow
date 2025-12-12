@@ -219,7 +219,7 @@ public class WorkflowRegistryService {
 
         for (RegisteredWorkflow workflow : workflows) {
             boolean needsSave = false;
-            int removedCount = 0;
+            int removedCount;
 
             if (workflow.getRegisteredBy() != null && !workflow.getRegisteredBy().isEmpty()) {
                 int sizeBefore = workflow.getRegisteredBy().size();
