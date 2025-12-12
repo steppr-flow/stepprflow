@@ -63,7 +63,7 @@ public class PayloadManagementService {
                 .build();
 
         // Add change to payload history
-        execution.getPayloadHistoryMutable().add(change);
+        execution.addPayloadChange(change);
 
         execution.setPayload(payloadMap);
         execution.setUpdatedAt(Instant.now());
