@@ -37,8 +37,6 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 </dependency>
 ```
 
-```
-
 ### 2. Define a Workflow
 
 ```java
