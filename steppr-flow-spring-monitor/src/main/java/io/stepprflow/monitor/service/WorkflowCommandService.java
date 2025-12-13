@@ -75,11 +75,8 @@ public class WorkflowCommandService {
      * Create a new execution attempt, moving pending payload changes to this attempt.
      */
     private void createExecutionAttempt(WorkflowExecution execution, int startStep, String resumedBy) {
-        // Get mutable attempts list (initializes if null)
-        List<WorkflowExecution.ExecutionAttempt> attempts = execution.getExecutionAttemptsMutable();
-
         // Determine attempt number
-        int attemptNumber = attempts.size() + 1;
+        int attemptNumber = execution.getNextAttemptNumber();
 
         // Get pending payload changes and clear them
         List<WorkflowExecution.PayloadChange> pendingChanges = execution.getPayloadHistory();
@@ -94,7 +91,7 @@ public class WorkflowCommandService {
                 .payloadChanges(!pendingChanges.isEmpty() ? pendingChanges : null)
                 .build();
 
-        attempts.add(attempt);
+        execution.addExecutionAttempt(attempt);
         execution.setUpdatedAt(Instant.now());
         repository.save(execution);
 

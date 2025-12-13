@@ -145,82 +145,53 @@ public class ExecutionPersistenceService {
      * Finalize the current execution attempt with result information.
      */
     private void finalizeCurrentAttempt(WorkflowExecution execution, WorkflowMessage message) {
-        List<WorkflowExecution.ExecutionAttempt> attempts = execution.getExecutionAttemptsMutable();
-        if (attempts.isEmpty()) {
-            return;
-        }
+        execution.getCurrentAttempt().ifPresent(currentAttempt -> {
+            // Only update if not already finalized
+            if (currentAttempt.getResult() == null) {
+                currentAttempt.setEndedAt(Instant.now());
+                currentAttempt.setResult(message.getStatus());
+                currentAttempt.setEndStep(message.getCurrentStep());
 
-        // Get the last (current) attempt
-        WorkflowExecution.ExecutionAttempt currentAttempt = attempts.get(attempts.size() - 1);
-
-        // Only update if not already finalized
-        if (currentAttempt.getResult() == null) {
-            currentAttempt.setEndedAt(Instant.now());
-            currentAttempt.setResult(message.getStatus());
-            currentAttempt.setEndStep(message.getCurrentStep());
-
-            if (message.getErrorInfo() != null) {
-                currentAttempt.setErrorMessage(message.getErrorInfo().getMessage());
+                if (message.getErrorInfo() != null) {
+                    currentAttempt.setErrorMessage(message.getErrorInfo().getMessage());
+                }
             }
-        }
+        });
     }
 
     private void addStepToHistory(WorkflowExecution execution, WorkflowMessage message) {
-        List<WorkflowExecution.StepExecution> history = execution.getStepHistoryMutable();
-
         int currentStepId = message.getCurrentStep();
+        Instant now = Instant.now();
 
         // Mark previous steps as PASSED if they are still IN_PROGRESS or PENDING
-        // This happens when we move to the next step
-        for (WorkflowExecution.StepExecution prevStep : history) {
-            if (prevStep.getStepId() < currentStepId &&
-                (prevStep.getStatus() == WorkflowStatus.IN_PROGRESS ||
-                 prevStep.getStatus() == WorkflowStatus.PENDING)) {
-                prevStep.setStatus(WorkflowStatus.PASSED);
-                Instant completedAt = Instant.now();
-                prevStep.setCompletedAt(completedAt);
-                if (prevStep.getStartedAt() != null) {
-                    prevStep.setDurationMs(
-                            completedAt.toEpochMilli() - prevStep.getStartedAt().toEpochMilli());
-                }
-            }
-        }
+        execution.markPreviousStepsAsPassed(currentStepId, now);
 
         // Find or create step entry for current step
-        WorkflowExecution.StepExecution stepExecution = history.stream()
-                .filter(s -> s.getStepId() == currentStepId)
-                .findFirst()
-                .orElse(null);
+        WorkflowExecution.StepExecution stepExecution = execution.findStepByStepId(currentStepId)
+                .orElseGet(() -> {
+                    String stepLabel = getStepLabel(message.getTopic(), currentStepId);
+                    WorkflowExecution.StepExecution newStep = WorkflowExecution.StepExecution.builder()
+                            .stepId(currentStepId)
+                            .stepLabel(stepLabel)
+                            .startedAt(now)
+                            .attempt(1)
+                            .build();
+                    execution.addStepExecution(newStep);
+                    return newStep;
+                });
 
-        if (stepExecution == null) {
-            String stepLabel = getStepLabel(message.getTopic(), currentStepId);
-            stepExecution = WorkflowExecution.StepExecution.builder()
-                    .stepId(currentStepId)
-                    .stepLabel(stepLabel)
-                    .startedAt(Instant.now())
-                    .attempt(1)
-                    .build();
-            history.add(stepExecution);
-        }
+        // Update current step status based on workflow status
+        updateStepStatus(stepExecution, message, now);
+    }
 
-        // Update current step status
-        // For workflow COMPLETED status, mark current step as COMPLETED
-        // For workflow FAILED status, mark current step as FAILED
-        if (message.getStatus() == WorkflowStatus.COMPLETED) {
-            stepExecution.setStatus(WorkflowStatus.COMPLETED);
-            Instant completedAt = Instant.now();
-            stepExecution.setCompletedAt(completedAt);
+    private void updateStepStatus(WorkflowExecution.StepExecution stepExecution,
+                                  WorkflowMessage message, Instant now) {
+        if (message.getStatus() == WorkflowStatus.COMPLETED
+                || message.getStatus() == WorkflowStatus.FAILED) {
+            stepExecution.setStatus(message.getStatus());
+            stepExecution.setCompletedAt(now);
             if (stepExecution.getStartedAt() != null) {
-                stepExecution.setDurationMs(
-                        completedAt.toEpochMilli() - stepExecution.getStartedAt().toEpochMilli());
-            }
-        } else if (message.getStatus() == WorkflowStatus.FAILED) {
-            stepExecution.setStatus(WorkflowStatus.FAILED);
-            Instant completedAt = Instant.now();
-            stepExecution.setCompletedAt(completedAt);
-            if (stepExecution.getStartedAt() != null) {
-                stepExecution.setDurationMs(
-                        completedAt.toEpochMilli() - stepExecution.getStartedAt().toEpochMilli());
+                stepExecution.setDurationMs(now.toEpochMilli() - stepExecution.getStartedAt().toEpochMilli());
             }
         } else {
             stepExecution.setStatus(message.getStatus());

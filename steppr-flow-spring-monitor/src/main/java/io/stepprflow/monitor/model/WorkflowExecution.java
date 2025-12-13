@@ -18,6 +18,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -146,14 +147,50 @@ public class WorkflowExecution {
     }
 
     /**
-     * Returns a mutable list for modifying step history.
-     * Creates the list if null.
+     * Adds a step execution to the history.
+     * Initializes the list if null.
+     *
+     * @param step the step execution to add
      */
-    public List<StepExecution> getStepHistoryMutable() {
+    public void addStepExecution(StepExecution step) {
         if (this.stepHistory == null) {
             this.stepHistory = new ArrayList<>();
         }
-        return this.stepHistory;
+        this.stepHistory.add(step);
+    }
+
+    /**
+     * Finds a step execution by step ID.
+     *
+     * @param stepId the step ID to find
+     * @return an Optional containing the step execution if found
+     */
+    public Optional<StepExecution> findStepByStepId(int stepId) {
+        if (this.stepHistory == null) {
+            return Optional.empty();
+        }
+        return this.stepHistory.stream()
+                .filter(s -> s.getStepId() == stepId)
+                .findFirst();
+    }
+
+    /**
+     * Marks all previous steps (before currentStepId) as PASSED if they are still IN_PROGRESS or PENDING.
+     *
+     * @param currentStepId the current step ID
+     * @param completedAt the completion timestamp
+     */
+    public void markPreviousStepsAsPassed(int currentStepId, Instant completedAt) {
+        if (this.stepHistory == null) {
+            return;
+        }
+        for (StepExecution prevStep : this.stepHistory) {
+            if (prevStep.getStepId() < currentStepId
+                    && (prevStep.getStatus() == WorkflowStatus.IN_PROGRESS
+                        || prevStep.getStatus() == WorkflowStatus.PENDING)) {
+                prevStep.markAsPassed(completedAt);
+            }
+        }
     }
 
     /**
@@ -198,14 +235,46 @@ public class WorkflowExecution {
     }
 
     /**
-     * Returns a mutable list for modifying execution attempts.
-     * Creates the list if null.
+     * Returns the next attempt number (current size + 1).
+     *
+     * @return the next attempt number
      */
-    public List<ExecutionAttempt> getExecutionAttemptsMutable() {
+    public int getNextAttemptNumber() {
+        return (this.executionAttempts == null ? 0 : this.executionAttempts.size()) + 1;
+    }
+
+    /**
+     * Adds an execution attempt to the list.
+     * Initializes the list if null.
+     *
+     * @param attempt the execution attempt to add
+     */
+    public void addExecutionAttempt(ExecutionAttempt attempt) {
         if (this.executionAttempts == null) {
             this.executionAttempts = new ArrayList<>();
         }
-        return this.executionAttempts;
+        this.executionAttempts.add(attempt);
+    }
+
+    /**
+     * Returns the current (last) execution attempt if any.
+     *
+     * @return an Optional containing the current attempt
+     */
+    public Optional<ExecutionAttempt> getCurrentAttempt() {
+        if (this.executionAttempts == null || this.executionAttempts.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(this.executionAttempts.get(this.executionAttempts.size() - 1));
+    }
+
+    /**
+     * Returns true if there are any execution attempts.
+     *
+     * @return true if attempts exist
+     */
+    public boolean hasAttempts() {
+        return this.executionAttempts != null && !this.executionAttempts.isEmpty();
     }
 
     @Data
@@ -221,6 +290,19 @@ public class WorkflowExecution {
         private Long durationMs;
         private String errorMessage;
         private int attempt;
+
+        /**
+         * Marks this step as PASSED with the given completion time.
+         *
+         * @param completedAt the completion timestamp
+         */
+        public void markAsPassed(Instant completedAt) {
+            this.status = WorkflowStatus.PASSED;
+            this.completedAt = completedAt;
+            if (this.startedAt != null) {
+                this.durationMs = completedAt.toEpochMilli() - this.startedAt.toEpochMilli();
+            }
+        }
     }
 
     /**
