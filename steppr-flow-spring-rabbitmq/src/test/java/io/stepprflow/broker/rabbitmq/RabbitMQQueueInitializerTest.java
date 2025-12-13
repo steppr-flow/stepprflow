@@ -52,7 +52,7 @@ class RabbitMQQueueInitializerTest {
     }
 
     @Nested
-    @DisplayName("afterSingletonsInstantiated()")
+    @DisplayName("init()")
     class InitializationTests {
 
         @Test
@@ -62,7 +62,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(List.of("order-workflow"));
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             verify(rabbitAdmin, times(2)).declareExchange(exchangeCaptor.capture());
@@ -82,7 +82,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(List.of("order-workflow"));
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             verify(rabbitAdmin, atLeast(4)).declareQueue(queueCaptor.capture());
@@ -104,7 +104,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(List.of("order-workflow"));
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             verify(rabbitAdmin, atLeast(4)).declareBinding(bindingCaptor.capture());
@@ -120,7 +120,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(List.of("payment-workflow"));
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             verify(rabbitAdmin, atLeast(1)).declareQueue(queueCaptor.capture());
@@ -142,7 +142,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(Collections.emptyList());
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             verify(rabbitAdmin).declareQueue(queueCaptor.capture());
@@ -157,7 +157,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(List.of("wf1", "wf2"));
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             assertThat(initializer.getWorkflowQueueNames())
@@ -171,7 +171,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(List.of("wf-a", "wf-b", "wf-c"));
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             // 2 exchanges + 4 queues per workflow (main, dlq, retry, completed) * 3 workflows = 12 queues
@@ -198,7 +198,7 @@ class RabbitMQQueueInitializerTest {
             when(workflowRegistry.getTopics()).thenReturn(List.of("my-workflow"));
 
             // When
-            initializer.afterSingletonsInstantiated();
+            initializer.init();
 
             // Then
             assertThat(initializer.getWorkflowQueueNames())

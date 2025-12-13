@@ -14,10 +14,12 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 ## Features
 
 - **Annotation-driven workflows** - Define workflows using simple annotations
-- **Multi-broker support** - Kafka and RabbitMQ implementations included
-- **Automatic retries** - Built-in retry handling with configurable policies
+- **Multi-broker support** - Kafka (default) and RabbitMQ implementations
+- **Automatic retries** - Built-in retry handling with exponential backoff
 - **Step-by-step execution** - Each workflow step executes independently
-- **Monitoring ready** - Optional monitoring module with MongoDB persistence
+- **Built-in persistence** - MongoDB persistence for workflow state and replay
+- **Resume failed workflows** - Replay failed steps from where they stopped
+- **Real-time monitoring** - REST API and WebSocket for workflow tracking
 
 ## Modules
 
@@ -27,7 +29,7 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 | `steppr-flow-spring-kafka` | Apache Kafka message broker implementation |
 | `steppr-flow-spring-rabbitmq` | RabbitMQ message broker implementation |
 | `steppr-flow-spring-monitor` | Monitoring, persistence, and REST API |
-| `steppr-flow-spring-boot-starter` | Spring Boot auto-configuration |
+| `steppr-flow-spring-boot-starter` | Spring Boot auto-configuration (includes all above) |
 | `steppr-flow-dashboard` | Standalone monitoring server |
 | `steppr-flow-ui` | Vue.js dashboard UI for workflow monitoring |
 
@@ -106,27 +108,48 @@ public class OrderController {
 
 ### 4. Configure the Broker
 
-**application.yml (Kafka):**
+**application.yml (Kafka - default):**
 ```yaml
-steppr-flow:
-  enabled: true
-
-spring:
+stepprflow:
+  broker: kafka
   kafka:
     bootstrap-servers: localhost:9092
+    consumer:
+      group-id: my-app-workers
+    trusted-packages:
+      - io.stepprflow.core.model
+      - com.mycompany.workflow.payload
 ```
 
 **application.yml (RabbitMQ):**
 ```yaml
-steppr-flow:
-  enabled: true
-
-spring:
+stepprflow:
+  broker: rabbitmq
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+    trusted-packages:
+      - io.stepprflow.core.model
+      - com.mycompany.workflow.payload
+```
+
+### 5. Requirements
+
+The starter includes MongoDB persistence. Make sure MongoDB is running:
+
+```bash
+docker run -d --name mongodb -p 27017:27017 mongo:latest
+```
+
+MongoDB connection defaults to `mongodb://localhost:27017/stepprflow`. To customize:
+
+```yaml
+stepprflow:
+  mongodb:
+    uri: mongodb://custom-host:27017/mydb
+    database: mydb
 ```
 
 ## Annotations
@@ -241,6 +264,7 @@ mvn install -DskipTests
 
 - Java 21+
 - Spring Boot 3.5+
+- MongoDB 6.x+ (for persistence)
 - Apache Kafka 3.x or RabbitMQ 3.12+
 - Docker (for integration tests)
 

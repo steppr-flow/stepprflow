@@ -32,7 +32,7 @@ Spring Boot framework for orchestrating asynchronous multi-step workflows via me
 Add configuration in `application.yml`:
 
 ```yaml
-steppr-flow:
+stepprflow:
   enabled: true
   retry:
     max-attempts: 3
@@ -40,16 +40,22 @@ steppr-flow:
     max-delay: 5m
     multiplier: 2.0
 
-# For Kafka
-spring:
+  # For Kafka (default broker)
   kafka:
     bootstrap-servers: localhost:9092
+    consumer:
+      group-id: my-app-workers
+    trusted-packages:
+      - io.stepprflow.core.model
+      - com.mycompany.workflow
 
-# Or for RabbitMQ
-spring:
-  rabbitmq:
-    host: localhost
-    port: 5672
+  # Or for RabbitMQ (set broker: rabbitmq)
+  # broker: rabbitmq
+  # rabbitmq:
+  #   host: localhost
+  #   port: 5672
+  #   username: guest
+  #   password: guest
 ```
 
 ### 2. Create a Payload
@@ -249,7 +255,7 @@ Non-retryable exceptions (like `IllegalArgumentException`) send the message dire
 To customize:
 
 ```yaml
-steppr-flow:
+stepprflow:
   retry:
     non-retryable-exceptions:
       - java.lang.IllegalArgumentException

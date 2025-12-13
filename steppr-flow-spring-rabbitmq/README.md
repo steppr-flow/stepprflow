@@ -23,30 +23,33 @@ stepprflow:
   enabled: true
   broker: rabbitmq
   rabbitmq:
-    exchange: stepprflow-exchange
-    exchange-type: topic
-    durable: true
-    auto-delete: false
-    concurrency: 3
-    prefetch: 10
-
-spring:
-  rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+    virtual-host: /
+    exchange: stepprflow.workflows
+    prefetch-count: 10
+    trusted-packages:
+      - io.stepprflow.core.model
+      - com.yourcompany.workflow
 ```
+
+> **Note:** All RabbitMQ configuration is under `stepprflow.rabbitmq.*`. You do not need to configure `spring.rabbitmq.*` separately.
 
 ### Configuration Properties
 
 | Property | Description | Default |
 |----------|-------------|---------|
-| `stepprflow.rabbitmq.exchange` | Exchange name | `stepprflow-exchange` |
-| `stepprflow.rabbitmq.exchange-type` | Exchange type | `topic` |
-| `stepprflow.rabbitmq.durable` | Durable queues | `true` |
-| `stepprflow.rabbitmq.concurrency` | Consumer concurrency | `1` |
-| `stepprflow.rabbitmq.prefetch` | Prefetch count | `10` |
+| `stepprflow.rabbitmq.host` | RabbitMQ host | `localhost` |
+| `stepprflow.rabbitmq.port` | RabbitMQ port | `5672` |
+| `stepprflow.rabbitmq.username` | Username | `guest` |
+| `stepprflow.rabbitmq.password` | Password | `guest` |
+| `stepprflow.rabbitmq.virtual-host` | Virtual host | `/` |
+| `stepprflow.rabbitmq.exchange` | Exchange name | `stepprflow.workflows` |
+| `stepprflow.rabbitmq.prefetch-count` | Prefetch count | `10` |
+| `stepprflow.rabbitmq.dlq-suffix` | DLQ suffix | `.dlq` |
+| `stepprflow.rabbitmq.trusted-packages` | Packages for deserialization | `[io.stepprflow.core.model]` |
 
 ## Features
 
@@ -59,8 +62,10 @@ spring:
 
 | Queue Pattern | Description |
 |---------------|-------------|
-| `stepprflow.{workflow-topic}` | Main workflow queue |
-| `stepprflow.{workflow-topic}.dlq` | Dead Letter Queue |
+| `{workflow-topic}` | Main workflow queue |
+| `{workflow-topic}.dlq` | Dead Letter Queue |
+| `{workflow-topic}.retry` | Retry queue |
+| `{workflow-topic}.completed` | Completed workflow queue |
 
 ## Usage
 

@@ -94,6 +94,12 @@
       </div>
     </div>
 
+    <!-- Health & Outbox Row -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <HealthPanel :health="health" />
+      <OutboxPanel :outbox="outbox" />
+    </div>
+
     <!-- Circuit Breakers -->
     <div class="bg-white border border-gray-100 rounded-lg">
       <div class="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
@@ -226,6 +232,8 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 import { useMetricsStore } from '@/stores/metrics'
 import StatsCard from '@/components/StatsCard.vue'
+import HealthPanel from '@/components/HealthPanel.vue'
+import OutboxPanel from '@/components/OutboxPanel.vue'
 import { format } from 'date-fns'
 
 const store = useMetricsStore()
@@ -238,6 +246,8 @@ const healthStatus = computed(() => store.healthStatus)
 const workflowsSorted = computed(() => store.workflowsSorted)
 const circuitBreakers = computed(() => store.circuitBreakers)
 const circuitBreakerConfig = computed(() => store.circuitBreakerConfig)
+const health = computed(() => store.health)
+const outbox = computed(() => store.outbox)
 
 const healthBannerClass = computed(() => ({
   'bg-emerald-50 border border-emerald-100': healthStatus.value === 'healthy',
@@ -269,9 +279,13 @@ onMounted(() => {
   store.fetchDashboard()
   store.fetchCircuitBreakers()
   store.fetchCircuitBreakerConfig()
+  store.fetchHealth()
+  store.fetchOutboxStats()
   interval = setInterval(() => {
     store.fetchDashboard()
     store.fetchCircuitBreakers()
+    store.fetchHealth()
+    store.fetchOutboxStats()
   }, 5000)
 })
 

@@ -14,7 +14,7 @@
 
     <artifactId>steppr-flow-spring-boot-starter</artifactId>
     <name>Steppr Flow Spring Boot Starter</name>
-    <description>Spring Boot starter for Steppr Flow workflow orchestration</description>
+    <description>Spring Boot starter for Steppr Flow workflow orchestration with persistence and monitoring</description>
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
@@ -31,6 +31,24 @@
         <dependency>
             <groupId>io.stepprflow</groupId>
             <artifactId>steppr-flow-spring-kafka</artifactId>
+        </dependency>
+
+        <!-- Monitor module (persistence, metrics, resume/retry) -->
+        <dependency>
+            <groupId>io.stepprflow</groupId>
+            <artifactId>steppr-flow-spring-monitor</artifactId>
+        </dependency>
+
+        <!-- MongoDB for workflow execution persistence -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+        <!-- Actuator for metrics (MeterRegistry) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
         <dependency>

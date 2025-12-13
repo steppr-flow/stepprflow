@@ -18,11 +18,12 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
+        <!-- Sample modules don't require coverage checks -->
+        <jacoco.skip>true</jacoco.skip>
     </properties>
 
     <dependencies>
-        <!-- Steppr Flow Spring Boot Starter (lightweight - no monitoring endpoints) -->
-        <!-- For monitoring, deploy steppr-flow-dashboard separately via Docker -->
+        <!-- Steppr Flow Spring Boot Starter (includes persistence, metrics, resume/retry) -->
         <dependency>
             <groupId>io.stepprflow</groupId>
             <artifactId>steppr-flow-spring-boot-starter</artifactId>

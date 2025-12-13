@@ -18,17 +18,18 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
+        <!-- Sample modules don't require coverage checks -->
+        <jacoco.skip>true</jacoco.skip>
     </properties>
 
     <dependencies>
-        <!-- Steppr Flow Spring Boot Starter (lightweight - no monitoring endpoints) -->
-        <!-- For monitoring, deploy steppr-flow-dashboard separately via Docker -->
+        <!-- Steppr Flow Spring Boot Starter (includes persistence, metrics, resume/retry) -->
         <dependency>
             <groupId>io.stepprflow</groupId>
             <artifactId>steppr-flow-spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- RabbitMQ broker -->
+        <!-- RabbitMQ broker (overrides default Kafka) -->
         <dependency>
             <groupId>io.stepprflow</groupId>
             <artifactId>steppr-flow-spring-rabbitmq</artifactId>
@@ -61,7 +62,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>io.stepprflow.sample.KafkaSampleApplication</mainClass>
+                    <mainClass>io.stepprflow.sample.RabbitmqSampleApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>

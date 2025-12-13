@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { metricsApi, circuitBreakerApi } from '@/services/api'
+import { metricsApi, circuitBreakerApi, healthApi, outboxApi } from '@/services/api'
 
 export const useMetricsStore = defineStore('metrics', () => {
   // State
@@ -24,6 +24,22 @@ export const useMetricsStore = defineStore('metrics', () => {
   // Circuit Breakers state
   const circuitBreakers = ref([])
   const circuitBreakerConfig = ref(null)
+
+  // Health state
+  const health = ref({
+    status: 'UP',
+    components: {}
+  })
+
+  // Outbox state
+  const outbox = ref({
+    pending: 0,
+    sent: 0,
+    failed: 0,
+    total: 0,
+    sendRate: 0,
+    health: 'UP'
+  })
 
   // Computed
   const totalProcessed = computed(() =>
@@ -121,6 +137,35 @@ export const useMetricsStore = defineStore('metrics', () => {
     }
   }
 
+  // Health actions
+  async function fetchHealth() {
+    try {
+      const { data } = await healthApi.getHealth()
+      health.value = data || { status: 'UP', components: {} }
+    } catch (e) {
+      console.error('Failed to fetch health:', e)
+      health.value = { status: 'DOWN', components: {} }
+    }
+  }
+
+  // Outbox actions
+  async function fetchOutboxStats() {
+    try {
+      const { data } = await outboxApi.getStats()
+      outbox.value = data || {
+        pending: 0,
+        sent: 0,
+        failed: 0,
+        total: 0,
+        sendRate: 0,
+        health: 'UP'
+      }
+    } catch (e) {
+      console.error('Failed to fetch outbox stats:', e)
+      // Keep previous values on error
+    }
+  }
+
   return {
     // State
     dashboard,
@@ -129,6 +174,8 @@ export const useMetricsStore = defineStore('metrics', () => {
     lastUpdated,
     circuitBreakers,
     circuitBreakerConfig,
+    health,
+    outbox,
     // Computed
     totalProcessed,
     healthStatus,
@@ -139,6 +186,8 @@ export const useMetricsStore = defineStore('metrics', () => {
     fetchCircuitBreakers,
     fetchCircuitBreakerConfig,
     resetCircuitBreaker,
+    fetchHealth,
+    fetchOutboxStats,
     clearError
   }
 })

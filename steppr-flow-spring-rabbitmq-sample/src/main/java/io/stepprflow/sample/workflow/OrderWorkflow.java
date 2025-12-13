@@ -6,7 +6,7 @@ import io.stepprflow.core.annotation.Step;
 import io.stepprflow.core.annotation.Timeout;
 import io.stepprflow.core.annotation.Topic;
 import io.stepprflow.core.model.WorkflowMessage;
-import io.stepprflow.core.StepprFlow;
+import io.stepprflow.core.service.StepprFlow;
 import io.stepprflow.sample.exception.InsufficientInventoryException;
 import io.stepprflow.sample.model.OrderPayload;
 import io.stepprflow.sample.service.InventoryService;

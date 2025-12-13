@@ -91,6 +91,7 @@ public class RabbitMQBrokerAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @org.springframework.context.annotation.DependsOn("workflowRegistry")
     public RabbitMQQueueInitializer rabbitMQQueueInitializer(
             WorkflowRegistry workflowRegistry,
             RabbitAdmin rabbitAdmin,

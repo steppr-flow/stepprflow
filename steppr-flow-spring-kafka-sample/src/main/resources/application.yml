@@ -2,31 +2,33 @@ spring:
   application:
     name: stepprflow-kafka-sample
 
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: ${spring.application.name}-workers
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-        spring.json.value.default.type: io.stepprflow.core.model.WorkflowMessage
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-
 server:
   port: 8010
 
 stepprflow:
   broker: kafka
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: ${spring.application.name}-workers
+      auto-offset-reset: earliest
+      concurrency: 1
+    producer:
+      acks: all
+      retries: 3
+    trusted-packages:
+      - io.stepprflow.core.model
+      - io.stepprflow.sample.model
   agent:
     server-url: http://localhost:8090
     auto-register: true
+  monitor:
+    web-socket:
+      enabled: false
 
 logging:
   level:
     io.stepprflow: DEBUG
     io.stepprflow.sample: DEBUG
+    io.stepprflow.monitor: DEBUG
+    org.springframework.data.mongodb: DEBUG

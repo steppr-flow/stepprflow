@@ -24,8 +24,6 @@ stepprflow:
   broker: kafka
   kafka:
     bootstrap-servers: localhost:9092
-    trusted-packages:
-      - com.yourcompany.workflow
     consumer:
       group-id: stepprflow-workers
       auto-offset-reset: earliest
@@ -33,11 +31,12 @@ stepprflow:
     producer:
       acks: all
       retries: 3
-
-spring:
-  kafka:
-    bootstrap-servers: localhost:9092
+    trusted-packages:
+      - io.stepprflow.core.model
+      - com.yourcompany.workflow
 ```
+
+> **Note:** All Kafka configuration is under `stepprflow.kafka.*`. You do not need to configure `spring.kafka.*` separately.
 
 ### Configuration Properties
 

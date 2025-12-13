@@ -11,16 +11,17 @@ import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
-import org.springframework.beans.factory.SmartInitializingSingleton;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Initializes RabbitMQ queues, exchanges and bindings for workflows.
+ * Uses @PostConstruct to initialize after WorkflowRegistry has scanned workflows
+ * (via @DependsOn in auto-configuration).
  */
 @Slf4j
-public class RabbitMQQueueInitializer implements SmartInitializingSingleton {
+public class RabbitMQQueueInitializer {
 
     private final WorkflowRegistry workflowRegistry;
     private final RabbitAdmin rabbitAdmin;
@@ -37,8 +38,12 @@ public class RabbitMQQueueInitializer implements SmartInitializingSingleton {
         this.properties = properties;
     }
 
-    @Override
-    public void afterSingletonsInstantiated() {
+    /**
+     * Initialize queues. Called after WorkflowRegistry is populated.
+     * Must run before RabbitListener containers start.
+     */
+    @jakarta.annotation.PostConstruct
+    public void init() {
         initializeQueues();
     }
 
@@ -128,6 +133,7 @@ public class RabbitMQQueueInitializer implements SmartInitializingSingleton {
         // Create completed queue
         Queue completedQueue = QueueBuilder.durable(completedQueueName).build();
         rabbitAdmin.declareQueue(completedQueue);
+        workflowQueueNames.add(completedQueueName);
         log.debug("Declared completed queue: {}", completedQueueName);
 
         // Bind completed queue

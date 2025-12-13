@@ -9,7 +9,6 @@ import io.stepprflow.core.model.StepDefinition;
 import io.stepprflow.core.model.WorkflowDefinition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -24,14 +23,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Registry for workflow definitions.
  *
- * <p>Scans for @Topic annotated beans on startup.
- * Implements SmartInitializingSingleton to ensure all beans are created
- * before scanning.
+ * <p>Scans for @Topic annotated beans on startup using @PostConstruct.
+ * This ensures workflows are registered before RabbitMQ listeners start.
  */
 @Component("workflowRegistry")
 @RequiredArgsConstructor
 @Slf4j
-public class WorkflowRegistry implements SmartInitializingSingleton {
+public class WorkflowRegistry {
 
     /** The Spring application context. */
     private final ApplicationContext applicationContext;
@@ -39,8 +37,8 @@ public class WorkflowRegistry implements SmartInitializingSingleton {
     /** Map of topic names to workflow definitions. */
     private final Map<String, WorkflowDefinition> definitions = new ConcurrentHashMap<>();
 
-    @Override
-    public void afterSingletonsInstantiated() {
+    @jakarta.annotation.PostConstruct
+    public void init() {
         log.info("Scanning for workflow definitions...");
 
         Map<String, Object> beans = applicationContext.getBeansWithAnnotation(Topic.class);

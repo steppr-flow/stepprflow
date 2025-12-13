@@ -23,7 +23,7 @@ This module provides:
 ## Configuration
 
 ```yaml
-steppr-flow:
+stepprflow:
   monitor:
     enabled: true
     retry:
@@ -33,11 +33,13 @@ steppr-flow:
       enabled: true
       retention-days: 30
 
-spring:
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/stepprflow
+  # MongoDB configuration (defaults shown)
+  mongodb:
+    uri: mongodb://localhost:27017/stepprflow
+    database: stepprflow
 ```
+
+> **Note:** MongoDB configuration is handled internally by Steppr Flow via `stepprflow.mongodb.*` properties. You do not need to configure `spring.data.mongodb` separately.
 
 ## REST API
 

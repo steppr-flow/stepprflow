@@ -153,6 +153,16 @@ export const circuitBreakerApi = {
   reset: (name) => api.post(`/circuit-breakers/${name}/reset`)
 }
 
+// Health endpoints (monitor module)
+export const healthApi = {
+  getHealth: () => api.get('/health')
+}
+
+// Outbox endpoints (monitor module)
+export const outboxApi = {
+  getStats: () => api.get('/outbox/stats')
+}
+
 // Workflow execution endpoints (monitor module - /api/workflows)
 export const executionApi = {
   // List executions with pagination and filters

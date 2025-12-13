@@ -1,11 +1,16 @@
 package io.stepprflow.monitor.service;
 
 import io.stepprflow.core.broker.MessageBroker;
+import io.stepprflow.core.exception.MessageSendException;
 import io.stepprflow.core.model.WorkflowMessage;
 import io.stepprflow.core.model.WorkflowStatus;
+import io.stepprflow.monitor.exception.ConcurrentModificationException;
+import io.stepprflow.monitor.exception.WorkflowResumeException;
 import io.stepprflow.monitor.model.WorkflowExecution;
+import io.stepprflow.monitor.outbox.OutboxService;
 import io.stepprflow.monitor.repository.WorkflowExecutionRepository;
 import io.stepprflow.monitor.util.WorkflowMessageFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -232,6 +239,59 @@ class WorkflowCommandServiceTest {
             assertThat(attempt.getPayloadChanges()).hasSize(1);
             assertThat(attempt.getPayloadChanges().get(0).getFieldPath()).isEqualTo("orderId");
         }
+
+        @Test
+        @DisplayName("Should use outbox when enabled")
+        void shouldUseOutboxWhenEnabled() {
+            // Create service with outbox
+            OutboxService outboxService = org.mockito.Mockito.mock(OutboxService.class);
+            when(outboxService.isEnabled()).thenReturn(true);
+            when(outboxService.enqueueResume(eq("test-topic"), any(WorkflowMessage.class)))
+                    .thenReturn("outbox-123");
+
+            WorkflowCommandService serviceWithOutbox = new WorkflowCommandService(
+                    repository, messageBroker, messageFactory, outboxService);
+
+            testExecution.setStatus(WorkflowStatus.FAILED);
+            testExecution.setExecutionAttempts(new ArrayList<>());
+            WorkflowMessage resumeMessage = WorkflowMessage.builder().build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(testExecution));
+            when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(messageFactory.createResumeMessage(any(), anyInt())).thenReturn(resumeMessage);
+
+            serviceWithOutbox.resume("exec-123", null, "UI User");
+
+            verify(outboxService).enqueueResume("test-topic", resumeMessage);
+            verify(messageBroker, never()).sendSync(any(), any());
+        }
+
+        @Test
+        @DisplayName("Should throw WorkflowResumeException when broker send fails")
+        void shouldThrowWorkflowResumeExceptionWhenBrokerFails() {
+            testExecution.setStatus(WorkflowStatus.FAILED);
+            testExecution.setExecutionAttempts(new ArrayList<>());
+            WorkflowMessage resumeMessage = WorkflowMessage.builder().build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(testExecution));
+            when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(messageFactory.createResumeMessage(any(), anyInt())).thenReturn(resumeMessage);
+            doThrow(new MessageSendException("kafka", "test-topic", "Connection failed"))
+                    .when(messageBroker).sendSync(any(), any());
+
+            assertThatThrownBy(() -> commandService.resume("exec-123", null, "UI User"))
+                    .isInstanceOf(WorkflowResumeException.class);
+        }
+
+        @Test
+        @DisplayName("Should throw ConcurrentModificationException on optimistic lock failure")
+        void shouldThrowConcurrentModificationExceptionOnLockFailure() {
+            testExecution.setStatus(WorkflowStatus.FAILED);
+            testExecution.setExecutionAttempts(new ArrayList<>());
+            when(repository.findById("exec-123")).thenReturn(Optional.of(testExecution));
+            when(repository.save(any())).thenThrow(new OptimisticLockingFailureException("Concurrent update"));
+
+            assertThatThrownBy(() -> commandService.resume("exec-123", null, "UI User"))
+                    .isInstanceOf(ConcurrentModificationException.class);
+        }
     }
 
     @Nested
@@ -307,5 +367,17 @@ class WorkflowCommandServiceTest {
 
             verify(repository).save(any(WorkflowExecution.class));
         }
+
+        @Test
+        @DisplayName("Should throw ConcurrentModificationException on optimistic lock failure")
+        void shouldThrowConcurrentModificationExceptionOnLockFailure() {
+            testExecution.setStatus(WorkflowStatus.IN_PROGRESS);
+            when(repository.findById("exec-123")).thenReturn(Optional.of(testExecution));
+            when(repository.save(any())).thenThrow(new OptimisticLockingFailureException("Concurrent update"));
+
+            assertThatThrownBy(() -> commandService.cancel("exec-123"))
+                    .isInstanceOf(ConcurrentModificationException.class);
+        }
     }
 }
+

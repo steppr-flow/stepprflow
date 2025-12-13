@@ -134,5 +134,24 @@ public class MonitorProperties {
          * Interval for cleaning up old sent messages.
          */
         private Duration cleanupInterval = Duration.ofHours(1);
+
+        /**
+         * Health check configuration.
+         */
+        private OutboxHealth health = new OutboxHealth();
+    }
+
+    @Data
+    public static class OutboxHealth {
+        /**
+         * Threshold for pending messages before health check reports DOWN.
+         */
+        private long pendingThreshold = 1000;
+
+        /**
+         * Threshold for failed messages before health check reports DOWN.
+         * Default is 0, meaning any failed message triggers unhealthy status.
+         */
+        private long failedThreshold = 0;
     }
 }

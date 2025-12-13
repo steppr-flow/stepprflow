@@ -50,7 +50,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
             assertThat(definition).isNotNull();
@@ -65,7 +65,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("nonWorkflow", nonWorkflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             assertThat(workflowRegistry.getTopics()).isEmpty();
         }
@@ -80,7 +80,7 @@ class WorkflowRegistryTest {
             beans.put("anotherWorkflow", workflow2);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             assertThat(workflowRegistry.getTopics()).hasSize(2);
             assertThat(workflowRegistry.getTopics()).containsExactlyInAnyOrder("test-workflow", "another-workflow");
@@ -98,7 +98,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
             assertThat(definition.getTotalSteps()).isEqualTo(3);
@@ -111,7 +111,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
             List<StepDefinition> steps = definition.getSteps();
@@ -128,7 +128,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
             StepDefinition step1 = definition.getStep(1);
@@ -144,7 +144,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
             StepDefinition step2 = definition.getStep(2);
@@ -165,7 +165,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("workflowWithTimeout", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("timeout-workflow");
             StepDefinition step = definition.getStep(1);
@@ -180,7 +180,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("workflowWithTimeout", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("timeout-workflow");
 
@@ -199,7 +199,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
 
@@ -214,7 +214,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
 
@@ -234,7 +234,7 @@ class WorkflowRegistryTest {
             Map<String, Object> beans = Map.of("testWorkflow", workflow);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
 
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
 
             WorkflowDefinition definition = workflowRegistry.getDefinition("test-workflow");
 
@@ -255,7 +255,7 @@ class WorkflowRegistryTest {
             beans.put("testWorkflow", workflow1);
             beans.put("anotherWorkflow", workflow2);
             when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
-            workflowRegistry.afterSingletonsInstantiated();
+            workflowRegistry.init();
         }
 
         @Test

@@ -16,20 +16,19 @@ This sample implements an order processing workflow with 5 steps:
 
 - Java 21+
 - Maven 3.8+
-- Docker & Docker Compose
+- Docker
 
 ## Quick Start
 
-### 1. Start Kafka
+### 1. Start Infrastructure
 
 ```bash
-cd steppr-flow-kafka-sample
-docker-compose up -d
+# MongoDB (required for persistence)
+docker run -d --name mongodb -p 27017:27017 mongo:latest
+
+# Kafka
+docker run -d --name kafka -p 9092:9092 apache/kafka:latest
 ```
-
-Wait for Kafka to be ready (about 30 seconds).
-
-Kafka UI is available at: http://localhost:8090
 
 ### 2. Build and Run
 
@@ -38,7 +37,7 @@ Kafka UI is available at: http://localhost:8090
 mvn clean install -DskipTests
 
 # Run the sample
-cd steppr-flow-kafka-sample
+cd steppr-flow-spring-kafka-sample
 mvn spring-boot:run
 ```
 
@@ -107,13 +106,28 @@ You'll see the workflow executing step by step:
 === ORDER WORKFLOW COMPLETED ===
 ```
 
-## API Endpoints
+### 5. Check Workflow State in MongoDB
+
+```bash
+docker exec -it mongodb mongosh stepprflow --eval "db.workflowExecutions.find().pretty()"
+```
+
+## Monitoring API
+
+The starter includes a REST API for workflow monitoring:
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workflows` | List all executions |
+| GET | `/api/workflows/{id}` | Get execution details |
+| POST | `/api/workflows/{id}/resume` | Resume a failed workflow |
+| POST | `/api/workflows/{id}/cancel` | Cancel a workflow |
+
+## Sample API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/orders` | Create a new order |
-| POST | `/api/orders/{executionId}/resume` | Resume a failed workflow |
-| DELETE | `/api/orders/{executionId}` | Cancel an order |
 
 ## Testing Failures
 
@@ -121,12 +135,12 @@ The PaymentService has a 10% chance of failing to simulate real-world conditions
 
 1. The workflow stops at step 3
 2. `@OnFailure` callback is triggered
-3. You can see the error in logs
+3. The state is persisted in MongoDB
 
 To resume after fixing the issue:
 
 ```bash
-curl -X POST "http://localhost:8080/api/orders/{executionId}/resume?fromStep=3"
+curl -X POST "http://localhost:8010/api/workflows/{executionId}/resume"
 ```
 
 ## Testing Inventory Issues
@@ -161,5 +175,6 @@ curl -X POST http://localhost:8010/api/orders \
 ## Cleanup
 
 ```bash
-docker-compose down -v
+docker stop mongodb kafka
+docker rm mongodb kafka
 ```

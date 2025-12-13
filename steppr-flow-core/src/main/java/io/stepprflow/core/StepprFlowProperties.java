@@ -58,6 +58,11 @@ public class StepprFlowProperties {
     private Timeout timeout = new Timeout();
 
     /**
+     * MongoDB configuration for persistence.
+     */
+    private MongoDB mongodb = new MongoDB();
+
+    /**
      * Supported broker types.
      */
     public enum BrokerType {
@@ -359,5 +364,21 @@ public class StepprFlowProperties {
          * Default timeout for steps without explicit timeout.
          */
         private Duration defaultStepTimeout = Duration.ofMinutes(5);
+    }
+
+    /**
+     * MongoDB configuration for workflow persistence.
+     */
+    @Data
+    public static class MongoDB {
+        /**
+         * MongoDB connection URI.
+         */
+        private String uri = "mongodb://localhost:27017/stepprflow";
+
+        /**
+         * Database name (extracted from URI if not specified).
+         */
+        private String database = "stepprflow";
     }
 }

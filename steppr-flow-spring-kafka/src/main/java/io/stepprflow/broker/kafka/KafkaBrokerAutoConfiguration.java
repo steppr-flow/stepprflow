@@ -90,6 +90,8 @@ public class KafkaBrokerAutoConfiguration {
         config.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, 10240); // 10KB min fetch
         config.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 500); // Wait max 500ms
         config.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 500); // More records per poll
+        // Topic discovery - refresh metadata every 30 seconds for topicPattern matching
+        config.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, 30000); // 30 seconds
 
         String groupId = properties.getKafka().getConsumer().getGroupId();
         if (groupId != null && !groupId.isEmpty()) {

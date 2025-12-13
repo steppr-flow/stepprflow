@@ -50,6 +50,8 @@ public class ExecutionPersistenceService {
     @Async
     @EventListener
     public void handleWorkflowMessageEvent(WorkflowMessageEvent event) {
+        log.info("Received WorkflowMessageEvent: executionId={}, status={}",
+                event.getMessage().getExecutionId(), event.getMessage().getStatus());
         onWorkflowMessage(event.getMessage());
     }
 
@@ -71,6 +73,8 @@ public class ExecutionPersistenceService {
 
         updateExecution(execution, message);
         repository.save(execution);
+        log.info("Persisted workflow execution: executionId={}, status={}",
+                message.getExecutionId(), message.getStatus());
 
         // Notify via WebSocket (if available)
         if (broadcaster != null) {
