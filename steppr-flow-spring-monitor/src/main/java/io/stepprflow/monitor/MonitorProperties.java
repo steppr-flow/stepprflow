@@ -39,6 +39,11 @@ public class MonitorProperties {
      */
     private Registry registry = new Registry();
 
+    /**
+     * Outbox configuration for reliable message delivery.
+     */
+    private Outbox outbox = new Outbox();
+
     @Data
     public static class WebSocket {
         private boolean enabled = true;
@@ -84,5 +89,50 @@ public class MonitorProperties {
          * Interval for running the stale instance cleanup job.
          */
         private Duration cleanupInterval = Duration.ofMinutes(1);
+    }
+
+    @Data
+    public static class Outbox {
+        /**
+         * Enable the transactional outbox pattern for reliable message delivery.
+         * When enabled, messages are first written to an outbox collection,
+         * then sent by a background relay process.
+         */
+        private boolean enabled = true;
+
+        /**
+         * Interval for polling pending outbox messages.
+         */
+        private Duration pollInterval = Duration.ofSeconds(1);
+
+        /**
+         * Batch size for processing outbox messages.
+         */
+        private int batchSize = 100;
+
+        /**
+         * Maximum number of send attempts before marking a message as failed.
+         */
+        private int maxAttempts = 5;
+
+        /**
+         * Base delay for exponential backoff (in milliseconds).
+         */
+        private long baseDelayMs = 1000;
+
+        /**
+         * Maximum delay for exponential backoff (in milliseconds).
+         */
+        private long maxDelayMs = 60000;
+
+        /**
+         * Retention period for sent messages before cleanup.
+         */
+        private Duration sentRetention = Duration.ofHours(24);
+
+        /**
+         * Interval for cleaning up old sent messages.
+         */
+        private Duration cleanupInterval = Duration.ofHours(1);
     }
 }

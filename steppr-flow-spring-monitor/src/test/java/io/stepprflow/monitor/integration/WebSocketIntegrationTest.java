@@ -69,6 +69,8 @@ class WebSocketIntegrationTest {
         registry.add("stepprflow.monitor.web-socket.topic-prefix", () -> "/topic/workflow");
         // Disable retry scheduler
         registry.add("stepprflow.monitor.retry-scheduler.enabled", () -> false);
+        // Disable outbox (requires MongoDB repository)
+        registry.add("stepprflow.monitor.outbox.enabled", () -> false);
     }
 
     @LocalServerPort

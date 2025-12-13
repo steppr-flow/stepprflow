@@ -7,10 +7,11 @@ import io.stepprflow.core.model.WorkflowStatus;
 import io.stepprflow.monitor.exception.ConcurrentModificationException;
 import io.stepprflow.monitor.exception.WorkflowResumeException;
 import io.stepprflow.monitor.model.WorkflowExecution;
+import io.stepprflow.monitor.outbox.OutboxService;
 import io.stepprflow.monitor.repository.WorkflowExecutionRepository;
 import io.stepprflow.monitor.util.WorkflowMessageFactory;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
@@ -21,28 +22,49 @@ import java.util.List;
 /**
  * Service for workflow command operations.
  * Handles state-changing operations like resume and cancel.
+ *
+ * <p>When the Transactional Outbox is enabled, messages are written to the outbox
+ * collection in the same transaction as execution updates, ensuring consistency.
+ * A background relay process then sends messages to the broker.
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class WorkflowCommandService {
 
     private final WorkflowExecutionRepository repository;
     private final MessageBroker messageBroker;
     private final WorkflowMessageFactory messageFactory;
+    private final OutboxService outboxService;
+
+    @Autowired
+    public WorkflowCommandService(
+            WorkflowExecutionRepository repository,
+            MessageBroker messageBroker,
+            WorkflowMessageFactory messageFactory,
+            @Autowired(required = false) OutboxService outboxService) {
+        this.repository = repository;
+        this.messageBroker = messageBroker;
+        this.messageFactory = messageFactory;
+        this.outboxService = outboxService;
+    }
 
     /**
      * Resume a failed or paused workflow.
      *
-     * <p>This operation follows a "save-first" pattern:
+     * <p>When Transactional Outbox is enabled:
+     * <ol>
+     *   <li>Validate execution status</li>
+     *   <li>Create and persist a new execution attempt</li>
+     *   <li>Write resume message to outbox (same transaction)</li>
+     *   <li>Background relay sends to broker</li>
+     * </ol>
+     *
+     * <p>When Outbox is disabled (fallback):
      * <ol>
      *   <li>Validate execution status</li>
      *   <li>Create and persist a new execution attempt</li>
      *   <li>Send the resume message to the broker synchronously</li>
      * </ol>
-     *
-     * <p>If the broker send fails after persistence, a {@link WorkflowResumeException}
-     * is thrown. The execution attempt remains persisted, and the operation can be retried.
      *
      * @param executionId the workflow execution ID
      * @param fromStep optional step to resume from (defaults to current step)
@@ -50,7 +72,7 @@ public class WorkflowCommandService {
      * @throws IllegalArgumentException if execution not found
      * @throws IllegalStateException if execution status doesn't allow resume
      * @throws ConcurrentModificationException if concurrent modification detected
-     * @throws WorkflowResumeException if broker send fails after persistence
+     * @throws WorkflowResumeException if broker send fails (only when outbox disabled)
      */
     public void resume(String executionId, Integer fromStep, String resumedBy) {
         WorkflowExecution execution = repository.findById(executionId)
@@ -67,16 +89,36 @@ public class WorkflowCommandService {
         // Create a new execution attempt (persisted to DB)
         int attemptNumber = createExecutionAttempt(execution, step, resumedBy);
 
-        // Create and send the resume message synchronously
+        // Create the resume message
         WorkflowMessage message = messageFactory.createResumeMessage(execution, step);
 
         log.info("Resuming workflow {} from step {} (attempt {})", executionId, step, attemptNumber);
 
+        if (isOutboxEnabled()) {
+            // Use Transactional Outbox for reliable delivery
+            String outboxId = outboxService.enqueueResume(execution.getTopic(), message);
+            log.info("Resume message enqueued to outbox (id={}) for workflow {}", outboxId, executionId);
+        } else {
+            // Fallback to direct send
+            sendDirectly(executionId, attemptNumber, execution.getTopic(), message);
+        }
+    }
+
+    /**
+     * Check if outbox is enabled and available.
+     */
+    private boolean isOutboxEnabled() {
+        return outboxService != null && outboxService.isEnabled();
+    }
+
+    /**
+     * Send message directly to broker (fallback when outbox is disabled).
+     */
+    private void sendDirectly(String executionId, int attemptNumber, String topic, WorkflowMessage message) {
         try {
-            messageBroker.sendSync(execution.getTopic(), message);
+            messageBroker.sendSync(topic, message);
             log.info("Resume message sent successfully for workflow {}", executionId);
         } catch (MessageSendException e) {
-            // Log the partial failure state - execution attempt is persisted but message not sent
             log.error("Failed to send resume message for workflow {} (attempt {}). " +
                       "Execution attempt is persisted. Retry the resume operation.",
                       executionId, attemptNumber, e);
