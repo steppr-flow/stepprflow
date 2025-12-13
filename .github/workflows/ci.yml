@@ -338,6 +338,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Install project (required for analysis)
+        run: mvn -B install -DskipTests --file pom.xml
+
       - name: OWASP Dependency Check
         run: mvn -B org.owasp:dependency-check-maven:check --file pom.xml
         continue-on-error: true
