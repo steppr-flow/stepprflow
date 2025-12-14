@@ -223,7 +223,7 @@ Recommended extensions:
 2. Add `pom.xml` with parent reference:
 ```xml
 <parent>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </parent>

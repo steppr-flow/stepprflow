@@ -10,7 +10,7 @@ This module provides RabbitMQ-based message transport for Steppr Flow workflows,
 
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-rabbitmq</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>

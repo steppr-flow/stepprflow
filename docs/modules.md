@@ -36,7 +36,7 @@ steppr-flow/
 **Usage:**
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-core</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
@@ -60,7 +60,7 @@ steppr-flow/
 **Usage:**
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-kafka</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
@@ -95,7 +95,7 @@ steppr-flow:
 **Usage:**
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-rabbitmq</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
@@ -161,7 +161,7 @@ steppr-flow:
 **Usage:**
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-boot-starter</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
