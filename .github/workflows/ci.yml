@@ -40,42 +40,42 @@ jobs:
         with:
           filters: |
             core:
-              - 'steppr-flow-core/**'
+              - 'stepprflow-core/**'
               - 'pom.xml'
             kafka:
-              - 'steppr-flow-spring-kafka/**'
-              - 'steppr-flow-core/**'
+              - 'stepprflow-spring-kafka/**'
+              - 'stepprflow-core/**'
               - 'pom.xml'
             rabbitmq:
-              - 'steppr-flow-spring-rabbitmq/**'
-              - 'steppr-flow-core/**'
+              - 'stepprflow-spring-rabbitmq/**'
+              - 'stepprflow-core/**'
               - 'pom.xml'
             monitor:
-              - 'steppr-flow-spring-monitor/**'
-              - 'steppr-flow-core/**'
+              - 'stepprflow-spring-monitor/**'
+              - 'stepprflow-core/**'
               - 'pom.xml'
             starter:
-              - 'steppr-flow-spring-boot-starter/**'
-              - 'steppr-flow-core/**'
+              - 'stepprflow-spring-boot-starter/**'
+              - 'stepprflow-core/**'
               - 'pom.xml'
             dashboard:
-              - 'steppr-flow-dashboard/**'
-              - 'steppr-flow-spring-monitor/**'
-              - 'steppr-flow-spring-kafka/**'
-              - 'steppr-flow-core/**'
+              - 'stepprflow-dashboard/**'
+              - 'stepprflow-spring-monitor/**'
+              - 'stepprflow-spring-kafka/**'
+              - 'stepprflow-core/**'
               - 'pom.xml'
             ui:
-              - 'steppr-flow-ui/**'
+              - 'stepprflow-ui/**'
             samples:
-              - 'steppr-flow-kafka-sample/**'
-              - 'steppr-flow-rabbitmq-sample/**'
+              - 'stepprflow-kafka-sample/**'
+              - 'stepprflow-rabbitmq-sample/**'
             backend-any:
-              - 'steppr-flow-core/**'
-              - 'steppr-flow-spring-kafka/**'
-              - 'steppr-flow-spring-rabbitmq/**'
-              - 'steppr-flow-spring-monitor/**'
-              - 'steppr-flow-spring-boot-starter/**'
-              - 'steppr-flow-dashboard/**'
+              - 'stepprflow-core/**'
+              - 'stepprflow-spring-kafka/**'
+              - 'stepprflow-spring-rabbitmq/**'
+              - 'stepprflow-spring-monitor/**'
+              - 'stepprflow-spring-boot-starter/**'
+              - 'stepprflow-dashboard/**'
               - 'pom.xml'
 
   # ===========================================
@@ -147,7 +147,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: steppr-flow-ui
+        working-directory: stepprflow-ui
 
     steps:
       - name: Checkout code
@@ -158,7 +158,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: steppr-flow-ui/package-lock.json
+          cache-dependency-path: stepprflow-ui/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -176,7 +176,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: frontend-dist
-          path: steppr-flow-ui/dist
+          path: stepprflow-ui/dist
           retention-days: 7
 
   # ===========================================
@@ -258,7 +258,7 @@ jobs:
           echo "Services ready!"
 
       - name: Run Kafka integration tests
-        run: mvn -B verify -DskipUnitTests -pl steppr-flow-spring-kafka -am --file pom.xml
+        run: mvn -B verify -DskipUnitTests -pl stepprflow-spring-kafka -am --file pom.xml
         env:
           SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/stepprflow-test
           SPRING_KAFKA_BOOTSTRAP_SERVERS: localhost:9092
@@ -307,7 +307,7 @@ jobs:
           echo "Services ready!"
 
       - name: Run RabbitMQ integration tests
-        run: mvn -B verify -DskipUnitTests -pl steppr-flow-spring-rabbitmq -am --file pom.xml
+        run: mvn -B verify -DskipUnitTests -pl stepprflow-spring-rabbitmq -am --file pom.xml
         env:
           SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/stepprflow-test
           SPRING_RABBITMQ_HOST: localhost

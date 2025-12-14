@@ -43,7 +43,7 @@ npm run preview
 ## Project Structure
 
 ```
-steppr-flow-ui/
+stepprflow-ui/
 ├── src/
 │   ├── components/       # Reusable Vue components
 │   │   ├── PayloadEditor.vue
@@ -84,10 +84,10 @@ export default defineConfig({
 
 ```bash
 # Build image
-docker build -t steppr-flow-ui .
+docker build -t stepprflow-ui .
 
 # Run container
-docker run -p 3000:80 steppr-flow-ui
+docker run -p 3000:80 stepprflow-ui
 ```
 
 ## Screenshots

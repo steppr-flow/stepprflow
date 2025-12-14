@@ -18,12 +18,12 @@ Spring Boot framework for orchestrating asynchronous multi-step workflows via me
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-core</artifactId>
+    <artifactId>stepprflow-core</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
-> **Note:** For most use cases, you should use `steppr-flow-spring-boot-starter` which includes this module along with auto-configuration.
+> **Note:** For most use cases, you should use `stepprflow-spring-boot-starter` which includes this module along with auto-configuration.
 
 ## Quick Start
 

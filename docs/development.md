@@ -43,9 +43,9 @@ steppr-flow/
 ├── config/
 │   └── checkstyle/         # Checkstyle configuration
 ├── docs/                   # Documentation
-├── steppr-flow-core/       # Core module
-├── steppr-flow-spring-*/   # Spring integrations
-├── steppr-flow-ui/         # Vue.js frontend
+├── stepprflow-core/       # Core module
+├── stepprflow-spring-*/   # Spring integrations
+├── stepprflow-ui/         # Vue.js frontend
 └── pom.xml                 # Parent POM
 ```
 
@@ -53,12 +53,12 @@ steppr-flow/
 
 Build a specific module:
 ```bash
-mvn -pl steppr-flow-core clean install
+mvn -pl stepprflow-core clean install
 ```
 
 Build with dependencies:
 ```bash
-mvn -pl steppr-flow-spring-kafka -am clean install
+mvn -pl stepprflow-spring-kafka -am clean install
 ```
 
 ## Running the Sample Applications
@@ -67,7 +67,7 @@ mvn -pl steppr-flow-spring-kafka -am clean install
 
 1. Start infrastructure:
 ```bash
-cd steppr-flow-kafka-sample
+cd stepprflow-kafka-sample
 docker-compose up -d
 ```
 
@@ -87,7 +87,7 @@ curl -X POST http://localhost:8080/api/orders \
 
 1. Start infrastructure:
 ```bash
-cd steppr-flow-rabbitmq-sample
+cd stepprflow-rabbitmq-sample
 docker-compose up -d
 ```
 
@@ -101,7 +101,7 @@ mvn spring-boot:run
 ### Option 1: Standalone Dashboard
 
 ```bash
-cd steppr-flow-dashboard
+cd stepprflow-dashboard
 docker-compose up -d  # Start Kafka & MongoDB
 mvn spring-boot:run
 ```
@@ -119,7 +119,7 @@ docker-compose up -d
 ### Setup
 
 ```bash
-cd steppr-flow-ui
+cd stepprflow-ui
 npm install
 ```
 
@@ -192,7 +192,7 @@ Reports are generated in `target/site/jacoco/index.html`.
 ### Load Tests
 
 ```bash
-cd steppr-flow-load-tests
+cd stepprflow-load-tests
 mvn gatling:test
 ```
 
@@ -224,7 +224,7 @@ Recommended extensions:
 ```xml
 <parent>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-parent</artifactId>
+    <artifactId>stepprflow-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </parent>
 ```

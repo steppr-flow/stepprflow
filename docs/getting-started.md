@@ -42,7 +42,7 @@ Add the Steppr Flow starter to your `pom.xml`:
     <!-- Steppr Flow Spring Boot Starter (includes Kafka by default) -->
     <dependency>
         <groupId>io.github.stepprflow</groupId>
-        <artifactId>steppr-flow-spring-boot-starter</artifactId>
+        <artifactId>stepprflow-spring-boot-starter</artifactId>
         <version>${steppr-flow.version}</version>
     </dependency>
 </dependencies>
@@ -55,13 +55,13 @@ Add the Steppr Flow starter to your `pom.xml`:
     <!-- Steppr Flow Spring Boot Starter -->
     <dependency>
         <groupId>io.github.stepprflow</groupId>
-        <artifactId>steppr-flow-spring-boot-starter</artifactId>
+        <artifactId>stepprflow-spring-boot-starter</artifactId>
         <version>${steppr-flow.version}</version>
         <exclusions>
             <!-- Exclude Kafka -->
             <exclusion>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>steppr-flow-spring-kafka</artifactId>
+                <artifactId>stepprflow-spring-kafka</artifactId>
             </exclusion>
         </exclusions>
     </dependency>
@@ -69,7 +69,7 @@ Add the Steppr Flow starter to your `pom.xml`:
     <!-- Add RabbitMQ -->
     <dependency>
         <groupId>io.github.stepprflow</groupId>
-        <artifactId>steppr-flow-spring-rabbitmq</artifactId>
+        <artifactId>stepprflow-spring-rabbitmq</artifactId>
         <version>${steppr-flow.version}</version>
     </dependency>
 </dependencies>
@@ -84,7 +84,7 @@ Create or update `src/main/resources/application.yml`:
 ```yaml
 spring:
   application:
-    name: my-steppr-flow-app
+    name: my-stepprflow-app
 
 # Steppr Flow Configuration
 stepprflow:
@@ -747,16 +747,16 @@ Add the monitoring dependency to your application OR deploy the standalone dashb
 
 ```bash
 # Build the dashboard
-cd steppr-flow-dashboard
+cd stepprflow-dashboard
 mvn package -DskipTests
 
 # Run with Docker
-docker build -t steppr-flow-dashboard .
+docker build -t stepprflow-dashboard .
 docker run -d \
   -p 8090:8090 \
   -e MONGODB_URI=mongodb://host.docker.internal:27017/stepprflow \
   -e KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
-  steppr-flow-dashboard
+  stepprflow-dashboard
 ```
 
 **Option B: Add to Your Application**
@@ -764,7 +764,7 @@ docker run -d \
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-monitor</artifactId>
+    <artifactId>stepprflow-spring-monitor</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
 ```

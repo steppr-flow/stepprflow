@@ -6,21 +6,21 @@ This document describes the architecture and purpose of each module in the Stepp
 
 ```
 steppr-flow/
-├── steppr-flow-core/           # Core workflow engine
-├── steppr-flow-spring-kafka/   # Kafka broker implementation
-├── steppr-flow-spring-rabbitmq/# RabbitMQ broker implementation
-├── steppr-flow-spring-monitor/ # Monitoring & REST API
-├── steppr-flow-spring-boot-starter/ # Auto-configuration
-├── steppr-flow-dashboard/      # Standalone monitoring server
-├── steppr-flow-ui/             # Vue.js dashboard frontend
-├── steppr-flow-kafka-sample/   # Kafka usage example
-├── steppr-flow-rabbitmq-sample/# RabbitMQ usage example
-└── steppr-flow-load-tests/     # Performance benchmarks
+├── stepprflow-core/           # Core workflow engine
+├── stepprflow-spring-kafka/   # Kafka broker implementation
+├── stepprflow-spring-rabbitmq/# RabbitMQ broker implementation
+├── stepprflow-spring-monitor/ # Monitoring & REST API
+├── stepprflow-spring-boot-starter/ # Auto-configuration
+├── stepprflow-dashboard/      # Standalone monitoring server
+├── stepprflow-ui/             # Vue.js dashboard frontend
+├── stepprflow-kafka-sample/   # Kafka usage example
+├── stepprflow-rabbitmq-sample/# RabbitMQ usage example
+└── stepprflow-load-tests/     # Performance benchmarks
 ```
 
 ## Core Modules
 
-### steppr-flow-core
+### stepprflow-core
 
 **Purpose:** Core workflow engine with broker-agnostic abstractions.
 
@@ -37,14 +37,14 @@ steppr-flow/
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-core</artifactId>
+    <artifactId>stepprflow-core</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
 ```
 
 ---
 
-### steppr-flow-spring-kafka
+### stepprflow-spring-kafka
 
 **Purpose:** Apache Kafka implementation of the message broker interface.
 
@@ -54,14 +54,14 @@ steppr-flow/
 - `KafkaBrokerAutoConfiguration` - Spring Boot auto-configuration
 
 **Dependencies:**
-- `steppr-flow-core`
+- `stepprflow-core`
 - `spring-kafka`
 
 **Usage:**
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-kafka</artifactId>
+    <artifactId>stepprflow-spring-kafka</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
 ```
@@ -78,7 +78,7 @@ steppr-flow:
 
 ---
 
-### steppr-flow-spring-rabbitmq
+### stepprflow-spring-rabbitmq
 
 **Purpose:** RabbitMQ implementation of the message broker interface.
 
@@ -89,14 +89,14 @@ steppr-flow:
 - `RabbitMQBrokerAutoConfiguration` - Spring Boot auto-configuration
 
 **Dependencies:**
-- `steppr-flow-core`
+- `stepprflow-core`
 - `spring-amqp`
 
 **Usage:**
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-rabbitmq</artifactId>
+    <artifactId>stepprflow-spring-rabbitmq</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
 ```
@@ -114,7 +114,7 @@ steppr-flow:
 
 ---
 
-### steppr-flow-spring-monitor
+### stepprflow-spring-monitor
 
 **Purpose:** Monitoring capabilities, REST API, and WebSocket support.
 
@@ -130,7 +130,7 @@ steppr-flow:
 - `WorkflowBroadcaster` - Real-time updates via WebSocket
 
 **Dependencies:**
-- `steppr-flow-core`
+- `stepprflow-core`
 - `spring-data-mongodb`
 - `spring-websocket`
 - `springdoc-openapi`
@@ -145,7 +145,7 @@ steppr-flow:
 
 ---
 
-### steppr-flow-spring-boot-starter
+### stepprflow-spring-boot-starter
 
 **Purpose:** Spring Boot starter for easy integration.
 
@@ -155,14 +155,14 @@ steppr-flow:
 - `WorkflowRegistrationClient` - Registers workflows with central server
 
 **Dependencies:**
-- `steppr-flow-core`
-- `steppr-flow-spring-monitor`
+- `stepprflow-core`
+- `stepprflow-spring-monitor`
 
 **Usage:**
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-boot-starter</artifactId>
+    <artifactId>stepprflow-spring-boot-starter</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>
 ```
@@ -171,7 +171,7 @@ steppr-flow:
 
 ## Application Modules
 
-### steppr-flow-dashboard
+### stepprflow-dashboard
 
 **Purpose:** Standalone monitoring server application.
 
@@ -184,12 +184,12 @@ steppr-flow:
 - Kafka consumer for workflow events
 
 **Dependencies:**
-- `steppr-flow-spring-monitor`
-- `steppr-flow-spring-kafka`
+- `stepprflow-spring-monitor`
+- `stepprflow-spring-kafka`
 
 ---
 
-### steppr-flow-ui
+### stepprflow-ui
 
 **Purpose:** Vue.js dashboard frontend.
 
@@ -211,7 +211,7 @@ steppr-flow:
 
 ## Sample Modules
 
-### steppr-flow-kafka-sample
+### stepprflow-kafka-sample
 
 **Purpose:** Example application demonstrating Kafka integration.
 
@@ -223,7 +223,7 @@ steppr-flow:
 
 ---
 
-### steppr-flow-rabbitmq-sample
+### stepprflow-rabbitmq-sample
 
 **Purpose:** Example application demonstrating RabbitMQ integration.
 
@@ -231,7 +231,7 @@ steppr-flow:
 
 ---
 
-### steppr-flow-load-tests
+### stepprflow-load-tests
 
 **Purpose:** Performance benchmarks using Gatling.
 
@@ -246,7 +246,7 @@ steppr-flow:
 
 ```
                     ┌─────────────────────┐
-                    │   steppr-flow-core  │
+                    │   stepprflow-core  │
                     └──────────┬──────────┘
            ┌──────────────────┼──────────────────┐
            │                  │                  │
