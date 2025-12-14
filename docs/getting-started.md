@@ -41,7 +41,7 @@ Add the Steppr Flow starter to your `pom.xml`:
 <dependencies>
     <!-- Steppr Flow Spring Boot Starter (includes Kafka by default) -->
     <dependency>
-        <groupId>io.github.steppr-flow</groupId>
+        <groupId>io.github.stepprflow</groupId>
         <artifactId>steppr-flow-spring-boot-starter</artifactId>
         <version>${steppr-flow.version}</version>
     </dependency>
@@ -54,13 +54,13 @@ Add the Steppr Flow starter to your `pom.xml`:
 <dependencies>
     <!-- Steppr Flow Spring Boot Starter -->
     <dependency>
-        <groupId>io.github.steppr-flow</groupId>
+        <groupId>io.github.stepprflow</groupId>
         <artifactId>steppr-flow-spring-boot-starter</artifactId>
         <version>${steppr-flow.version}</version>
         <exclusions>
             <!-- Exclude Kafka -->
             <exclusion>
-                <groupId>io.github.steppr-flow</groupId>
+                <groupId>io.github.stepprflow</groupId>
                 <artifactId>steppr-flow-spring-kafka</artifactId>
             </exclusion>
         </exclusions>
@@ -68,7 +68,7 @@ Add the Steppr Flow starter to your `pom.xml`:
 
     <!-- Add RabbitMQ -->
     <dependency>
-        <groupId>io.github.steppr-flow</groupId>
+        <groupId>io.github.stepprflow</groupId>
         <artifactId>steppr-flow-spring-rabbitmq</artifactId>
         <version>${steppr-flow.version}</version>
     </dependency>
@@ -763,7 +763,7 @@ docker run -d \
 
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-monitor</artifactId>
     <version>${steppr-flow.version}</version>
 </dependency>

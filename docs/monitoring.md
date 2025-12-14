@@ -47,7 +47,7 @@ This module adds monitoring capabilities directly to your workflow application.
 
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-monitor</artifactId>
     <version>${stepprflow.version}</version>
 </dependency>

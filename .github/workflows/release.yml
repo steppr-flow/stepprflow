@@ -196,7 +196,7 @@ jobs:
 
           \`\`\`xml
           <dependency>
-              <groupId>io.github.steppr-flow</groupId>
+              <groupId>io.github.stepprflow</groupId>
               <artifactId>steppr-flow-spring-boot-starter</artifactId>
               <version>${{ steps.new-version.outputs.version }}</version>
           </dependency>
@@ -205,7 +205,7 @@ jobs:
           For Kafka support:
           \`\`\`xml
           <dependency>
-              <groupId>io.github.steppr-flow</groupId>
+              <groupId>io.github.stepprflow</groupId>
               <artifactId>steppr-flow-spring-kafka</artifactId>
               <version>${{ steps.new-version.outputs.version }}</version>
           </dependency>
@@ -214,7 +214,7 @@ jobs:
           For RabbitMQ support:
           \`\`\`xml
           <dependency>
-              <groupId>io.github.steppr-flow</groupId>
+              <groupId>io.github.stepprflow</groupId>
               <artifactId>steppr-flow-spring-rabbitmq</artifactId>
               <version>${{ steps.new-version.outputs.version }}</version>
           </dependency>

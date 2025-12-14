@@ -197,7 +197,7 @@ The workflow automatically:
 
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-boot-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>

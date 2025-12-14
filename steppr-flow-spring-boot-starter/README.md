@@ -30,7 +30,7 @@ The starter bundles all necessary modules:
 
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-boot-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
@@ -40,7 +40,7 @@ The starter bundles all necessary modules:
 
 ```xml
 <dependency>
-    <groupId>io.github.steppr-flow</groupId>
+    <groupId>io.github.stepprflow</groupId>
     <artifactId>steppr-flow-spring-rabbitmq</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
