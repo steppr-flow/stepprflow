@@ -8,46 +8,40 @@
 
     <parent>
         <groupId>io.github.stepprflow</groupId>
-        <artifactId>steppr-flow-parent</artifactId>
+        <artifactId>stepprflow-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>steppr-flow-spring-rabbitmq</artifactId>
-    <name>Steppr Flow Spring RabbitMQ</name>
-    <description>RabbitMQ message broker implementation for Steppr Flow</description>
+    <artifactId>stepprflow-spring-kafka</artifactId>
+    <name>Steppr Flow Spring Kafka</name>
+    <description>Apache Kafka implementation of Steppr Flow MessageBroker</description>
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
     </properties>
 
     <dependencies>
-        <!-- Steppr Flow Core -->
+        <!-- Core module -->
         <dependency>
             <groupId>io.github.stepprflow</groupId>
-            <artifactId>steppr-flow-core</artifactId>
+            <artifactId>stepprflow-core</artifactId>
         </dependency>
 
-        <!-- Spring AMQP (RabbitMQ) -->
+        <!-- Kafka -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
         </dependency>
 
-        <!-- Jackson for JSON serialization -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-        </dependency>
-
-        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Test -->
@@ -57,8 +51,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.amqp</groupId>
-            <artifactId>spring-rabbit-test</artifactId>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -73,7 +67,7 @@
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>rabbitmq</artifactId>
+            <artifactId>kafka</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

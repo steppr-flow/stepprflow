@@ -15,7 +15,7 @@ This module provides:
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-monitor</artifactId>
+    <artifactId>stepprflow-spring-monitor</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```

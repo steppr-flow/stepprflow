@@ -25,13 +25,13 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 
 | Module | Description |
 |--------|-------------|
-| `steppr-flow-core` | Core framework, annotations, and abstractions |
-| `steppr-flow-spring-kafka` | Apache Kafka message broker implementation |
-| `steppr-flow-spring-rabbitmq` | RabbitMQ message broker implementation |
-| `steppr-flow-spring-monitor` | Monitoring, persistence, and REST API |
-| `steppr-flow-spring-boot-starter` | Spring Boot auto-configuration (includes all above) |
-| `steppr-flow-dashboard` | Standalone monitoring server |
-| `steppr-flow-ui` | Vue.js dashboard UI for workflow monitoring |
+| `stepprflow-core` | Core framework, annotations, and abstractions |
+| `stepprflow-spring-kafka` | Apache Kafka message broker implementation |
+| `stepprflow-spring-rabbitmq` | RabbitMQ message broker implementation |
+| `stepprflow-spring-monitor` | Monitoring, persistence, and REST API |
+| `stepprflow-spring-boot-starter` | Spring Boot auto-configuration (includes all above) |
+| `stepprflow-dashboard` | Standalone monitoring server |
+| `stepprflow-ui` | Vue.js dashboard UI for workflow monitoring |
 
 ## Quick Start
 
@@ -41,7 +41,7 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-boot-starter</artifactId>
+    <artifactId>stepprflow-spring-boot-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```
@@ -228,12 +228,12 @@ public void onFailed(WorkflowMessage message) {
 ├─────────────────────────────────────────────────────────────┤
 │  WorkflowStarter  │  @Topic Workflows  │  Step Handlers     │
 ├─────────────────────────────────────────────────────────────┤
-│                    steppr-flow-core                         │
+│                    stepprflow-core                         │
 │  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐     │
 │  │ StepExecutor │  │WorkflowRegistry│  │MessageBroker │     │
 │  └──────────────┘  └────────────────┘  └──────────────┘     │
 ├─────────────────────────────────────────────────────────────┤
-│  steppr-flow-spring-kafka  │  steppr-flow-spring-rabbitmq   │
+│  stepprflow-spring-kafka  │  stepprflow-spring-rabbitmq   │
 ├─────────────────────────────────────────────────────────────┤
 │          Apache Kafka       │        RabbitMQ               │
 └─────────────────────────────────────────────────────────────┘

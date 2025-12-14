@@ -10,9 +10,9 @@ This starter provides auto-configuration for Steppr Flow, making it easy to add 
 
 The starter bundles all necessary modules:
 
-- `steppr-flow-core` - Core workflow engine
-- `steppr-flow-spring-kafka` - Kafka broker (default)
-- `steppr-flow-spring-monitor` - Persistence, REST API, and monitoring
+- `stepprflow-core` - Core workflow engine
+- `stepprflow-spring-kafka` - Kafka broker (default)
+- `stepprflow-spring-monitor` - Persistence, REST API, and monitoring
 - `spring-boot-starter-data-mongodb` - MongoDB persistence
 - `spring-boot-starter-actuator` - Metrics and health checks
 
@@ -31,7 +31,7 @@ The starter bundles all necessary modules:
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-boot-starter</artifactId>
+    <artifactId>stepprflow-spring-boot-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -41,7 +41,7 @@ The starter bundles all necessary modules:
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-rabbitmq</artifactId>
+    <artifactId>stepprflow-spring-rabbitmq</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -218,11 +218,11 @@ The starter exposes REST endpoints at `/api/workflows`:
 ┌──────────────────────────────────────────────────┐
 │              Your Spring Boot App                │
 ├──────────────────────────────────────────────────┤
-│     steppr-flow-spring-boot-starter              │
+│     stepprflow-spring-boot-starter              │
 │  ┌────────────────────────────────────────────┐  │
-│  │  steppr-flow-core (engine)                 │  │
-│  │  steppr-flow-spring-kafka (default broker) │  │
-│  │  steppr-flow-spring-monitor (persistence)  │  │
+│  │  stepprflow-core (engine)                 │  │
+│  │  stepprflow-spring-kafka (default broker) │  │
+│  │  stepprflow-spring-monitor (persistence)  │  │
 │  │  spring-boot-starter-data-mongodb          │  │
 │  │  spring-boot-starter-actuator              │  │
 │  └────────────────────────────────────────────┘  │

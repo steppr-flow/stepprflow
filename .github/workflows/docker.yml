@@ -7,12 +7,12 @@ on:
     tags:
       - 'v*'
     paths:
-      - 'steppr-flow-core/**'
-      - 'steppr-flow-spring-kafka/**'
-      - 'steppr-flow-spring-rabbitmq/**'
-      - 'steppr-flow-spring-monitor/**'
-      - 'steppr-flow-dashboard/**'
-      - 'steppr-flow-ui/**'
+      - 'stepprflow-core/**'
+      - 'stepprflow-spring-kafka/**'
+      - 'stepprflow-spring-rabbitmq/**'
+      - 'stepprflow-spring-monitor/**'
+      - 'stepprflow-dashboard/**'
+      - 'stepprflow-ui/**'
       - 'Dockerfile'
       - 'docker-compose*.yml'
       - '.github/workflows/docker.yml'
@@ -20,12 +20,12 @@ on:
     branches:
       - main
     paths:
-      - 'steppr-flow-core/**'
-      - 'steppr-flow-spring-kafka/**'
-      - 'steppr-flow-spring-rabbitmq/**'
-      - 'steppr-flow-spring-monitor/**'
-      - 'steppr-flow-dashboard/**'
-      - 'steppr-flow-ui/**'
+      - 'stepprflow-core/**'
+      - 'stepprflow-spring-kafka/**'
+      - 'stepprflow-spring-rabbitmq/**'
+      - 'stepprflow-spring-monitor/**'
+      - 'stepprflow-dashboard/**'
+      - 'stepprflow-ui/**'
       - 'Dockerfile'
   workflow_dispatch:
     inputs:
@@ -37,7 +37,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: steppr-flow/steppr-flow-monitor
+  IMAGE_NAME: steppr-flow/stepprflow-monitor
 
 jobs:
   build:
@@ -182,7 +182,7 @@ jobs:
 
           # Run container with MongoDB
           docker run -d \
-            --name steppr-flow-test \
+            --name stepprflow-test \
             --network host \
             -e SPRING_DATA_MONGODB_URI=mongodb://localhost:27017/stepprflow \
             -e SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
@@ -196,8 +196,8 @@ jobs:
           curl --fail http://localhost:8090/actuator/health || exit 1
 
           # Cleanup
-          docker stop steppr-flow-test
-          docker rm steppr-flow-test
+          docker stop stepprflow-test
+          docker rm stepprflow-test
 
   # Update deployment (optional - triggered on release)
   notify:

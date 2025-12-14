@@ -1,8 +1,8 @@
 # Monitoring & Dashboard
 
 Steppr Flow provides comprehensive monitoring capabilities through two modules:
-- **steppr-flow-spring-monitor** - Embeddable monitoring library for your Spring Boot applications
-- **steppr-flow-dashboard** - Standalone monitoring server with Vue.js UI
+- **stepprflow-spring-monitor** - Embeddable monitoring library for your Spring Boot applications
+- **stepprflow-dashboard** - Standalone monitoring server with Vue.js UI
 
 ---
 
@@ -12,7 +12,7 @@ Steppr Flow provides comprehensive monitoring capabilities through two modules:
 ┌──────────────────────────────────────────────────────────────────┐
 │                     Your Application                             │
 │  ┌──────────────────────────────────────────────────────────┐    │
-│  │             steppr-flow-spring-monitor                   │    │
+│  │             stepprflow-spring-monitor                   │    │
 │  │  • Execution persistence (MongoDB)                       │    │
 │  │  • REST API endpoints                                    │    │
 │  │  • WebSocket broadcasts                                  │    │
@@ -23,11 +23,11 @@ Steppr Flow provides comprehensive monitoring capabilities through two modules:
                            │ Message Broker
                            ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                 steppr-flow-dashboard                           │
+│                 stepprflow-dashboard                           │
 │  ┌─────────────────────────────────────────────────────────┐    │
 │  │  • Kafka message listener                               │    │
 │  │  • REST API proxy                                       │    │
-│  │  • Vue.js UI (steppr-flow-ui)                           │    │
+│  │  • Vue.js UI (stepprflow-ui)                           │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                           │                                     │
 │                           ▼                                     │
@@ -39,7 +39,7 @@ Steppr Flow provides comprehensive monitoring capabilities through two modules:
 
 ---
 
-## steppr-flow-spring-monitor
+## stepprflow-spring-monitor
 
 This module adds monitoring capabilities directly to your workflow application.
 
@@ -48,7 +48,7 @@ This module adds monitoring capabilities directly to your workflow application.
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-monitor</artifactId>
+    <artifactId>stepprflow-spring-monitor</artifactId>
     <version>${stepprflow.version}</version>
 </dependency>
 ```
@@ -265,7 +265,7 @@ client.activate();
 
 ---
 
-## steppr-flow-dashboard
+## stepprflow-dashboard
 
 The standalone dashboard server aggregates monitoring data from multiple services and provides a unified UI.
 
@@ -275,10 +275,10 @@ The standalone dashboard server aggregates monitoring data from multiple service
 
 ```yaml
 services:
-  steppr-flow-dashboard:
+  stepprflow-dashboard:
     build:
       context: .
-      dockerfile: steppr-flow-dashboard/Dockerfile
+      dockerfile: stepprflow-dashboard/Dockerfile
     ports:
       - "9000:9000"
     environment:
@@ -292,7 +292,7 @@ services:
 **Standalone JAR:**
 
 ```bash
-java -jar steppr-flow-dashboard.jar \
+java -jar stepprflow-dashboard.jar \
   --spring.data.mongodb.uri=mongodb://localhost:27017/stepprflow \
   --spring.kafka.bootstrap-servers=localhost:9092
 ```
@@ -311,7 +311,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: steppr-flow-dashboard
+      group-id: stepprflow-dashboard
 
 # UI configuration
 stepprflow:

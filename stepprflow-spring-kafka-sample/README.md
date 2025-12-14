@@ -37,7 +37,7 @@ docker run -d --name kafka -p 9092:9092 apache/kafka:latest
 mvn clean install -DskipTests
 
 # Run the sample
-cd steppr-flow-spring-kafka-sample
+cd stepprflow-spring-kafka-sample
 mvn spring-boot:run
 ```
 

@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-parent</artifactId>
+    <artifactId>stepprflow-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -56,13 +56,13 @@
     </distributionManagement>
 
     <modules>
-        <module>steppr-flow-core</module>
-        <module>steppr-flow-spring-kafka</module>
-        <module>steppr-flow-spring-rabbitmq</module>
-        <module>steppr-flow-spring-monitor</module>
-        <module>steppr-flow-ui</module>
-        <module>steppr-flow-spring-boot-starter</module>
-        <module>steppr-flow-dashboard</module>
+        <module>stepprflow-core</module>
+        <module>stepprflow-spring-kafka</module>
+        <module>stepprflow-spring-rabbitmq</module>
+        <module>stepprflow-spring-monitor</module>
+        <module>stepprflow-ui</module>
+        <module>stepprflow-spring-boot-starter</module>
+        <module>stepprflow-dashboard</module>
     </modules>
 
     <profiles>
@@ -70,9 +70,9 @@
         <profile>
             <id>full</id>
             <modules>
-                <module>steppr-flow-kafka-sample</module>
-                <module>steppr-flow-rabbitmq-sample</module>
-                <module>steppr-flow-load-tests</module>
+                <module>stepprflow-kafka-sample</module>
+                <module>stepprflow-rabbitmq-sample</module>
+                <module>stepprflow-load-tests</module>
             </modules>
         </profile>
 
@@ -184,32 +184,32 @@
             <!-- Steppr Flow modules -->
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>steppr-flow-core</artifactId>
+                <artifactId>stepprflow-core</artifactId>
                 <version>${steppr-flow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>steppr-flow-spring-kafka</artifactId>
+                <artifactId>stepprflow-spring-kafka</artifactId>
                 <version>${steppr-flow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>steppr-flow-spring-rabbitmq</artifactId>
+                <artifactId>stepprflow-spring-rabbitmq</artifactId>
                 <version>${steppr-flow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>steppr-flow-spring-monitor</artifactId>
+                <artifactId>stepprflow-spring-monitor</artifactId>
                 <version>${steppr-flow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>steppr-flow-ui</artifactId>
+                <artifactId>stepprflow-ui</artifactId>
                 <version>${steppr-flow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>steppr-flow-spring-boot-starter</artifactId>
+                <artifactId>stepprflow-spring-boot-starter</artifactId>
                 <version>${steppr-flow.version}</version>
             </dependency>
         </dependencies>

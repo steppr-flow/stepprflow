@@ -23,10 +23,10 @@ Access the dashboard at `http://localhost:8090`
 
 ```bash
 # Build
-mvn package -pl steppr-flow-dashboard -am
+mvn package -pl stepprflow-dashboard -am
 
 # Run
-java -jar steppr-flow-dashboard/target/steppr-flow-dashboard-1.0.0-SNAPSHOT.jar
+java -jar stepprflow-dashboard/target/stepprflow-dashboard-1.0.0-SNAPSHOT.jar
 ```
 
 ## Configuration
@@ -70,27 +70,27 @@ steppr-flow:
 
 ```bash
 # Build image
-docker build -t steppr-flow-dashboard -f steppr-flow-dashboard/Dockerfile .
+docker build -t stepprflow-dashboard -f stepprflow-dashboard/Dockerfile .
 
 # Run with environment variables
 docker run -p 8090:8090 \
   -e SPRING_DATA_MONGODB_URI=mongodb://host.docker.internal:27017/stepprflow \
   -e SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
-  steppr-flow-dashboard
+  stepprflow-dashboard
 ```
 
 ## Architecture
 
 ```
 ┌──────────────────────────────────────┐
-│          steppr-flow-dashboard       │
+│          stepprflow-dashboard       │
 ├──────────────────────────────────────┤
 │  ┌────────────┐  ┌────────────────┐  │
 │  │  REST API  │  │  Vue.js UI     │  │
 │  │  /api/*    │  │  /             │  │
 │  └────────────┘  └────────────────┘  │
 ├──────────────────────────────────────┤
-│        steppr-flow-spring-monitor    │
+│        stepprflow-spring-monitor    │
 ├──────────────────────────────────────┤
 │  MongoDB  │  Kafka/RabbitMQ          │
 └──────────────────────────────────────┘

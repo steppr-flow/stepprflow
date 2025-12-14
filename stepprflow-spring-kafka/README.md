@@ -11,7 +11,7 @@ This module provides Kafka-based message transport for Steppr Flow workflows, en
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-kafka</artifactId>
+    <artifactId>stepprflow-spring-kafka</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```

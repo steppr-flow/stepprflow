@@ -197,7 +197,7 @@ jobs:
           \`\`\`xml
           <dependency>
               <groupId>io.github.stepprflow</groupId>
-              <artifactId>steppr-flow-spring-boot-starter</artifactId>
+              <artifactId>stepprflow-spring-boot-starter</artifactId>
               <version>${{ steps.new-version.outputs.version }}</version>
           </dependency>
           \`\`\`
@@ -206,7 +206,7 @@ jobs:
           \`\`\`xml
           <dependency>
               <groupId>io.github.stepprflow</groupId>
-              <artifactId>steppr-flow-spring-kafka</artifactId>
+              <artifactId>stepprflow-spring-kafka</artifactId>
               <version>${{ steps.new-version.outputs.version }}</version>
           </dependency>
           \`\`\`
@@ -215,14 +215,14 @@ jobs:
           \`\`\`xml
           <dependency>
               <groupId>io.github.stepprflow</groupId>
-              <artifactId>steppr-flow-spring-rabbitmq</artifactId>
+              <artifactId>stepprflow-spring-rabbitmq</artifactId>
               <version>${{ steps.new-version.outputs.version }}</version>
           </dependency>
           \`\`\`
 
           ### Docker
           \`\`\`bash
-          docker pull ghcr.io/steppr-flow/steppr-flow-dashboard:${{ steps.new-version.outputs.version }}
+          docker pull ghcr.io/steppr-flow/stepprflow-dashboard:${{ steps.new-version.outputs.version }}
           \`\`\`
 
           **Full Changelog**: https://github.com/steppr-flow/steppr-flow/compare/${LAST_TAG:-HEAD~50}...v${{ steps.new-version.outputs.version }}
@@ -245,11 +245,11 @@ jobs:
             --title "Release v${{ steps.new-version.outputs.version }}" \
             --notes-file release-notes.md \
             $PRERELEASE_FLAG \
-            steppr-flow-core/target/*.jar \
-            steppr-flow-spring-kafka/target/*.jar \
-            steppr-flow-spring-rabbitmq/target/*.jar \
-            steppr-flow-spring-monitor/target/*.jar \
-            steppr-flow-spring-boot-starter/target/*.jar
+            stepprflow-core/target/*.jar \
+            stepprflow-spring-kafka/target/*.jar \
+            stepprflow-spring-rabbitmq/target/*.jar \
+            stepprflow-spring-monitor/target/*.jar \
+            stepprflow-spring-boot-starter/target/*.jar
 
   # Build and publish Docker image
   docker:
@@ -281,7 +281,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/steppr-flow/steppr-flow-dashboard
+          images: ghcr.io/steppr-flow/stepprflow-dashboard
           tags: |
             type=raw,value=latest
             type=raw,value=${{ needs.release.outputs.version }}

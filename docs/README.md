@@ -35,7 +35,7 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 │           │                     │                     │                 │
 │           ▼                     ▼                     ▼                 │
 │  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                    steppr-flow-spring-boot-starter              │    │
+│  │                    stepprflow-spring-boot-starter              │    │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │    │
 │  │  │WorkflowStart│  │ StepExecutor│  │ WorkflowRegistry        │  │    │
 │  │  └─────────────┘  └─────────────┘  └─────────────────────────┘  │    │
@@ -47,7 +47,7 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         Message Broker Layer                            │
 │  ┌────────────────────────────┐    ┌────────────────────────────┐       │
-│  │   steppr-flow-spring-kafka │ OR │ steppr-flow-spring-rabbitmq│       │
+│  │   stepprflow-spring-kafka │ OR │ stepprflow-spring-rabbitmq│       │
 │  └────────────────────────────┘    └────────────────────────────┘       │
 │                     │                          │                        │
 │                     ▼                          ▼                        │
@@ -60,10 +60,10 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        Monitoring & Dashboard                           │
 │  ┌───────────────────────────┐  ┌────────────────────────────────────┐  │
-│  │ steppr-flow-spring-monitor│  │       steppr-flow-dashboard        │  │
+│  │ stepprflow-spring-monitor│  │       stepprflow-dashboard        │  │
 │  │  • Execution persistence  │  │  • REST API                        │  │
 │  │  • Metrics collection     │  │  • WebSocket broadcasts            │  │
-│  │  • Retry scheduling       │  │  • Vue.js UI (steppr-flow-ui)      │  │
+│  │  • Retry scheduling       │  │  • Vue.js UI (stepprflow-ui)      │  │
 │  └───────────────────────────┘  └────────────────────────────────────┘  │
 │                     │                          │                        │
 │                     ▼                          ▼                        │
@@ -77,13 +77,13 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 
 | Module | Description |
 |--------|-------------|
-| `steppr-flow-core` | Core framework: annotations, models, interfaces, workflow engine |
-| `steppr-flow-spring-boot-starter` | Spring Boot auto-configuration starter (includes Kafka by default) |
-| `steppr-flow-spring-kafka` | Apache Kafka message broker implementation |
-| `steppr-flow-spring-rabbitmq` | RabbitMQ message broker implementation |
-| `steppr-flow-spring-monitor` | Workflow monitoring, persistence, metrics, and retry scheduling |
-| `steppr-flow-dashboard` | Standalone monitoring server with REST API and WebSocket |
-| `steppr-flow-ui` | Vue.js dashboard UI for real-time workflow monitoring |
+| `stepprflow-core` | Core framework: annotations, models, interfaces, workflow engine |
+| `stepprflow-spring-boot-starter` | Spring Boot auto-configuration starter (includes Kafka by default) |
+| `stepprflow-spring-kafka` | Apache Kafka message broker implementation |
+| `stepprflow-spring-rabbitmq` | RabbitMQ message broker implementation |
+| `stepprflow-spring-monitor` | Workflow monitoring, persistence, metrics, and retry scheduling |
+| `stepprflow-dashboard` | Standalone monitoring server with REST API and WebSocket |
+| `stepprflow-ui` | Vue.js dashboard UI for real-time workflow monitoring |
 
 ## How It Works
 
@@ -198,7 +198,7 @@ The workflow automatically:
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>steppr-flow-spring-boot-starter</artifactId>
+    <artifactId>stepprflow-spring-boot-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
