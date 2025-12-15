@@ -138,7 +138,7 @@
         <testcontainers.version>1.20.4</testcontainers.version>
 
         <!-- Resilience4j -->
-        <resilience4j.version>2.2.0</resilience4j.version>
+        <resilience4j.version>2.3.0</resilience4j.version>
 
         <!-- Micrometer Tracing -->
         <micrometer-tracing.version>1.4.2</micrometer-tracing.version>
