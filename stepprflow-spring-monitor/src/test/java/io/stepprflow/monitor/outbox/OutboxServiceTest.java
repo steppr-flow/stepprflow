@@ -114,7 +114,7 @@ class OutboxServiceTest {
 
             String id = outboxService.enqueue("test-destination", message, MessageType.RESUME);
 
-            assertThat(id).isNotNull();
+            assertThat(id).isNotNull().isNotEmpty();
         }
     }
 

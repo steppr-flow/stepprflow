@@ -63,6 +63,20 @@ class KafkaMessageListenerTest {
         }
 
         @Test
+        @DisplayName("Should publish message received event")
+        void shouldPublishMessageReceivedEvent() {
+            // Given
+            WorkflowMessage message = createMessage(WorkflowStatus.PENDING);
+            ConsumerRecord<String, WorkflowMessage> record = createRecord(message);
+
+            // When
+            listener.onMessage(record, acknowledgment);
+
+            // Then
+            verify(eventPublisher).publishEvent(any());
+        }
+
+        @Test
         @DisplayName("Should process IN_PROGRESS message and acknowledge")
         void shouldProcessInProgressMessage() {
             // Given

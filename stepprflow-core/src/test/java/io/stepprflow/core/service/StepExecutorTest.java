@@ -43,6 +43,12 @@ class StepExecutorTest {
     @Mock
     private ObjectMapper objectMapper;
 
+    @Mock
+    private BackoffCalculator backoffCalculator;
+
+    @Mock
+    private CallbackMethodInvoker callbackMethodInvoker;
+
     @InjectMocks
     private StepExecutor stepExecutor;
 
@@ -162,7 +168,93 @@ class StepExecutorTest {
 
             stepExecutor.execute(testMessage);
 
-            assertThat(testWorkflow.successCalled).isTrue();
+            verify(callbackMethodInvoker).invokeRaw(eq(onSuccessMethod), eq(testWorkflow), any(WorkflowMessage.class), isNull());
+        }
+
+        @Test
+        @DisplayName("Should execute step with null payload")
+        void shouldExecuteStepWithNullPayload() throws Exception {
+            testMessage = testMessage.toBuilder()
+                    .payload(null)
+                    .build();
+
+            StepDefinition step1 = createStepDefinition(1, "step1");
+            StepDefinition step2 = createStepDefinition(2, "step2");
+            StepDefinition step3 = createStepDefinition(3, "step3");
+            testDefinition = createWorkflowDefinition(List.of(step1, step2, step3));
+
+            when(registry.getDefinition("test-topic")).thenReturn(testDefinition);
+
+            stepExecutor.execute(testMessage);
+
+            verify(messageBroker).send(eq("test-topic"), messageCaptor.capture());
+            assertThat(testWorkflow.step1Called).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should use raw payload when payloadType is null")
+        void shouldUseRawPayloadWhenPayloadTypeIsNull() throws Exception {
+            // Payload is NOT null but payloadType IS null -> should use raw payload
+            Map<String, Object> rawPayload = Map.of("rawKey", "rawValue");
+            testMessage = testMessage.toBuilder()
+                    .payload(rawPayload)
+                    .payloadType(null)
+                    .build();
+
+            StepDefinition step1 = createStepDefinition(1, "step1");
+            StepDefinition step2 = createStepDefinition(2, "step2");
+            StepDefinition step3 = createStepDefinition(3, "step3");
+            testDefinition = createWorkflowDefinition(List.of(step1, step2, step3));
+
+            when(registry.getDefinition("test-topic")).thenReturn(testDefinition);
+
+            stepExecutor.execute(testMessage);
+
+            // Verify step was called - if raw payload was null, step would fail
+            assertThat(testWorkflow.step1Called).isTrue();
+            assertThat(testWorkflow.lastPayload).isEqualTo(rawPayload);
+            // ObjectMapper should NOT be called when payloadType is null
+            verify(objectMapper, never()).convertValue(any(), any(Class.class));
+        }
+
+        @Test
+        @DisplayName("Should call success callback with no parameters")
+        void shouldCallSuccessCallbackWithNoParameters() throws Exception {
+            testMessage = testMessage.toBuilder()
+                    .currentStep(3)
+                    .build();
+
+            StepDefinition step1 = createStepDefinition(1, "step1");
+            StepDefinition step2 = createStepDefinition(2, "step2");
+            StepDefinition step3 = createStepDefinition(3, "step3");
+            Method onSuccessMethod = TestWorkflow.class.getDeclaredMethod("onSuccessNoParams");
+            testDefinition = createWorkflowDefinition(List.of(step1, step2, step3), onSuccessMethod, null);
+
+            when(registry.getDefinition("test-topic")).thenReturn(testDefinition);
+
+            stepExecutor.execute(testMessage);
+
+            verify(callbackMethodInvoker).invokeRaw(eq(onSuccessMethod), eq(testWorkflow), any(WorkflowMessage.class), isNull());
+        }
+
+        @Test
+        @DisplayName("Should call success callback with WorkflowMessage parameter")
+        void shouldCallSuccessCallbackWithWorkflowMessage() throws Exception {
+            testMessage = testMessage.toBuilder()
+                    .currentStep(3)
+                    .build();
+
+            StepDefinition step1 = createStepDefinition(1, "step1");
+            StepDefinition step2 = createStepDefinition(2, "step2");
+            StepDefinition step3 = createStepDefinition(3, "step3");
+            Method onSuccessMethod = TestWorkflow.class.getDeclaredMethod("onSuccessWithMessage", WorkflowMessage.class);
+            testDefinition = createWorkflowDefinition(List.of(step1, step2, step3), onSuccessMethod, null);
+
+            when(registry.getDefinition("test-topic")).thenReturn(testDefinition);
+
+            stepExecutor.execute(testMessage);
+
+            verify(callbackMethodInvoker).invokeRaw(eq(onSuccessMethod), eq(testWorkflow), any(WorkflowMessage.class), isNull());
         }
     }
 
@@ -185,6 +277,9 @@ class StepExecutorTest {
             dlqConfig = new StepprFlowProperties.Dlq();
             dlqConfig.setEnabled(true);
             dlqConfig.setSuffix(".dlq");
+
+            // Configure backoff calculator mock (lenient because not all tests trigger retry)
+            lenient().when(backoffCalculator.calculate(anyInt())).thenReturn(Duration.ofSeconds(1));
         }
 
         @Test
@@ -292,7 +387,63 @@ class StepExecutorTest {
 
             stepExecutor.execute(testMessage);
 
-            assertThat(testWorkflow.failureCalled).isTrue();
+            verify(callbackMethodInvoker).invokeRaw(eq(onFailureMethod), eq(testWorkflow), any(WorkflowMessage.class), any(Throwable.class));
+        }
+
+        @Test
+        @DisplayName("Should not send to DLQ when DLQ is disabled")
+        void shouldNotSendToDlqWhenDisabled() throws Exception {
+            dlqConfig.setEnabled(false);
+            when(properties.getDlq()).thenReturn(dlqConfig);
+
+            RetryInfo exhaustedRetry = RetryInfo.builder()
+                    .attempt(3)
+                    .maxAttempts(3)
+                    .build();
+            testMessage = testMessage.toBuilder()
+                    .retryInfo(exhaustedRetry)
+                    .build();
+
+            StepDefinition step = createFailingStepDefinition(1, "failingStep");
+            testDefinition = createWorkflowDefinition(List.of(step));
+
+            when(registry.getDefinition("test-topic")).thenReturn(testDefinition);
+
+            stepExecutor.execute(testMessage);
+
+            // Should not send to DLQ when disabled
+            verify(messageBroker, never()).send(eq("test-topic.dlq"), any());
+        }
+
+        @Test
+        @DisplayName("Should truncate long stack traces")
+        void shouldTruncateLongStackTraces() throws Exception {
+            when(properties.getDlq()).thenReturn(dlqConfig);
+
+            RetryInfo exhaustedRetry = RetryInfo.builder()
+                    .attempt(3)
+                    .maxAttempts(3)
+                    .build();
+            testMessage = testMessage.toBuilder()
+                    .retryInfo(exhaustedRetry)
+                    .build();
+
+            // Use a step that throws an exception with deep stack trace
+            StepDefinition step = createDeepStackTraceStepDefinition(1, "deepStackStep");
+            testDefinition = createWorkflowDefinition(List.of(step));
+
+            when(registry.getDefinition("test-topic")).thenReturn(testDefinition);
+
+            stepExecutor.execute(testMessage);
+
+            verify(messageBroker).send(eq("test-topic.dlq"), messageCaptor.capture());
+            WorkflowMessage dlqMessage = messageCaptor.getValue();
+
+            // Stack trace should be truncated to 2000 chars + "..."
+            assertThat(dlqMessage.getErrorInfo().getStackTrace()).hasSizeLessThanOrEqualTo(2003);
+            if (dlqMessage.getErrorInfo().getStackTrace().length() > 2000) {
+                assertThat(dlqMessage.getErrorInfo().getStackTrace()).endsWith("...");
+            }
         }
     }
 
@@ -310,6 +461,8 @@ class StepExecutorTest {
             retryConfig.setNonRetryableExceptions(List.of());
 
             when(properties.getRetry()).thenReturn(retryConfig);
+            // Configure backoff calculator mock
+            when(backoffCalculator.calculate(anyInt())).thenReturn(Duration.ofSeconds(2));
         }
 
         @Test
@@ -376,6 +529,18 @@ class StepExecutorTest {
                 .build();
     }
 
+    private StepDefinition createDeepStackTraceStepDefinition(int id, String methodName) throws Exception {
+        Method method = TestWorkflow.class.getDeclaredMethod(methodName, Object.class);
+        return StepDefinition.builder()
+                .id(id)
+                .label(methodName)
+                .description("Deep stack trace step " + id)
+                .method(method)
+                .skippable(false)
+                .continueOnFailure(false)
+                .build();
+    }
+
     private WorkflowDefinition createWorkflowDefinition(List<StepDefinition> steps) {
         return createWorkflowDefinition(steps, null, null);
     }
@@ -402,10 +567,14 @@ class StepExecutorTest {
         boolean step2Called = false;
         boolean step3Called = false;
         boolean successCalled = false;
+        boolean successNoParamsCalled = false;
+        boolean successWithMessageCalled = false;
         boolean failureCalled = false;
+        Object lastPayload = null;
 
         public void step1(Object payload) {
             step1Called = true;
+            lastPayload = payload;
         }
 
         public void step2(Object payload) {
@@ -424,8 +593,29 @@ class StepExecutorTest {
             throw new IllegalArgumentException("Invalid argument");
         }
 
+        public void deepStackStep(Object payload) {
+            // Generate a deep stack trace by recursive calls
+            deepRecursive(50);
+        }
+
+        private void deepRecursive(int depth) {
+            if (depth <= 0) {
+                throw new RuntimeException("Deep exception with very long message: "
+                        + "A".repeat(500));
+            }
+            deepRecursive(depth - 1);
+        }
+
         public void onSuccess(Object payload) {
             successCalled = true;
+        }
+
+        public void onSuccessNoParams() {
+            successNoParamsCalled = true;
+        }
+
+        public void onSuccessWithMessage(WorkflowMessage message) {
+            successWithMessageCalled = true;
         }
 
         public void onFailure(Object payload, Throwable error) {

@@ -74,6 +74,36 @@ class OutboxMessageTest {
         }
 
         @Test
+        @DisplayName("Should use correct backoff formula: baseDelay * 2^(attempts-1)")
+        void shouldUseCorrectBackoffFormula() {
+            OutboxMessage message = OutboxMessage.builder()
+                    .attempts(0)
+                    .maxAttempts(10)
+                    .status(OutboxStatus.PENDING)
+                    .build();
+
+            long baseDelayMs = 1000;
+            Instant before = Instant.now();
+
+            // First call: attempts becomes 1, delay = 1000 * 2^(1-1) = 1000 * 1 = 1000ms
+            message.incrementAttemptWithBackoff(baseDelayMs, 60000);
+
+            Instant nextRetry = message.getNextRetryAt();
+            // The delay should be approximately 1000ms (baseDelay * 2^0 = baseDelay * 1)
+            // If mutation changes -1 to +1, it would be 4000ms (baseDelay * 2^2)
+            assertThat(nextRetry).isAfterOrEqualTo(before.plusMillis(baseDelayMs));
+            assertThat(nextRetry).isBefore(before.plusMillis(baseDelayMs + 1500)); // Allow 1.5s tolerance
+
+            // Second call: attempts becomes 2, delay = 1000 * 2^(2-1) = 1000 * 2 = 2000ms
+            Instant before2 = Instant.now();
+            message.incrementAttemptWithBackoff(baseDelayMs, 60000);
+
+            Instant nextRetry2 = message.getNextRetryAt();
+            assertThat(nextRetry2).isAfterOrEqualTo(before2.plusMillis(2000));
+            assertThat(nextRetry2).isBefore(before2.plusMillis(2000 + 1500));
+        }
+
+        @Test
         @DisplayName("Should cap delay at maxDelay")
         void shouldCapDelayAtMaxDelay() {
             OutboxMessage message = OutboxMessage.builder()

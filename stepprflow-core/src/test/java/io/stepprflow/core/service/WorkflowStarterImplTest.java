@@ -185,6 +185,9 @@ class WorkflowStarterImplTest {
             String executionId = future.get(5, TimeUnit.SECONDS);
 
             assertThat(executionId).isNotNull();
+            // Verify executionId is a valid UUID (not empty string)
+            assertThat(executionId).isNotEmpty();
+            assertThat(executionId).matches("[a-f0-9\\-]{36}");
             verify(messageBroker).send(eq("test-topic"), any(WorkflowMessage.class));
         }
 
@@ -217,6 +220,22 @@ class WorkflowStarterImplTest {
             assertThat(message.getCorrelationId()).isNotNull();
             assertThat(message.getTopic()).isEqualTo("test-topic");
             assertThat(message.getStatus()).isEqualTo(WorkflowStatus.PENDING);
+        }
+
+        @Test
+        @DisplayName("Should send message to broker")
+        void shouldSendMessageToBroker() {
+            when(registry.getDefinition("test-topic")).thenReturn(testDefinition);
+
+            WorkflowMessage returnedMessage = workflowStarter.startAndGetMessage("test-topic", new TestPayload("test"));
+
+            // Verify messageBroker.send() was called
+            verify(messageBroker).send(eq("test-topic"), messageCaptor.capture());
+            WorkflowMessage sentMessage = messageCaptor.getValue();
+
+            // Verify the sent message matches the returned message
+            assertThat(sentMessage.getExecutionId()).isEqualTo(returnedMessage.getExecutionId());
+            assertThat(sentMessage.getTopic()).isEqualTo(returnedMessage.getTopic());
         }
 
         @Test

@@ -251,12 +251,150 @@ class ExecutionPersistenceServiceTest {
 
             assertThat(saved.getDurationMs()).isNotNull();
             assertThat(saved.getDurationMs()).isGreaterThan(0);
+            // Duration should be approximately 10 seconds (10000ms), not negative
+            assertThat(saved.getDurationMs()).isBetween(9000L, 15000L);
+        }
+
+        @Test
+        @DisplayName("Should set completedAt for CANCELLED status")
+        void shouldSetCompletedAtForCancelledStatus() {
+            when(repository.findById("exec-123")).thenReturn(Optional.empty());
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.CANCELLED)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            assertThat(saved.getCompletedAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("Should finalize execution attempt on completion")
+        void shouldFinalizeExecutionAttemptOnCompletion() {
+            // Create execution with an active attempt
+            WorkflowExecution.ExecutionAttempt activeAttempt = WorkflowExecution.ExecutionAttempt.builder()
+                    .attemptNumber(1)
+                    .startedAt(Instant.now().minusSeconds(10))
+                    .startStep(1)
+                    .build();
+
+            ArrayList<WorkflowExecution.ExecutionAttempt> attempts = new ArrayList<>();
+            attempts.add(activeAttempt);
+
+            WorkflowExecution existing = WorkflowExecution.builder()
+                    .executionId("exec-123")
+                    .topic("test-topic")
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .currentStep(3)
+                    .stepHistory(new ArrayList<>())
+                    .executionAttempts(attempts)
+                    .build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(existing));
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.COMPLETED)
+                    .currentStep(3)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            // Attempt should be finalized
+            WorkflowExecution.ExecutionAttempt finalizedAttempt = saved.getExecutionAttempts().get(0);
+            assertThat(finalizedAttempt.getEndedAt()).isNotNull();
+            assertThat(finalizedAttempt.getResult()).isEqualTo(WorkflowStatus.COMPLETED);
+            assertThat(finalizedAttempt.getEndStep()).isEqualTo(3);
+        }
+
+        @Test
+        @DisplayName("Should set error message in attempt on failure")
+        void shouldSetErrorMessageInAttemptOnFailure() {
+            // Create execution with an active attempt
+            WorkflowExecution.ExecutionAttempt activeAttempt = WorkflowExecution.ExecutionAttempt.builder()
+                    .attemptNumber(1)
+                    .startedAt(Instant.now().minusSeconds(10))
+                    .startStep(1)
+                    .build();
+
+            ArrayList<WorkflowExecution.ExecutionAttempt> attempts = new ArrayList<>();
+            attempts.add(activeAttempt);
+
+            WorkflowExecution existing = WorkflowExecution.builder()
+                    .executionId("exec-123")
+                    .topic("test-topic")
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .currentStep(2)
+                    .stepHistory(new ArrayList<>())
+                    .executionAttempts(attempts)
+                    .build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(existing));
+
+            ErrorInfo errorInfo = ErrorInfo.builder()
+                    .message("Workflow failed at step 2")
+                    .build();
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.FAILED)
+                    .currentStep(2)
+                    .errorInfo(errorInfo)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            WorkflowExecution.ExecutionAttempt finalizedAttempt = saved.getExecutionAttempts().get(0);
+            assertThat(finalizedAttempt.getErrorMessage()).isEqualTo("Workflow failed at step 2");
         }
     }
 
     @Nested
     @DisplayName("Step history tracking")
     class StepHistoryTrackingTests {
+
+        @Test
+        @DisplayName("Should add step to history for PENDING status")
+        void shouldAddStepToHistoryForPendingStatus() {
+            when(repository.findById("exec-123")).thenReturn(Optional.empty());
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.PENDING)
+                    .currentStep(1)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            assertThat(saved.getStepHistory()).isNotNull();
+            assertThat(saved.getStepHistory()).hasSize(1);
+        }
+
+        @Test
+        @DisplayName("Should add step to history for RETRY_PENDING status")
+        void shouldAddStepToHistoryForRetryPendingStatus() {
+            when(repository.findById("exec-123")).thenReturn(Optional.empty());
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.RETRY_PENDING)
+                    .currentStep(1)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            assertThat(saved.getStepHistory()).isNotNull();
+            assertThat(saved.getStepHistory()).hasSize(1);
+        }
 
         @Test
         @DisplayName("Should add step to history for IN_PROGRESS status")
@@ -276,6 +414,48 @@ class ExecutionPersistenceServiceTest {
             assertThat(saved.getStepHistory()).isNotNull();
             assertThat(saved.getStepHistory()).hasSize(1);
             assertThat(saved.getStepHistory().get(0).getStepId()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Should mark previous steps as PASSED when advancing to next step")
+        void shouldMarkPreviousStepsAsPassedWhenAdvancing() {
+            // Create existing execution with step 1 IN_PROGRESS
+            WorkflowExecution.StepExecution step1 = WorkflowExecution.StepExecution.builder()
+                    .stepId(1)
+                    .startedAt(Instant.now().minusSeconds(10))
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .build();
+
+            ArrayList<WorkflowExecution.StepExecution> history = new ArrayList<>();
+            history.add(step1);
+
+            WorkflowExecution existing = WorkflowExecution.builder()
+                    .executionId("exec-123")
+                    .topic("test-topic")
+                    .currentStep(1)
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .stepHistory(history)
+                    .build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(existing));
+
+            // Now advance to step 2
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .currentStep(2)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            // Step 1 should be marked as PASSED
+            WorkflowExecution.StepExecution savedStep1 = saved.getStepHistory().stream()
+                    .filter(s -> s.getStepId() == 1)
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(savedStep1.getStatus()).isEqualTo(WorkflowStatus.PASSED);
+            assertThat(savedStep1.getCompletedAt()).isNotNull();
         }
 
         @Test
@@ -389,6 +569,170 @@ class ExecutionPersistenceServiceTest {
             WorkflowExecution saved = executionCaptor.getValue();
 
             assertThat(saved.getStepHistory().get(0).getAttempt()).isEqualTo(3);
+        }
+    }
+
+    @Nested
+    @DisplayName("Step duration calculation")
+    class StepDurationCalculationTests {
+
+        @Test
+        @DisplayName("Should calculate step duration correctly when startedAt is set")
+        void shouldCalculateStepDurationCorrectlyWhenStartedAtIsSet() {
+            // Create existing execution with a step that has startedAt
+            Instant stepStartTime = Instant.now().minusSeconds(5);
+            WorkflowExecution.StepExecution existingStep = WorkflowExecution.StepExecution.builder()
+                    .stepId(1)
+                    .startedAt(stepStartTime)
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .build();
+
+            ArrayList<WorkflowExecution.StepExecution> history = new ArrayList<>();
+            history.add(existingStep);
+
+            WorkflowExecution existing = WorkflowExecution.builder()
+                    .executionId("exec-123")
+                    .topic("test-topic")
+                    .stepHistory(history)
+                    .build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(existing));
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.COMPLETED)
+                    .currentStep(1)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            // Step duration should be positive (approximately 5 seconds)
+            Long durationMs = saved.getStepHistory().get(0).getDurationMs();
+            assertThat(durationMs).isNotNull();
+            assertThat(durationMs).isGreaterThanOrEqualTo(5000L);
+            assertThat(durationMs).isLessThan(10000L);
+        }
+
+        @Test
+        @DisplayName("Should not calculate step duration when startedAt is null")
+        void shouldNotCalculateStepDurationWhenStartedAtIsNull() {
+            // Create existing execution with a step that has no startedAt
+            WorkflowExecution.StepExecution existingStep = WorkflowExecution.StepExecution.builder()
+                    .stepId(1)
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .build();
+
+            ArrayList<WorkflowExecution.StepExecution> history = new ArrayList<>();
+            history.add(existingStep);
+
+            WorkflowExecution existing = WorkflowExecution.builder()
+                    .executionId("exec-123")
+                    .topic("test-topic")
+                    .stepHistory(history)
+                    .build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(existing));
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.COMPLETED)
+                    .currentStep(1)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            assertThat(saved.getStepHistory().get(0).getDurationMs()).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("Step status handling")
+    class StepStatusHandlingTests {
+
+        @Test
+        @DisplayName("Should set step status to IN_PROGRESS for IN_PROGRESS message")
+        void shouldSetStepStatusToInProgressForInProgressMessage() {
+            WorkflowExecution.StepExecution existingStep = WorkflowExecution.StepExecution.builder()
+                    .stepId(1)
+                    .startedAt(Instant.now().minusSeconds(5))
+                    .status(WorkflowStatus.PENDING)
+                    .build();
+
+            ArrayList<WorkflowExecution.StepExecution> history = new ArrayList<>();
+            history.add(existingStep);
+
+            WorkflowExecution existing = WorkflowExecution.builder()
+                    .executionId("exec-123")
+                    .topic("test-topic")
+                    .stepHistory(history)
+                    .build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(existing));
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .currentStep(1)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            assertThat(saved.getStepHistory().get(0).getStatus()).isEqualTo(WorkflowStatus.IN_PROGRESS);
+        }
+
+        @Test
+        @DisplayName("Should set step status to PENDING for PENDING message")
+        void shouldSetStepStatusToPendingForPendingMessage() {
+            when(repository.findById("exec-123")).thenReturn(Optional.empty());
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.PENDING)
+                    .currentStep(1)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            // Step should be created with the same status
+            assertThat(saved.getStepHistory().get(0).getStatus()).isEqualTo(WorkflowStatus.PENDING);
+        }
+
+        @Test
+        @DisplayName("Should set step status to FAILED for FAILED message")
+        void shouldSetStepStatusToFailedForFailedMessage() {
+            WorkflowExecution.StepExecution existingStep = WorkflowExecution.StepExecution.builder()
+                    .stepId(1)
+                    .startedAt(Instant.now().minusSeconds(5))
+                    .status(WorkflowStatus.IN_PROGRESS)
+                    .build();
+
+            ArrayList<WorkflowExecution.StepExecution> history = new ArrayList<>();
+            history.add(existingStep);
+
+            WorkflowExecution existing = WorkflowExecution.builder()
+                    .executionId("exec-123")
+                    .topic("test-topic")
+                    .stepHistory(history)
+                    .build();
+            when(repository.findById("exec-123")).thenReturn(Optional.of(existing));
+
+            testMessage = testMessage.toBuilder()
+                    .status(WorkflowStatus.FAILED)
+                    .currentStep(1)
+                    .build();
+
+            persistenceService.onWorkflowMessage(testMessage);
+
+            verify(repository).save(executionCaptor.capture());
+            WorkflowExecution saved = executionCaptor.getValue();
+
+            assertThat(saved.getStepHistory().get(0).getStatus()).isEqualTo(WorkflowStatus.FAILED);
+            assertThat(saved.getStepHistory().get(0).getCompletedAt()).isNotNull();
         }
     }
 

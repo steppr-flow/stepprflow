@@ -82,7 +82,35 @@ class WorkflowRegistrationClientTest {
                     properties, workflowRegistry, objectMapper);
 
             client.registerWorkflows();
-            // No exception means success
+            // Verify registry was called but no HTTP request made (would throw if tried)
+            org.mockito.Mockito.verify(workflowRegistry).getAllDefinitions();
+        }
+
+        @Test
+        @DisplayName("should call registry getAllDefinitions when serverUrl is valid")
+        void shouldCallRegistryWhenServerUrlIsValid() {
+            properties.setServerUrl("http://localhost:8090");
+            when(workflowRegistry.getAllDefinitions()).thenReturn(Collections.emptyList());
+
+            WorkflowRegistrationClient client = new WorkflowRegistrationClient(
+                    properties, workflowRegistry, objectMapper);
+            client.registerWorkflows();
+
+            // Verify the workflow definitions were requested
+            org.mockito.Mockito.verify(workflowRegistry).getAllDefinitions();
+        }
+
+        @Test
+        @DisplayName("should not call registry when serverUrl is null")
+        void shouldNotCallRegistryWhenServerUrlIsNull() {
+            properties.setServerUrl(null);
+
+            WorkflowRegistrationClient client = new WorkflowRegistrationClient(
+                    properties, workflowRegistry, objectMapper);
+            client.registerWorkflows();
+
+            // Verify registry was NOT called
+            org.mockito.Mockito.verify(workflowRegistry, org.mockito.Mockito.never()).getAllDefinitions();
         }
     }
 

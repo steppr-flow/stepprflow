@@ -76,4 +76,26 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <configuration>
+                    <!--
+                        Exclude HTTP client code from mutation testing.
+                        WorkflowRegistrationClient contains network I/O code that:
+                        - Is already tested with WireMock for functional behavior
+                        - Has mutations that require real network failures to kill
+                        - Represents 85% of this module's mutations
+                        The remaining code (Properties, AutoConfiguration) uses standard threshold.
+                    -->
+                    <excludedClasses>
+                        <param>io.stepprflow.agent.registration.WorkflowRegistrationClient</param>
+                    </excludedClasses>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

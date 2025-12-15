@@ -244,6 +244,42 @@ class WorkflowRegistryTest {
     }
 
     @Nested
+    @DisplayName("Proxy handling")
+    class ProxyHandlingTests {
+
+        @Test
+        @DisplayName("Should handle CGLIB proxy classes by using superclass")
+        void shouldHandleCglibProxyByUsingSuperclass() {
+            // Create a simulated proxy (subclass with $$ in name would be detected as proxy)
+            TestWorkflowProxy$$EnhancerByCGLIB$$abc123 proxyWorkflow = new TestWorkflowProxy$$EnhancerByCGLIB$$abc123();
+            Map<String, Object> beans = Map.of("proxyWorkflow", proxyWorkflow);
+            when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
+
+            workflowRegistry.init();
+
+            // Should find the workflow via the superclass
+            WorkflowDefinition definition = workflowRegistry.getDefinition("proxy-workflow");
+            assertThat(definition).isNotNull();
+            assertThat(definition.getTopic()).isEqualTo("proxy-workflow");
+        }
+
+        @Test
+        @DisplayName("Should skip bean when topic annotation not found after proxy resolution")
+        void shouldSkipWhenTopicNotFoundAfterProxyResolution() {
+            // This simulates a case where the proxy class has @Topic but the superclass doesn't
+            // (shouldn't normally happen, but we need to test the defensive check)
+            NoTopicWorkflowProxy$$EnhancerByCGLIB$$xyz789 proxyWithoutTopic = new NoTopicWorkflowProxy$$EnhancerByCGLIB$$xyz789();
+            Map<String, Object> beans = Map.of("proxyWithoutTopic", proxyWithoutTopic);
+            when(applicationContext.getBeansWithAnnotation(Topic.class)).thenReturn(beans);
+
+            workflowRegistry.init();
+
+            // Should skip this workflow since superclass has no @Topic
+            assertThat(workflowRegistry.getTopics()).isEmpty();
+        }
+    }
+
+    @Nested
     @DisplayName("Query methods")
     class QueryMethodsTests {
 
@@ -324,5 +360,31 @@ class WorkflowRegistryTest {
         @Timeout(value = 30, unit = TimeUnit.SECONDS)
         public void timedStep(Object payload) {
         }
+    }
+
+    // Base class for proxy simulation (has @Topic annotation)
+    @Topic("proxy-workflow")
+    static class ProxyWorkflowBase implements StepprFlow {
+        @Step(id = 1, label = "Proxy Step")
+        public void proxyStep(Object payload) {
+        }
+    }
+
+    // Simulated CGLIB proxy class (name contains $$)
+    // This simulates what Spring does with CGLIB proxies
+    static class TestWorkflowProxy$$EnhancerByCGLIB$$abc123 extends ProxyWorkflowBase {
+        // Proxy class - inherits @Topic from superclass
+    }
+
+    // Base class WITHOUT @Topic annotation
+    static class NoTopicWorkflowBase implements StepprFlow {
+        @Step(id = 1, label = "No Topic Step")
+        public void noTopicStep(Object payload) {
+        }
+    }
+
+    // Simulated CGLIB proxy where superclass has no @Topic
+    static class NoTopicWorkflowProxy$$EnhancerByCGLIB$$xyz789 extends NoTopicWorkflowBase {
+        // Proxy class - superclass has no @Topic, so this should be skipped
     }
 }

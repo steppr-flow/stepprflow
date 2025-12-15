@@ -177,6 +177,16 @@ class CallbackMethodInvokerTest {
     class InvokeRawTests {
 
         @Test
+        @DisplayName("Should invoke callback with no parameters")
+        void shouldInvokeWithNoParameters() throws Exception {
+            Method method = TestCallbackHandler.class.getDeclaredMethod("onSuccessNoArgs");
+
+            invoker.invokeRaw(method, handler, testMessage, null);
+
+            assertThat(handler.noArgsCalled).isTrue();
+        }
+
+        @Test
         @DisplayName("Should use raw payload from message")
         void shouldUseRawPayload() throws Exception {
             Method method = TestCallbackHandler.class.getDeclaredMethod("onSuccessWithPayload", Object.class);
@@ -184,6 +194,16 @@ class CallbackMethodInvokerTest {
             invoker.invokeRaw(method, handler, testMessage, null);
 
             assertThat(handler.payloadReceived).isEqualTo(testMessage.getPayload());
+        }
+
+        @Test
+        @DisplayName("Should invoke with WorkflowMessage parameter")
+        void shouldInvokeWithWorkflowMessage() throws Exception {
+            Method method = TestCallbackHandler.class.getDeclaredMethod("onSuccessWithMessage", WorkflowMessage.class);
+
+            invoker.invokeRaw(method, handler, testMessage, null);
+
+            assertThat(handler.messageReceived).isEqualTo(testMessage);
         }
 
         @Test
@@ -196,6 +216,18 @@ class CallbackMethodInvokerTest {
 
             assertThat(handler.payloadReceived).isEqualTo(testMessage.getPayload());
             assertThat(handler.errorReceived).isEqualTo(error);
+        }
+
+        @Test
+        @DisplayName("Should not throw for methods with 3+ parameters")
+        void shouldNotThrowForUnsupportedParameters() throws Exception {
+            Method method = TestCallbackHandler.class.getDeclaredMethod("unsupportedThreeParams", Object.class, Throwable.class, String.class);
+
+            // Should not throw, just log a warning
+            invoker.invokeRaw(method, handler, testMessage, new RuntimeException("error"));
+
+            // Method should not be invoked
+            assertThat(handler.unsupportedCalled).isFalse();
         }
     }
 

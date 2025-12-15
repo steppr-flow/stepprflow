@@ -2,16 +2,26 @@ package io.stepprflow.monitor.controller;
 
 import io.stepprflow.monitor.exception.ConcurrentModificationException;
 import io.stepprflow.monitor.exception.ResourceNotFoundException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for GlobalExceptionHandler.
@@ -208,6 +218,153 @@ class GlobalExceptionHandlerTest {
             @SuppressWarnings("unchecked")
             Map<String, Object> body = (Map<String, Object>) response.getBody();
             assertThat(body.get("code")).isEqualTo("INTERNAL_ERROR");
+        }
+    }
+
+    @Nested
+    @DisplayName("MethodArgumentNotValidException handling")
+    class MethodArgumentNotValidExceptionTests {
+
+        @Test
+        @DisplayName("Should return 400 BAD_REQUEST for validation errors")
+        void shouldReturn400ForValidationErrors() {
+            MethodArgumentNotValidException ex = createMockMethodArgumentNotValidException(
+                    "username", "must not be blank"
+            );
+
+            ResponseEntity<?> response = handler.handleValidationError(ex);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("Should include field errors in response")
+        void shouldIncludeFieldErrorsInResponse() {
+            MethodArgumentNotValidException ex = createMockMethodArgumentNotValidException(
+                    "email", "must be a valid email"
+            );
+
+            ResponseEntity<?> response = handler.handleValidationError(ex);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = (Map<String, Object>) response.getBody();
+            assertThat(body.get("code")).isEqualTo("VALIDATION_ERROR");
+            assertThat(body.get("message").toString()).contains("email");
+            assertThat(body.get("message").toString()).contains("must be a valid email");
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> fieldErrors = (List<Map<String, String>>) body.get("fieldErrors");
+            assertThat(fieldErrors).isNotEmpty();
+            assertThat(fieldErrors.get(0).get("field")).isEqualTo("email");
+            assertThat(fieldErrors.get(0).get("message")).isEqualTo("must be a valid email");
+        }
+
+        @Test
+        @DisplayName("Should handle null default message gracefully")
+        void shouldHandleNullDefaultMessageGracefully() {
+            MethodArgumentNotValidException ex = createMockMethodArgumentNotValidException(
+                    "field", null
+            );
+
+            ResponseEntity<?> response = handler.handleValidationError(ex);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = (Map<String, Object>) response.getBody();
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> fieldErrors = (List<Map<String, String>>) body.get("fieldErrors");
+            assertThat(fieldErrors).isNotEmpty();
+            assertThat(fieldErrors.get(0).get("message")).isEqualTo("Invalid value");
+        }
+
+        private MethodArgumentNotValidException createMockMethodArgumentNotValidException(
+                String field, String message) {
+            FieldError fieldError = new FieldError("object", field, message);
+            BindingResult bindingResult = mock(BindingResult.class);
+            when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
+
+            MethodArgumentNotValidException ex = mock(MethodArgumentNotValidException.class);
+            when(ex.getBindingResult()).thenReturn(bindingResult);
+            return ex;
+        }
+    }
+
+    @Nested
+    @DisplayName("ConstraintViolationException handling")
+    class ConstraintViolationExceptionTests {
+
+        @Test
+        @DisplayName("Should return 400 BAD_REQUEST for constraint violations")
+        void shouldReturn400ForConstraintViolations() {
+            ConstraintViolationException ex = createMockConstraintViolationException(
+                    "listExecutions.page", "must be greater than 0"
+            );
+
+            ResponseEntity<?> response = handler.handleConstraintViolation(ex);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("Should extract field name from path with dot")
+        void shouldExtractFieldNameFromPathWithDot() {
+            ConstraintViolationException ex = createMockConstraintViolationException(
+                    "listExecutions.page", "must be positive"
+            );
+
+            ResponseEntity<?> response = handler.handleConstraintViolation(ex);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = (Map<String, Object>) response.getBody();
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> fieldErrors = (List<Map<String, String>>) body.get("fieldErrors");
+            assertThat(fieldErrors).isNotEmpty();
+            assertThat(fieldErrors.get(0).get("field")).isEqualTo("page");
+            assertThat(fieldErrors.get(0).get("message")).isEqualTo("must be positive");
+        }
+
+        @Test
+        @DisplayName("Should handle path without dot")
+        void shouldHandlePathWithoutDot() {
+            ConstraintViolationException ex = createMockConstraintViolationException(
+                    "simpleField", "is invalid"
+            );
+
+            ResponseEntity<?> response = handler.handleConstraintViolation(ex);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = (Map<String, Object>) response.getBody();
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> fieldErrors = (List<Map<String, String>>) body.get("fieldErrors");
+            assertThat(fieldErrors).isNotEmpty();
+            assertThat(fieldErrors.get(0).get("field")).isEqualTo("simpleField");
+        }
+
+        @Test
+        @DisplayName("Should include error message with field names")
+        void shouldIncludeErrorMessageWithFieldNames() {
+            ConstraintViolationException ex = createMockConstraintViolationException(
+                    "method.size", "must be at least 1"
+            );
+
+            ResponseEntity<?> response = handler.handleConstraintViolation(ex);
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> body = (Map<String, Object>) response.getBody();
+            assertThat(body.get("message").toString()).contains("size");
+            assertThat(body.get("message").toString()).contains("must be at least 1");
+        }
+
+        @SuppressWarnings("unchecked")
+        private ConstraintViolationException createMockConstraintViolationException(
+                String propertyPath, String message) {
+            Path path = mock(Path.class);
+            when(path.toString()).thenReturn(propertyPath);
+
+            ConstraintViolation<Object> violation = mock(ConstraintViolation.class);
+            when(violation.getPropertyPath()).thenReturn(path);
+            when(violation.getMessage()).thenReturn(message);
+
+            return new ConstraintViolationException(Set.of(violation));
         }
     }
 }

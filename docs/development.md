@@ -189,6 +189,38 @@ mvn jacoco:report
 
 Reports are generated in `target/site/jacoco/index.html`.
 
+### Mutation Testing (Pitest)
+
+Pitest performs mutation testing to measure test quality. It works by introducing small changes (mutations) to the code and checking if tests detect them.
+
+**Run mutation testing on all modules:**
+```bash
+mvn verify -Ppitest
+```
+
+**Run on a specific module:**
+```bash
+mvn verify -Ppitest -pl stepprflow-core
+```
+
+**Run directly (without verify phase):**
+```bash
+mvn pitest:mutationCoverage -pl stepprflow-core
+```
+
+**Configuration:**
+- Mutation threshold: 60% (mutations that must be killed)
+- Coverage threshold: 80% (line coverage required)
+- Uses 4 threads for parallel execution
+- Excludes DTOs, models, configurations from mutation
+
+**Output:**
+- HTML report: `target/pit-reports/YYYYMMDDHHMI/index.html`
+- XML report: `target/pit-reports/YYYYMMDDHHMI/mutations.xml`
+
+**Incremental mode:**
+Pitest uses history files to speed up subsequent runs by only testing mutations affected by code changes.
+
 ### Load Tests
 
 ```bash

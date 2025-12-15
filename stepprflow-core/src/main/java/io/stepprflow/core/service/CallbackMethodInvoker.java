@@ -33,7 +33,6 @@ public class CallbackMethodInvoker {
             final Object handler,
             final WorkflowMessage message,
             final Throwable error) throws Exception {
-        method.setAccessible(true);
         Class<?>[] paramTypes = method.getParameterTypes();
 
         if (paramTypes.length == 0) {
@@ -63,7 +62,6 @@ public class CallbackMethodInvoker {
             final Object handler,
             final WorkflowMessage message,
             final Throwable error) throws Exception {
-        method.setAccessible(true);
         Class<?>[] paramTypes = method.getParameterTypes();
 
         if (paramTypes.length == 0) {

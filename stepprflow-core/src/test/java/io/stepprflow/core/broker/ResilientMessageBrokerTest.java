@@ -94,6 +94,46 @@ class ResilientMessageBrokerTest {
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("Broker error");
         }
+
+        @Test
+        @DisplayName("should delegate sendAsync directly when disabled")
+        void shouldDelegateSendAsyncDirectly() {
+            cbConfig.setEnabled(false);
+            createResilientBroker();
+            WorkflowMessage message = createTestMessage();
+            CompletableFuture<Void> expected = CompletableFuture.completedFuture(null);
+            when(delegateBroker.sendAsync(any(), any())).thenReturn(expected);
+
+            CompletableFuture<Void> result = resilientBroker.sendAsync("topic", message);
+
+            assertThat(result).isSameAs(expected);
+            verify(delegateBroker).sendAsync("topic", message);
+        }
+
+        @Test
+        @DisplayName("should delegate sendSync directly when disabled")
+        void shouldDelegateSendSyncDirectly() {
+            cbConfig.setEnabled(false);
+            createResilientBroker();
+            WorkflowMessage message = createTestMessage();
+
+            resilientBroker.sendSync("topic", message);
+
+            verify(delegateBroker).sendSync("topic", message);
+        }
+
+        @Test
+        @DisplayName("should delegate isAvailable directly when disabled")
+        void shouldDelegateIsAvailableDirectly() {
+            cbConfig.setEnabled(false);
+            createResilientBroker();
+            when(delegateBroker.isAvailable()).thenReturn(true);
+
+            boolean result = resilientBroker.isAvailable();
+
+            assertThat(result).isTrue();
+            verify(delegateBroker).isAvailable();
+        }
     }
 
     @Nested
@@ -368,7 +408,7 @@ class ResilientMessageBrokerTest {
         }
 
         @Test
-        @DisplayName("should return false when circuit is open")
+        @DisplayName("should return false when circuit is open without checking delegate")
         void shouldReturnFalseWhenOpen() {
             WorkflowMessage message = createTestMessage();
             doThrow(new RuntimeException("Broker down")).when(delegateBroker).send(any(), any());
@@ -381,6 +421,8 @@ class ResilientMessageBrokerTest {
             }
 
             assertThat(resilientBroker.isAvailable()).isFalse();
+            // Verify delegate.isAvailable() is NOT called when circuit is OPEN
+            verify(delegateBroker, never()).isAvailable();
         }
 
         @Test
