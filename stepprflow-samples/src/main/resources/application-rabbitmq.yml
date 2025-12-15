@@ -1,0 +1,17 @@
+# RabbitMQ broker configuration
+server:
+  port: 8011  # Different port to avoid conflict when running both
+
+stepprflow:
+  broker: rabbitmq
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    exchange: stepprflow.workflows
+    prefetch-count: 10
+    trusted-packages:
+      - io.stepprflow.core.model
+      - io.stepprflow.sample.model

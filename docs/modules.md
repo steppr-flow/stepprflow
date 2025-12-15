@@ -5,7 +5,7 @@ This document describes the architecture and purpose of each module in the Stepp
 ## Module Overview
 
 ```
-steppr-flow/
+stepprflow/
 ├── stepprflow-core/           # Core workflow engine
 ├── stepprflow-spring-kafka/   # Kafka broker implementation
 ├── stepprflow-spring-rabbitmq/# RabbitMQ broker implementation
@@ -38,7 +38,7 @@ steppr-flow/
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-core</artifactId>
-    <version>${steppr-flow.version}</version>
+    <version>${stepprflow.version}</version>
 </dependency>
 ```
 
@@ -62,7 +62,7 @@ steppr-flow/
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-kafka</artifactId>
-    <version>${steppr-flow.version}</version>
+    <version>${stepprflow.version}</version>
 </dependency>
 ```
 
@@ -71,7 +71,7 @@ steppr-flow/
 spring:
   kafka:
     bootstrap-servers: localhost:9092
-steppr-flow:
+stepprflow:
   kafka:
     enabled: true
 ```
@@ -97,7 +97,7 @@ steppr-flow:
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-rabbitmq</artifactId>
-    <version>${steppr-flow.version}</version>
+    <version>${stepprflow.version}</version>
 </dependency>
 ```
 
@@ -107,7 +107,7 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-steppr-flow:
+stepprflow:
   rabbitmq:
     enabled: true
 ```
@@ -163,7 +163,7 @@ steppr-flow:
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-boot-starter</artifactId>
-    <version>${steppr-flow.version}</version>
+    <version>${stepprflow.version}</version>
 </dependency>
 ```
 

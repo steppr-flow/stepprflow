@@ -3,17 +3,11 @@ server:
 
 spring:
   application:
-    name: steppr-flow-dashboard
+    name: stepprflow-dashboard
 
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://localhost:27017/stepprflow}
-
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP:steppr-flow-dashboard}
-      auto-offset-reset: earliest
 
 stepprflow:
   enabled: true
@@ -41,7 +35,7 @@ stepprflow:
       - io.stepprflow.core.model
       - io.stepprflow.monitor.model
     consumer:
-      group-id: ${KAFKA_CONSUMER_GROUP:steppr-flow-dashboard}
+      group-id: ${KAFKA_CONSUMER_GROUP:stepprflow-dashboard}
       auto-offset-reset: earliest
       concurrency: ${KAFKA_CONSUMER_CONCURRENCY:3}
     producer:

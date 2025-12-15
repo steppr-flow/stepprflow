@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
     <!--
-        SpotBugs exclusion filter for steppr-flow
+        SpotBugs exclusion filter for stepprflow
 
         This filter excludes false positives that occur in Spring-managed beans
         where dependency injection is the standard pattern, and for DTOs/models

@@ -15,8 +15,8 @@ This guide covers setting up a local development environment for Steppr Flow.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/steppr-flow/steppr-flow.git
-cd steppr-flow
+git clone https://github.com/stepprflow/stepprflow.git
+cd stepprflow
 ```
 
 ### 2. Build all modules
@@ -34,7 +34,7 @@ mvn test
 ## Project Structure
 
 ```
-steppr-flow/
+stepprflow/
 ├── .github/                 # GitHub Actions workflows
 │   ├── workflows/
 │   │   ├── ci.yml          # CI pipeline

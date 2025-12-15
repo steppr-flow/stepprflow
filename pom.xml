@@ -13,7 +13,7 @@
 
     <name>Steppr Flow</name>
     <description>Multi-broker workflow orchestration framework for Spring Boot</description>
-    <url>https://github.com/steppr-flow/steppr-flow</url>
+    <url>https://github.com/stepprflow/stepprflow</url>
 
     <licenses>
         <license>
@@ -29,14 +29,14 @@
             <name>Ali M'HIN</name>
             <email>alimhin@gmail.com</email>
             <organization>Steppr Flow</organization>
-            <organizationUrl>https://github.com/steppr-flow</organizationUrl>
+            <organizationUrl>https://github.com/stepprflow</organizationUrl>
         </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/steppr-flow/steppr-flow.git</connection>
-        <developerConnection>scm:git:ssh://github.com:steppr-flow/steppr-flow.git</developerConnection>
-        <url>https://github.com/steppr-flow/steppr-flow</url>
+        <connection>scm:git:git://github.com/stepprflow/stepprflow.git</connection>
+        <developerConnection>scm:git:ssh://github.com:stepprflow/stepprflow.git</developerConnection>
+        <url>https://github.com/stepprflow/stepprflow</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -45,7 +45,7 @@
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/steppr-flow/steppr-flow</url>
+            <url>https://maven.pkg.github.com/stepprflow/stepprflow</url>
         </repository>
         <!-- Maven Central (Sonatype OSSRH) -->
         <snapshotRepository>
@@ -59,9 +59,9 @@
         <module>stepprflow-core</module>
         <module>stepprflow-spring-kafka</module>
         <module>stepprflow-spring-rabbitmq</module>
+        <module>stepprflow-spring-boot-starter</module>
         <module>stepprflow-spring-monitor</module>
         <module>stepprflow-ui</module>
-        <module>stepprflow-spring-boot-starter</module>
         <module>stepprflow-dashboard</module>
     </modules>
 
@@ -70,8 +70,7 @@
         <profile>
             <id>full</id>
             <modules>
-                <module>stepprflow-kafka-sample</module>
-                <module>stepprflow-rabbitmq-sample</module>
+                <module>stepprflow-samples</module>
                 <module>stepprflow-load-tests</module>
             </modules>
         </profile>
@@ -145,7 +144,7 @@
         <micrometer-tracing.version>1.4.2</micrometer-tracing.version>
 
         <!-- Steppr Flow version -->
-        <steppr-flow.version>${project.version}</steppr-flow.version>
+        <stepprflow.version>${project.version}</stepprflow.version>
 
         <!-- JaCoCo -->
         <jacoco.version>0.8.12</jacoco.version>
@@ -185,32 +184,32 @@
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
                 <artifactId>stepprflow-core</artifactId>
-                <version>${steppr-flow.version}</version>
+                <version>${stepprflow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
                 <artifactId>stepprflow-spring-kafka</artifactId>
-                <version>${steppr-flow.version}</version>
+                <version>${stepprflow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
                 <artifactId>stepprflow-spring-rabbitmq</artifactId>
-                <version>${steppr-flow.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stepprflow</groupId>
-                <artifactId>stepprflow-spring-monitor</artifactId>
-                <version>${steppr-flow.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stepprflow</groupId>
-                <artifactId>stepprflow-ui</artifactId>
-                <version>${steppr-flow.version}</version>
+                <version>${stepprflow.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
                 <artifactId>stepprflow-spring-boot-starter</artifactId>
-                <version>${steppr-flow.version}</version>
+                <version>${stepprflow.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stepprflow</groupId>
+                <artifactId>stepprflow-spring-monitor</artifactId>
+                <version>${stepprflow.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.stepprflow</groupId>
+                <artifactId>stepprflow-ui</artifactId>
+                <version>${stepprflow.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

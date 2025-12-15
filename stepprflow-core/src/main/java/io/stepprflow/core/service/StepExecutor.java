@@ -34,7 +34,7 @@ public class StepExecutor {
     /** The message broker. */
     private final MessageBroker messageBroker;
 
-    /** The steppr-flow properties. */
+    /** The stepprflow properties. */
     private final StepprFlowProperties properties;
 
     /** The JSON object mapper. */

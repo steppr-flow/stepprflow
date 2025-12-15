@@ -1,232 +1,131 @@
-# Steppr Flow Spring Boot Starter
+# Steppr Flow Monitor
 
-Spring Boot starter for easy integration of Steppr Flow into your applications.
+Monitoring, persistence, and REST API module for Steppr Flow workflows.
 
 ## Overview
 
-This starter provides auto-configuration for Steppr Flow, making it easy to add workflow orchestration capabilities to any Spring Boot application. It includes everything you need: workflow engine, persistence, monitoring, and metrics.
-
-## What's Included
-
-The starter bundles all necessary modules:
-
-- `stepprflow-core` - Core workflow engine
-- `stepprflow-spring-kafka` - Kafka broker (default)
-- `stepprflow-spring-monitor` - Persistence, REST API, and monitoring
-- `spring-boot-starter-data-mongodb` - MongoDB persistence
-- `spring-boot-starter-actuator` - Metrics and health checks
-
-## Features
-
-- Auto-configuration of all Steppr Flow components
-- Automatic workflow registration via `@Topic` annotation
-- Built-in MongoDB persistence for workflow state
-- Resume/replay failed workflows from where they stopped
-- REST API for workflow monitoring and control
-- Metrics via Micrometer/Actuator
-- Support for Kafka (default) and RabbitMQ brokers
+This module provides:
+- MongoDB persistence for workflow executions
+- REST API for querying and managing workflows
+- Real-time updates via WebSocket
+- Metrics and statistics
 
 ## Installation
 
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>stepprflow-spring-boot-starter</artifactId>
+    <artifactId>stepprflow-spring-monitor</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
-```
-
-**Using RabbitMQ instead of Kafka?** Add:
-
-```xml
-<dependency>
-    <groupId>io.github.stepprflow</groupId>
-    <artifactId>stepprflow-spring-rabbitmq</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-</dependency>
-```
-
-## Requirements
-
-- Java 21+
-- MongoDB running on `localhost:27017` (default)
-- Kafka on `localhost:9092` (default) OR RabbitMQ on `localhost:5672`
-
-Quick start with Docker:
-
-```bash
-# MongoDB (required)
-docker run -d --name mongodb -p 27017:27017 mongo:latest
-
-# Kafka
-docker run -d --name kafka -p 9092:9092 apache/kafka:latest
-
-# OR RabbitMQ
-docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:management
 ```
 
 ## Configuration
 
-### Minimal (Kafka)
-
 ```yaml
 stepprflow:
-  kafka:
-    bootstrap-servers: localhost:9092
-    trusted-packages:
-      - io.stepprflow.core.model
-      - com.mycompany.workflow
-```
+  monitor:
+    enabled: true
+    retry:
+      enabled: true
+      poll-interval: 30s
+    cleanup:
+      enabled: true
+      retention-days: 30
 
-### Minimal (RabbitMQ)
-
-```yaml
-stepprflow:
-  broker: rabbitmq
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    trusted-packages:
-      - io.stepprflow.core.model
-      - com.mycompany.workflow
-```
-
-### Full Configuration
-
-```yaml
-stepprflow:
-  enabled: true
-  broker: kafka  # or 'rabbitmq'
-
-  # Kafka configuration (when broker: kafka)
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: my-app-workers
-      auto-offset-reset: earliest
-      concurrency: 1
-    producer:
-      acks: all
-      retries: 3
-    trusted-packages:
-      - io.stepprflow.core.model
-      - com.mycompany.workflow
-
-  # RabbitMQ configuration (when broker: rabbitmq)
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    exchange: stepprflow.workflows
-    prefetch-count: 10
-    trusted-packages:
-      - io.stepprflow.core.model
-      - com.mycompany.workflow
-
-  # MongoDB (defaults shown)
+  # MongoDB configuration (defaults shown)
   mongodb:
     uri: mongodb://localhost:27017/stepprflow
     database: stepprflow
-
-  # Retry policy
-  retry:
-    max-attempts: 3
-    initial-delay: 1s
-    max-delay: 5m
-    multiplier: 2.0
-
-  # Dead Letter Queue
-  dlq:
-    enabled: true
-    suffix: .dlq
-
-  # Monitor module
-  monitor:
-    enabled: true
-    web-socket:
-      enabled: true
 ```
 
-## Usage
+> **Note:** MongoDB configuration is handled internally by Steppr Flow via `stepprflow.mongodb.*` properties. You do not need to configure `spring.data.mongodb` separately.
 
-### 1. Define a Workflow
+## REST API
 
-```java
-@Component
-@Topic("order-workflow")
-public class OrderWorkflow implements StepprFlow {
+### Endpoints
 
-    @Step(id = 1, label = "Validate Order")
-    public void validate(OrderPayload payload) {
-        // Validation logic
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/workflows` | List executions (paginated) |
+| `GET` | `/api/workflows/{id}` | Get execution by ID |
+| `GET` | `/api/workflows/stats` | Get statistics |
+| `GET` | `/api/workflows/recent` | Get recent executions |
+| `POST` | `/api/workflows/{id}/resume` | Resume failed execution |
+| `DELETE` | `/api/workflows/{id}` | Cancel execution |
+| `PATCH` | `/api/workflows/{id}/payload` | Update payload field |
+
+### Query Parameters
+
+```
+GET /api/workflows?page=0&size=20&topic=order-processing&statuses=FAILED,RETRY_PENDING&sortBy=createdAt&direction=DESC
+```
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `page` | Page number (0-based) | `0` |
+| `size` | Page size (1-100) | `20` |
+| `topic` | Filter by topic | - |
+| `statuses` | Filter by status (comma-separated) | - |
+| `sortBy` | Sort field | `createdAt` |
+| `direction` | Sort direction (ASC/DESC) | `DESC` |
+
+### Example Response
+
+```json
+{
+  "content": [
+    {
+      "executionId": "exec-123",
+      "correlationId": "corr-456",
+      "topic": "order-processing",
+      "status": "COMPLETED",
+      "currentStep": 4,
+      "totalSteps": 4,
+      "payload": { "orderId": "ORD-001" },
+      "createdAt": "2024-01-15T10:30:00Z",
+      "completedAt": "2024-01-15T10:30:05Z"
     }
-
-    @Step(id = 2, label = "Process Payment")
-    public void processPayment(OrderPayload payload) {
-        // Payment logic
-    }
-
-    @Step(id = 3, label = "Send Confirmation")
-    public void sendConfirmation(OrderPayload payload) {
-        // Notification logic
-    }
-
-    @OnSuccess
-    public void onComplete(OrderPayload payload) {
-        log.info("Order completed: {}", payload.getOrderId());
-    }
-
-    @OnFailure
-    public void onFailed(OrderPayload payload, Throwable error) {
-        log.error("Order failed: {}", error.getMessage());
-    }
+  ],
+  "totalElements": 150,
+  "totalPages": 8
 }
 ```
 
-### 2. Start a Workflow
+## WebSocket
 
-```java
-@RestController
-@RequestMapping("/orders")
-public class OrderController {
+Subscribe to real-time updates:
 
-    private final WorkflowStarter workflowStarter;
-
-    @PostMapping
-    public ResponseEntity<String> createOrder(@RequestBody OrderRequest request) {
-        String executionId = workflowStarter.start("order-workflow", new OrderPayload(request));
-        return ResponseEntity.accepted().body(executionId);
-    }
-}
+```javascript
+const ws = new WebSocket('ws://localhost:8090/ws/workflows');
+ws.onmessage = (event) => {
+  const update = JSON.parse(event.data);
+  console.log('Workflow update:', update);
+};
 ```
 
-### 3. Monitor Workflows
+## Services
 
-The starter exposes REST endpoints at `/api/workflows`:
+| Service | Description |
+|---------|-------------|
+| `WorkflowQueryService` | Read operations |
+| `WorkflowCommandService` | State changes (resume, cancel) |
+| `PayloadManagementService` | Payload updates with optimistic locking |
 
-- `GET /api/workflows` - List all executions
-- `GET /api/workflows/{id}` - Get execution details
-- `POST /api/workflows/{id}/resume` - Resume a failed workflow
-- `POST /api/workflows/{id}/cancel` - Cancel a workflow
-
-## Architecture
+## Data Model
 
 ```
-┌──────────────────────────────────────────────────┐
-│              Your Spring Boot App                │
-├──────────────────────────────────────────────────┤
-│     stepprflow-spring-boot-starter              │
-│  ┌────────────────────────────────────────────┐  │
-│  │  stepprflow-core (engine)                 │  │
-│  │  stepprflow-spring-kafka (default broker) │  │
-│  │  stepprflow-spring-monitor (persistence)  │  │
-│  │  spring-boot-starter-data-mongodb          │  │
-│  │  spring-boot-starter-actuator              │  │
-│  └────────────────────────────────────────────┘  │
-├──────────────────────────────────────────────────┤
-│          Kafka / RabbitMQ    │    MongoDB        │
-└──────────────────────────────────────────────────┘
+WorkflowExecution
+├── executionId (PK)
+├── correlationId
+├── topic
+├── status
+├── currentStep / totalSteps
+├── payload / originalPayload
+├── payloadHistory[]
+├── stepHistory[]
+├── retryInfo
+├── errorInfo
+├── createdAt / updatedAt / completedAt
+└── version (optimistic locking)
 ```

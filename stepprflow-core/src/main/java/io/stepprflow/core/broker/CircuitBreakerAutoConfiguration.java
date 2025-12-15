@@ -40,7 +40,7 @@ public class CircuitBreakerAutoConfiguration {
     /**
      * Creates the default CircuitBreakerRegistry bean.
      *
-     * @param properties the steppr-flow properties
+     * @param properties the stepprflow properties
      * @return the circuit breaker registry
      */
     @Bean
@@ -110,7 +110,7 @@ public class CircuitBreakerAutoConfiguration {
          * Creates a resilient message broker wrapper.
          *
          * @param delegate the delegate broker
-         * @param properties the steppr-flow properties
+         * @param properties the stepprflow properties
          * @param registry the circuit breaker registry
          * @return the resilient message broker
          */

@@ -35,7 +35,7 @@ Add the Steppr Flow starter to your `pom.xml`:
 
 ```xml
 <properties>
-    <steppr-flow.version>1.0.0-SNAPSHOT</steppr-flow.version>
+    <stepprflow.version>1.0.0-SNAPSHOT</stepprflow.version>
 </properties>
 
 <dependencies>
@@ -43,7 +43,7 @@ Add the Steppr Flow starter to your `pom.xml`:
     <dependency>
         <groupId>io.github.stepprflow</groupId>
         <artifactId>stepprflow-spring-boot-starter</artifactId>
-        <version>${steppr-flow.version}</version>
+        <version>${stepprflow.version}</version>
     </dependency>
 </dependencies>
 ```
@@ -56,7 +56,7 @@ Add the Steppr Flow starter to your `pom.xml`:
     <dependency>
         <groupId>io.github.stepprflow</groupId>
         <artifactId>stepprflow-spring-boot-starter</artifactId>
-        <version>${steppr-flow.version}</version>
+        <version>${stepprflow.version}</version>
         <exclusions>
             <!-- Exclude Kafka -->
             <exclusion>
@@ -70,7 +70,7 @@ Add the Steppr Flow starter to your `pom.xml`:
     <dependency>
         <groupId>io.github.stepprflow</groupId>
         <artifactId>stepprflow-spring-rabbitmq</artifactId>
-        <version>${steppr-flow.version}</version>
+        <version>${stepprflow.version}</version>
     </dependency>
 </dependencies>
 ```
@@ -765,7 +765,7 @@ docker run -d \
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-monitor</artifactId>
-    <version>${steppr-flow.version}</version>
+    <version>${stepprflow.version}</version>
 </dependency>
 ```
 
