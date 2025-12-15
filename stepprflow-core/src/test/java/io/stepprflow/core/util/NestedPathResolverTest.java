@@ -510,5 +510,194 @@ class NestedPathResolverTest {
 
             assertThat(result).isFalse();
         }
+
+        @Test
+        @DisplayName("Should return false for null map")
+        void shouldReturnFalseForNullMap() {
+            boolean result = resolver.hasValue(null, "name");
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return false for null path")
+        void shouldReturnFalseForNullPath() {
+            Map<String, Object> map = new HashMap<>();
+            map.put("name", "John");
+
+            boolean result = resolver.hasValue(map, null);
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return false for empty path")
+        void shouldReturnFalseForEmptyPath() {
+            Map<String, Object> map = new HashMap<>();
+            map.put("name", "John");
+
+            boolean result = resolver.hasValue(map, "");
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return true for array element at exact boundary")
+        void shouldReturnTrueForArrayElementAtExactBoundary() {
+            List<String> items = new ArrayList<>();
+            items.add("first");
+            items.add("last");
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("items", items);
+
+            // Test exact boundary: index = size - 1 = 1
+            boolean result = resolver.hasValue(map, "items[1]");
+
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should return false for array index equal to size")
+        void shouldReturnFalseForArrayIndexEqualToSize() {
+            List<String> items = new ArrayList<>();
+            items.add("only");
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("items", items);
+
+            // index = 1, size = 1, so index >= size
+            boolean result = resolver.hasValue(map, "items[1]");
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should handle array with nested object correctly")
+        void shouldHandleArrayWithNestedObjectCorrectly() {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", 1);
+            item.put("name", "Item 1");
+
+            List<Map<String, Object>> items = new ArrayList<>();
+            items.add(item);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("items", items);
+
+            // Check nested property inside array element
+            assertThat(resolver.hasValue(map, "items[0].id")).isTrue();
+            assertThat(resolver.hasValue(map, "items[0].missing")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return false when array notation on missing key")
+        void shouldReturnFalseWhenArrayNotationOnMissingKey() {
+            Map<String, Object> map = new HashMap<>();
+            map.put("other", "value");
+
+            boolean result = resolver.hasValue(map, "items[0]");
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return true for deeply nested path")
+        void shouldReturnTrueForDeeplyNestedPath() {
+            Map<String, Object> level3 = new HashMap<>();
+            level3.put("value", "deep");
+
+            Map<String, Object> level2 = new HashMap<>();
+            level2.put("level3", level3);
+
+            Map<String, Object> level1 = new HashMap<>();
+            level1.put("level2", level2);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("level1", level1);
+
+            assertThat(resolver.hasValue(map, "level1.level2.level3.value")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should return false when intermediate key missing in deep path")
+        void shouldReturnFalseWhenIntermediateKeyMissingInDeepPath() {
+            Map<String, Object> level2 = new HashMap<>();
+            level2.put("other", "value");
+
+            Map<String, Object> level1 = new HashMap<>();
+            level1.put("level2", level2);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("level1", level1);
+
+            // level3 doesn't exist
+            assertThat(resolver.hasValue(map, "level1.level2.level3.value")).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge cases for getValue()")
+    class GetValueEdgeCases {
+
+        @Test
+        @DisplayName("Should return null when intermediate value is null")
+        void shouldReturnNullWhenIntermediateValueIsNull() {
+            Map<String, Object> map = new HashMap<>();
+            map.put("address", null);
+
+            Object result = resolver.getValue(map, "address.city");
+
+            assertThat(result).isNull();
+        }
+
+        @Test
+        @DisplayName("Should handle first array element")
+        void shouldHandleFirstArrayElement() {
+            List<String> items = new ArrayList<>();
+            items.add("first");
+            items.add("second");
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("items", items);
+
+            Object result = resolver.getValue(map, "items[0]");
+
+            assertThat(result).isEqualTo("first");
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge cases for setValue()")
+    class SetValueEdgeCases {
+
+        @Test
+        @DisplayName("Should not fail when setting value on non-existent array path")
+        void shouldNotFailWhenSettingValueOnNonExistentArrayPath() {
+            Map<String, Object> map = new HashMap<>();
+            map.put("data", "not a list");
+
+            // Should not throw, just silently fail
+            resolver.setValue(map, "data[0]", "value");
+
+            // Original value unchanged
+            assertThat(map.get("data")).isEqualTo("not a list");
+        }
+
+        @Test
+        @DisplayName("Should replace null with map when setting nested value")
+        void shouldReplaceNullWithMapWhenSettingNestedValue() {
+            Map<String, Object> map = new HashMap<>();
+            map.put("data", null);
+
+            // setValue creates intermediate maps, replacing null
+            resolver.setValue(map, "data.nested", "value");
+
+            // null is replaced with a new map containing the nested value
+            assertThat(map.get("data")).isInstanceOf(Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) map.get("data");
+            assertThat(data.get("nested")).isEqualTo("value");
+        }
     }
 }

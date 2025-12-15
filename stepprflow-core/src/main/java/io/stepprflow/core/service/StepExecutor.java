@@ -9,12 +9,11 @@ import io.stepprflow.core.model.StepDefinition;
 import io.stepprflow.core.model.WorkflowDefinition;
 import io.stepprflow.core.model.WorkflowMessage;
 import io.stepprflow.core.model.WorkflowStatus;
+import io.stepprflow.core.util.StackTraceUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -40,8 +39,11 @@ public class StepExecutor {
     /** The JSON object mapper. */
     private final ObjectMapper objectMapper;
 
-    /** Maximum length for stack trace strings. */
-    private static final int MAX_STACK_TRACE_LENGTH = 2000;
+    /** The backoff calculator for retry delays. */
+    private final BackoffCalculator backoffCalculator;
+
+    /** The callback method invoker. */
+    private final CallbackMethodInvoker callbackMethodInvoker;
 
     /**
      * Execute a workflow step.
@@ -74,8 +76,6 @@ public class StepExecutor {
 
             // Execute step method
             Method method = step.getMethod();
-            // TODO throw custom exception when private method
-            method.setAccessible(true);
             method.invoke(definition.getHandler(), payload);
 
             // Check if last step
@@ -125,9 +125,8 @@ public class StepExecutor {
         // Call success callback if defined
         if (definition.getOnSuccessMethod() != null) {
             try {
-                definition.getOnSuccessMethod().setAccessible(true);
-                invokeCallback(definition.getOnSuccessMethod(),
-                              definition.getHandler(), message);
+                callbackMethodInvoker.invokeRaw(definition.getOnSuccessMethod(),
+                              definition.getHandler(), message, null);
             } catch (Exception e) {
                 log.error("Error in success callback", e);
             }
@@ -136,42 +135,6 @@ public class StepExecutor {
         // Send completion message
         WorkflowMessage completedMessage = message.complete();
         messageBroker.send(message.getTopic() + ".completed", completedMessage);
-    }
-
-    private void invokeCallback(
-            final Method method,
-            final Object handler,
-            final WorkflowMessage message) throws Exception {
-        invokeCallback(method, handler, message, null);
-    }
-
-    private void invokeCallback(
-            final Method method,
-            final Object handler,
-            final WorkflowMessage message,
-            final Throwable error) throws Exception {
-        Class<?>[] paramTypes = method.getParameterTypes();
-
-        if (paramTypes.length == 0) {
-            method.invoke(handler);
-        } else if (paramTypes.length == 1) {
-            Class<?> paramType = paramTypes[0];
-            if (WorkflowMessage.class.isAssignableFrom(paramType)) {
-                method.invoke(handler, message);
-            } else {
-                // Assume it's the payload type
-                Object payload = deserializePayload(message);
-                method.invoke(handler, payload);
-            }
-        } else if (paramTypes.length == 2
-                   && Throwable.class.isAssignableFrom(paramTypes[1])) {
-            // Failure callback with payload and error
-            Object payload = deserializePayload(message);
-            method.invoke(handler, payload, error);
-        } else {
-            log.warn("Callback method {} has unsupported parameter count: {}",
-                     method.getName(), paramTypes.length);
-        }
     }
 
     private void handleFailure(
@@ -213,8 +176,7 @@ public class StepExecutor {
             // Call failure callback
             if (definition.getOnFailureMethod() != null) {
                 try {
-                    definition.getOnFailureMethod().setAccessible(true);
-                    invokeCallback(definition.getOnFailureMethod(),
+                    callbackMethodInvoker.invokeRaw(definition.getOnFailureMethod(),
                                   definition.getHandler(), message, cause);
                 } catch (Exception ex) {
                     log.error("Error in failure callback", ex);
@@ -232,7 +194,7 @@ public class StepExecutor {
             final WorkflowMessage message,
             final RetryInfo retryInfo,
             final String errorMessage) {
-        Duration delay = calculateBackoff(retryInfo.getAttempt());
+        Duration delay = backoffCalculator.calculate(retryInfo.getAttempt());
         Instant nextRetry = Instant.now().plus(delay);
 
         RetryInfo newRetryInfo = retryInfo.nextAttempt(nextRetry, errorMessage);
@@ -262,18 +224,6 @@ public class StepExecutor {
         messageBroker.send(message.getTopic() + ".retry", retryMessage);
     }
 
-    private Duration calculateBackoff(final int attempt) {
-        StepprFlowProperties.Retry retryConfig = properties.getRetry();
-        long initialMs = retryConfig.getInitialDelay().toMillis();
-        double multiplier = retryConfig.getMultiplier();
-        long maxMs = retryConfig.getMaxDelay().toMillis();
-
-        long delayMs = (long) (initialMs * Math.pow(multiplier, attempt - 1));
-        delayMs = Math.min(delayMs, maxMs);
-
-        return Duration.ofMillis(delayMs);
-    }
-
     private void sendToDlq(
             final WorkflowMessage message,
             final StepDefinition step,
@@ -286,7 +236,7 @@ public class StepExecutor {
                 .code("STEP_EXECUTION_FAILED")
                 .message(cause.getMessage())
                 .exceptionType(cause.getClass().getName())
-                .stackTrace(getStackTrace(cause))
+                .stackTrace(StackTraceUtils.truncate(cause))
                 .stepId(step.getId())
                 .stepLabel(step.getLabel())
                 .build();
@@ -313,19 +263,5 @@ public class StepExecutor {
 
         log.info("Sent workflow {} [{}] to DLQ: {}",
                  message.getTopic(), message.getExecutionId(), dlqTopic);
-    }
-
-    private String getStackTrace(final Throwable cause) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        cause.printStackTrace(pw);
-        String stackTrace = sw.toString();
-
-        // Truncate if too long
-        if (stackTrace.length() > MAX_STACK_TRACE_LENGTH) {
-            stackTrace = stackTrace.substring(0, MAX_STACK_TRACE_LENGTH) + "...";
-        }
-
-        return stackTrace;
     }
 }

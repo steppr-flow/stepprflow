@@ -75,6 +75,28 @@
             </modules>
         </profile>
 
+        <!-- Profile for mutation testing with Pitest -->
+        <profile>
+            <id>pitest</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <executions>
+                            <execution>
+                                <id>mutation-testing</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>mutationCoverage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <!-- Profile for Maven Central release -->
         <profile>
             <id>release</id>
@@ -155,6 +177,10 @@
         <!-- Checkstyle -->
         <checkstyle.version>10.21.4</checkstyle.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+
+        <!-- Pitest (mutation testing) -->
+        <pitest.version>1.17.4</pitest.version>
+        <pitest-junit5.version>1.2.1</pitest-junit5.version>
 
         <!-- Root directory for multi-module project -->
         <main.basedir>${project.basedir}</main.basedir>
@@ -461,6 +487,89 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>${pitest.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.pitest</groupId>
+                            <artifactId>pitest-junit5-plugin</artifactId>
+                            <version>${pitest-junit5.version}</version>
+                        </dependency>
+                        <!-- Align JUnit Platform launcher with Spring Boot -->
+                        <dependency>
+                            <groupId>org.junit.platform</groupId>
+                            <artifactId>junit-platform-launcher</artifactId>
+                            <version>1.12.2</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.junit.jupiter</groupId>
+                            <artifactId>junit-jupiter-engine</artifactId>
+                            <version>5.12.2</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <!-- Target classes to mutate -->
+                        <targetClasses>
+                            <param>io.stepprflow.*</param>
+                        </targetClasses>
+                        <!-- Target tests -->
+                        <targetTests>
+                            <param>io.stepprflow.*</param>
+                        </targetTests>
+                        <!-- Exclude classes from mutation -->
+                        <excludedClasses>
+                            <param>**.*Properties</param>
+                            <param>**.*Properties$*</param>
+                            <param>**.*Config</param>
+                            <param>**.*Configuration</param>
+                            <param>**.*AutoConfiguration</param>
+                            <param>**.*Application</param>
+                            <param>**.*Exception</param>
+                            <param>**.*DTO</param>
+                            <param>**.*Dto</param>
+                            <param>**/dto/**</param>
+                            <param>**/model/**</param>
+                        </excludedClasses>
+                        <!-- Exclude test classes -->
+                        <excludedTestClasses>
+                            <param>**.*IT</param>
+                            <param>**.*IntegrationTest</param>
+                        </excludedTestClasses>
+                        <!-- Mutation operators -->
+                        <mutators>
+                            <mutator>DEFAULTS</mutator>
+                        </mutators>
+                        <!-- Output formats -->
+                        <outputFormats>
+                            <outputFormat>HTML</outputFormat>
+                            <outputFormat>XML</outputFormat>
+                        </outputFormats>
+                        <!-- Thresholds -->
+                        <mutationThreshold>60</mutationThreshold>
+                        <coverageThreshold>80</coverageThreshold>
+                        <!-- Performance -->
+                        <threads>1</threads>
+                        <timeoutConstant>10000</timeoutConstant>
+                        <timeoutFactor>2.0</timeoutFactor>
+                        <!-- JVM args for Java 21+ compatibility -->
+                        <jvmArgs>
+                            <jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
+                            <jvmArg>--add-opens=java.base/java.util=ALL-UNNAMED</jvmArg>
+                            <jvmArg>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</jvmArg>
+                            <jvmArg>--add-opens=java.base/java.io=ALL-UNNAMED</jvmArg>
+                            <jvmArg>--add-opens=java.base/java.time=ALL-UNNAMED</jvmArg>
+                        </jvmArgs>
+                        <!-- Use archived test format for better compatibility -->
+                        <useClasspathJar>true</useClasspathJar>
+                        <!-- History for incremental analysis -->
+                        <historyInputFile>${project.build.directory}/pit-history/history.bin</historyInputFile>
+                        <historyOutputFile>${project.build.directory}/pit-history/history.bin</historyOutputFile>
+                        <!-- Skip modules without tests -->
+                        <failWhenNoMutations>false</failWhenNoMutations>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

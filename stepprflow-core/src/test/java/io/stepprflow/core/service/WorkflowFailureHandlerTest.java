@@ -14,6 +14,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
@@ -233,6 +234,47 @@ class WorkflowFailureHandlerTest {
 
             // Should go to retry, not continue
             verify(messageBroker).send(eq("test-topic.retry"), any());
+        }
+
+        @Test
+        @DisplayName("Should unwrap InvocationTargetException to get root cause")
+        void shouldUnwrapInvocationTargetException() throws Exception {
+            RuntimeException rootCause = new RuntimeException("Root cause error");
+            InvocationTargetException wrappedException = new InvocationTargetException(rootCause);
+
+            // Exhaust retries to trigger DLQ
+            RetryInfo exhaustedRetry = RetryInfo.builder()
+                    .attempt(3)
+                    .maxAttempts(3)
+                    .build();
+            testMessage = testMessage.toBuilder()
+                    .retryInfo(exhaustedRetry)
+                    .build();
+
+            failureHandler.handleFailure(testMessage, testStep, testDefinition, wrappedException);
+
+            // Verify that createErrorInfo was called with the ROOT CAUSE, not the wrapper
+            verify(messageFactory).createErrorInfo(eq(rootCause), eq(testStep));
+        }
+
+        @Test
+        @DisplayName("Should use exception directly when not InvocationTargetException")
+        void shouldUseExceptionDirectlyWhenNotInvocationTargetException() {
+            RuntimeException directException = new RuntimeException("Direct error");
+
+            // Exhaust retries to trigger DLQ
+            RetryInfo exhaustedRetry = RetryInfo.builder()
+                    .attempt(3)
+                    .maxAttempts(3)
+                    .build();
+            testMessage = testMessage.toBuilder()
+                    .retryInfo(exhaustedRetry)
+                    .build();
+
+            failureHandler.handleFailure(testMessage, testStep, testDefinition, directException);
+
+            // Verify that createErrorInfo was called with the DIRECT exception
+            verify(messageFactory).createErrorInfo(eq(directException), eq(testStep));
         }
 
         @Test
