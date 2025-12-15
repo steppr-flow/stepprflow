@@ -27,7 +27,7 @@
     "@vitejs/plugin-vue": "^6.0.2",
     "@vitest/coverage-v8": "^4.0.15",
     "@vue/test-utils": "^2.4.0",
-    "autoprefixer": "^10.4.0",
+    "autoprefixer": "^10.4.23",
     "cypress": "^15.7.1",
     "jsdom": "^25.0.0",
     "msw": "^2.0.0",
