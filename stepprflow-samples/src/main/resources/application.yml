@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: stepprflow-sample
+  profiles:
+    active: kafka  # Default to Kafka, override with --spring.profiles.active=rabbitmq
+
+server:
+  port: 8010
+
+stepprflow:
+  enabled: true
+  mongodb:
+    uri: mongodb://localhost:27017/stepprflow
+  agent:
+    server-url: http://localhost:8090
+    auto-register: true
+  monitor:
+    enabled: true
+    web-socket:
+      enabled: false
+
+logging:
+  level:
+    io.stepprflow: DEBUG
+    io.stepprflow.sample: DEBUG
+    io.stepprflow.monitor: DEBUG

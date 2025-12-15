@@ -206,7 +206,7 @@ The workflow automatically:
 ### 2. Configure
 
 ```yaml
-steppr-flow:
+stepprflow:
   enabled: true
   retry:
     max-attempts: 3

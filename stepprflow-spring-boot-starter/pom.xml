@@ -14,7 +14,7 @@
 
     <artifactId>stepprflow-spring-boot-starter</artifactId>
     <name>Steppr Flow Spring Boot Starter</name>
-    <description>Spring Boot starter for Steppr Flow workflow orchestration with persistence and monitoring</description>
+    <description>Spring Boot starter for Steppr Flow workflow orchestration with auto-registration</description>
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>

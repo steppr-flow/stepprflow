@@ -42,7 +42,7 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
 
-steppr-flow:
+stepprflow:
   enabled: true
 ```
 

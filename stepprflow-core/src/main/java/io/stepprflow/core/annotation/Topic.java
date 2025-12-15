@@ -9,8 +9,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a class as an async workflow handler.
- * The topic name is used as the Kafka topic for this workflow.
+ * Marks a class as a StepprFlow workflow handler.
+ * The value is used as the workflow identifier (topic name for Kafka, queue name for RabbitMQ).
  *
  * <p>Example usage:
  * <pre>
@@ -26,29 +26,29 @@ import java.lang.annotation.Target;
 public @interface Topic {
 
     /**
-     * Kafka topic name for this workflow.
+     * Workflow identifier (used as topic name for Kafka, queue name for RabbitMQ).
      * Should be unique across the application.
      *
-     * @return the topic name
+     * @return the workflow identifier
      */
     String value();
 
     /**
      * Optional description for documentation.
      *
-     * @return the topic description
+     * @return the workflow description
      */
     String description() default "";
 
     /**
-     * Number of partitions for auto-created topic.
+     * Number of partitions for auto-created topic (Kafka) or consumers (RabbitMQ).
      *
      * @return the number of partitions
      */
     int partitions() default 1;
 
     /**
-     * Replication factor for auto-created topic.
+     * Replication factor for auto-created topic (Kafka only).
      *
      * @return the replication factor
      */

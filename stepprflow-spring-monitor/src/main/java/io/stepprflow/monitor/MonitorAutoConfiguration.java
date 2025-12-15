@@ -10,7 +10,10 @@ import io.stepprflow.monitor.config.OpenApiConfig;
 import io.stepprflow.monitor.config.WebSocketConfig;
 import io.stepprflow.monitor.controller.CircuitBreakerController;
 import io.stepprflow.monitor.controller.GlobalExceptionHandler;
+import io.stepprflow.monitor.controller.HealthController;
 import io.stepprflow.monitor.controller.MetricsController;
+import io.stepprflow.monitor.controller.OutboxController;
+import io.stepprflow.monitor.controller.RegistryController;
 import io.stepprflow.monitor.controller.WorkflowController;
 import io.stepprflow.monitor.outbox.OutboxMessageRepository;
 import io.stepprflow.monitor.repository.WorkflowExecutionRepository;
@@ -54,6 +57,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         GlobalExceptionHandler.class,
         WorkflowController.class,
         CircuitBreakerController.class,
+        HealthController.class,
+        OutboxController.class,
+        RegistryController.class,
         ExecutionPersistenceService.class,
         RetrySchedulerService.class,
         WorkflowQueryService.class,

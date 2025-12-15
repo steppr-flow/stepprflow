@@ -1,8 +1,8 @@
 # Steppr Flow
 
-[![CI Build](https://github.com/steppr-flow/steppr-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/steppr-flow/steppr-flow/actions/workflows/ci.yml)
-[![Qodana](https://github.com/steppr-flow/steppr-flow/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/steppr-flow/steppr-flow/actions/workflows/qodana_code_quality.yml)
-[![codecov](https://codecov.io/gh/steppr-flow/steppr-flow/branch/main/graph/badge.svg)](https://codecov.io/gh/steppr-flow/steppr-flow)
+[![CI Build](https://github.com/stepprflow/stepprflow/actions/workflows/ci.yml/badge.svg)](https://github.com/stepprflow/stepprflow/actions/workflows/ci.yml)
+[![Qodana](https://github.com/stepprflow/stepprflow/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/stepprflow/stepprflow/actions/workflows/qodana_code_quality.yml)
+[![codecov](https://codecov.io/gh/stepprflow/stepprflow/branch/main/graph/badge.svg)](https://codecov.io/gh/stepprflow/stepprflow)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java](https://img.shields.io/badge/Java-21+-orange.svg)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5+-green.svg)](https://spring.io/projects/spring-boot)

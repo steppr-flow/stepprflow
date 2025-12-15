@@ -21,7 +21,7 @@
     </properties>
 
     <dependencies>
-        <!-- Monitor module (includes core) - provides monitoring services -->
+        <!-- Monitor module - provides monitoring REST endpoints and persistence -->
         <dependency>
             <groupId>io.github.stepprflow</groupId>
             <artifactId>stepprflow-spring-monitor</artifactId>

@@ -61,7 +61,7 @@ class RabbitMQMessageBrokerTest {
     private ArgumentCaptor<MessageProperties> propertiesCaptor;
 
     private RabbitMQMessageBroker broker;
-    private static final String EXCHANGE = "steppr-flow-exchange";
+    private static final String EXCHANGE = "stepprflow-exchange";
 
     @BeforeEach
     void setUp() {

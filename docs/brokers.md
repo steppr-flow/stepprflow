@@ -12,7 +12,7 @@ Apache Kafka is the default broker for high-throughput, distributed workflows.
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-kafka</artifactId>
-    <version>${steppr-flow.version}</version>
+    <version>${stepprflow.version}</version>
 </dependency>
 ```
 
@@ -94,7 +94,7 @@ RabbitMQ is ideal for simpler deployments and when you need flexible routing.
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-rabbitmq</artifactId>
-    <version>${steppr-flow.version}</version>
+    <version>${stepprflow.version}</version>
 </dependency>
 ```
 

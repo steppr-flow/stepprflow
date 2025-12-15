@@ -13,7 +13,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class BackoffCalculator {
 
-    /** The steppr-flow properties. */
+    /** The stepprflow properties. */
     private final StepprFlowProperties properties;
 
     /**

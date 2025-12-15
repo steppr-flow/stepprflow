@@ -12,13 +12,13 @@ FROM node:20-alpine AS ui-builder
 WORKDIR /app/ui
 
 # Copy package files for better caching
-COPY steppr-flow-ui/package*.json ./
+COPY stepprflow-ui/package*.json ./
 
 # Install dependencies
 RUN npm ci --silent
 
 # Copy UI source code
-COPY steppr-flow-ui/ .
+COPY stepprflow-ui/ .
 
 # Build the frontend
 RUN npm run build
@@ -32,32 +32,33 @@ WORKDIR /app
 
 # Copy pom files first for better caching
 COPY pom.xml .
-COPY steppr-flow-core/pom.xml steppr-flow-core/
-COPY steppr-flow-spring-kafka/pom.xml steppr-flow-spring-kafka/
-COPY steppr-flow-spring-rabbitmq/pom.xml steppr-flow-spring-rabbitmq/
-COPY steppr-flow-spring-monitor/pom.xml steppr-flow-spring-monitor/
-COPY steppr-flow-ui/pom.xml steppr-flow-ui/
-COPY steppr-flow-spring-boot-starter/pom.xml steppr-flow-spring-boot-starter/
-COPY steppr-flow-dashboard/pom.xml steppr-flow-dashboard/
+COPY stepprflow-core/pom.xml stepprflow-core/
+COPY stepprflow-spring-kafka/pom.xml stepprflow-spring-kafka/
+COPY stepprflow-spring-rabbitmq/pom.xml stepprflow-spring-rabbitmq/
+COPY stepprflow-ui/pom.xml stepprflow-ui/
+COPY stepprflow-spring-boot-starter/pom.xml stepprflow-spring-boot-starter/
+COPY stepprflow-spring-monitor/pom.xml stepprflow-spring-monitor/
+COPY stepprflow-dashboard/pom.xml stepprflow-dashboard/
 
 # Download dependencies (cached layer)
-RUN mvn dependency:go-offline -pl steppr-flow-dashboard -am -q || true
+RUN mvn dependency:go-offline -pl stepprflow-dashboard -am -q || true
 
 # Copy source code
-COPY steppr-flow-core/src steppr-flow-core/src
-COPY steppr-flow-spring-kafka/src steppr-flow-spring-kafka/src
-COPY steppr-flow-spring-rabbitmq/src steppr-flow-spring-rabbitmq/src
-COPY steppr-flow-spring-monitor/src steppr-flow-spring-monitor/src
-COPY steppr-flow-dashboard/src steppr-flow-dashboard/src
+COPY stepprflow-core/src stepprflow-core/src
+COPY stepprflow-spring-kafka/src stepprflow-spring-kafka/src
+COPY stepprflow-spring-rabbitmq/src stepprflow-spring-rabbitmq/src
+COPY stepprflow-spring-boot-starter/src stepprflow-spring-boot-starter/src
+COPY stepprflow-spring-monitor/src stepprflow-spring-monitor/src
+COPY stepprflow-dashboard/src stepprflow-dashboard/src
 
 # Copy checkstyle config
 COPY config/checkstyle/checkstyle.xml config/checkstyle/checkstyle.xml
 
 # Copy built UI assets to static resources
-COPY --from=ui-builder /app/ui/dist steppr-flow-dashboard/src/main/resources/static/
+COPY --from=ui-builder /app/ui/dist stepprflow-dashboard/src/main/resources/static/
 
 # Build the application with embedded UI
-RUN mvn clean package -pl steppr-flow-dashboard -am -DskipTests -q
+RUN mvn clean package -pl stepprflow-dashboard -am -DskipTests -q
 
 # -----------------------------------------------------------------------------
 # Stage 3: Extract Spring Boot layers for optimized caching
@@ -65,7 +66,7 @@ RUN mvn clean package -pl steppr-flow-dashboard -am -DskipTests -q
 FROM eclipse-temurin:21-jdk-alpine AS layers
 
 WORKDIR /app
-COPY --from=backend-builder /app/steppr-flow-dashboard/target/*.jar app.jar
+COPY --from=backend-builder /app/stepprflow-dashboard/target/*.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract
 
 # -----------------------------------------------------------------------------
@@ -75,7 +76,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="Steppr Flow Team <contact@stepprflow.io>"
 LABEL description="Steppr Flow Dashboard - Monitoring server with embedded UI"
-LABEL org.opencontainers.image.source="https://github.com/steppr-flow/steppr-flow"
+LABEL org.opencontainers.image.source="https://github.com/stepprflow/stepprflow"
 LABEL org.opencontainers.image.title="Steppr Flow Dashboard"
 LABEL org.opencontainers.image.description="Multi-broker workflow orchestration monitoring dashboard"
 LABEL org.opencontainers.image.vendor="Steppr Flow"
