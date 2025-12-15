@@ -342,7 +342,7 @@ jobs:
         run: mvn -B install -DskipTests --file pom.xml
 
       - name: OWASP Dependency Check
-        run: mvn -B org.owasp:dependency-check-maven:check --file pom.xml
+        run: mvn -B org.owasp:dependency-check-maven:check --file pom.xml -DnvdApiKey=${{ secrets.NVD_API_KEY }}
         continue-on-error: true
 
       - name: Upload OWASP report
