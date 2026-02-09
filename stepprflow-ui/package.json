@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@vueuse/core": "^14.1.0",
-    "axios": "^1.6.0",
+    "axios": "^1.13.5",
     "date-fns": "^4.1.0",
     "pinia": "^3.0.4",
     "vue": "^3.4.0",
