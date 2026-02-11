@@ -4,7 +4,7 @@ Apache Kafka implementation of the Steppr Flow message broker.
 
 ## Overview
 
-This module provides Kafka-based message transport for Steppr Flow workflows, enabling distributed, high-throughput workflow execution.
+This module provides Kafka-based message transport for Steppr Flow workflows, ideal for high-throughput, distributed streaming scenarios.
 
 ## Installation
 
@@ -25,42 +25,38 @@ stepprflow:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: stepprflow-workers
-      auto-offset-reset: earliest
+      group-id: my-app-workers
       concurrency: 3
+      auto-offset-reset: earliest
     producer:
       acks: all
       retries: 3
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.yourcompany.workflow
 ```
-
-> **Note:** All Kafka configuration is under `stepprflow.kafka.*`. You do not need to configure `spring.kafka.*` separately.
 
 ### Configuration Properties
 
 | Property | Description | Default |
 |----------|-------------|---------|
-| `stepprflow.kafka.bootstrap-servers` | Kafka broker addresses | `localhost:9092` |
-| `stepprflow.kafka.consumer.group-id` | Consumer group ID | `stepprflow` |
-| `stepprflow.kafka.consumer.concurrency` | Number of consumer threads | `1` |
-| `stepprflow.kafka.producer.acks` | Producer acknowledgment | `all` |
-| `stepprflow.kafka.trusted-packages` | Packages for deserialization | `[]` |
+| `stepprflow.kafka.bootstrap-servers` | Kafka bootstrap servers | `localhost:9092` |
+| `stepprflow.kafka.consumer.group-id` | Consumer group ID | `stepprflow-workflow-processor` |
+| `stepprflow.kafka.consumer.concurrency` | Number of concurrent consumers | `1` |
+| `stepprflow.kafka.consumer.auto-offset-reset` | Auto offset reset | `earliest` |
+| `stepprflow.kafka.producer.acks` | Producer acknowledgments | `all` |
+| `stepprflow.kafka.producer.retries` | Producer retries | `3` |
+| `stepprflow.kafka.producer.batch-size` | Batch size in bytes | `16384` |
+| `stepprflow.kafka.producer.linger-ms` | Linger time in ms | `5` |
+| `stepprflow.kafka.topic-pattern` | Topic pattern for listener | `.*` |
+| `stepprflow.kafka.trusted-packages` | Packages for deserialization | `[io.github.stepprflow.core.model]` |
 
 ## Features
 
-- **Partitioned topics**: Workflows can be distributed across partitions
-- **Consumer groups**: Multiple instances share the workload
-- **Exactly-once semantics**: With proper Kafka configuration
-- **Dead Letter Queue**: Failed messages sent to `*.DLT` topics
-
-## Topic Naming
-
-| Topic Pattern | Description |
-|---------------|-------------|
-| `{workflow-topic}` | Main workflow messages |
-| `{workflow-topic}.DLT` | Dead Letter Topic for failed messages |
+- **Partition-based ordering**: Messages with the same execution ID go to the same partition
+- **Manual acknowledgment**: Reliable message processing with manual offset commit
+- **Snappy compression**: Optimized producer compression
+- **Batch fetching**: Consumer performance optimizations for high throughput
 
 ## Usage
 
@@ -108,6 +104,7 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
 ```
