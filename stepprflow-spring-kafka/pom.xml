@@ -14,34 +14,42 @@
 
     <artifactId>stepprflow-spring-kafka</artifactId>
     <name>Steppr Flow Spring Kafka</name>
-    <description>Apache Kafka implementation of Steppr Flow MessageBroker</description>
+    <description>Kafka message broker implementation for Steppr Flow</description>
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
+        <pitest.targetTests>io.github.stepprflow.broker.kafka.*</pitest.targetTests>
+        <pitest.targetClasses>io.github.stepprflow.broker.kafka.*</pitest.targetClasses>
     </properties>
 
     <dependencies>
-        <!-- Core module -->
+        <!-- Steppr Flow Core -->
         <dependency>
             <groupId>io.github.stepprflow</groupId>
             <artifactId>stepprflow-core</artifactId>
         </dependency>
 
-        <!-- Kafka -->
+        <!-- Spring Kafka -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- Jackson for JSON serialization -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <!-- Test -->

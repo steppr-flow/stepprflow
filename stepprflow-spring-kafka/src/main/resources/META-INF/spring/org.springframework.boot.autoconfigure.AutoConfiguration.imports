@@ -1,1 +1,1 @@
-io.stepprflow.broker.kafka.KafkaBrokerAutoConfiguration
+io.github.stepprflow.broker.kafka.KafkaBrokerAutoConfiguration
