@@ -327,7 +327,7 @@ If `restore()` doesn't set the context:
 ```yaml
 logging:
   level:
-    io.stepprflow.core.service: DEBUG
+    io.github.stepprflow.core.service: DEBUG
     com.yourapp.security: DEBUG
 ```
 

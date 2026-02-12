@@ -16,9 +16,12 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 - **Annotation-driven workflows** - Define workflows using simple annotations
 - **Multi-broker support** - Kafka (default) and RabbitMQ implementations
 - **Automatic retries** - Built-in retry handling with exponential backoff
+- **Dead Letter Queue (DLQ)** - Failed messages are automatically routed to DLQ
+- **Security context propagation** - Security context flows automatically between steps
 - **Step-by-step execution** - Each workflow step executes independently
 - **Circuit breaker protection** - Built-in Resilience4j circuit breaker for broker failures
 - **Distributed tracing** - Micrometer tracing integration for observability
+- **Automatic service registration** - Zero-config broker-based registration with heartbeat and crash detection
 - **Optional monitoring** - MongoDB persistence, REST API, and dashboard (opt-in)
 
 ## Modules
@@ -39,12 +42,12 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-kafka</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -53,12 +56,12 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-core</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-spring-rabbitmq</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -67,7 +70,7 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 <dependency>
     <groupId>io.github.stepprflow</groupId>
     <artifactId>stepprflow-monitoring</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -273,7 +276,7 @@ mvn clean install -Pfull
 - Java 21+
 - Spring Boot 3.5+
 - Apache Kafka 3.x or RabbitMQ 3.12+
-- MongoDB 6.x+ (only if using `stepprflow-monitoring`)
+- MongoDB 7.0+ (only if using `stepprflow-monitoring`)
 - Docker (for integration tests)
 
 ## License

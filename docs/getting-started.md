@@ -571,8 +571,6 @@ public class OrderController {
 Create `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
-
 services:
   # Zookeeper for Kafka
   zookeeper:
@@ -739,9 +737,25 @@ INFO  [order-workflow] Order workflow completed successfully: executionId=a1b2c3
 
 ## Adding Monitoring
 
+### How Registration Works
+
+Services **automatically register** their workflow definitions with the monitoring dashboard through the shared message broker (Kafka or RabbitMQ). There is no server URL to configure and no HTTP-based registration endpoint. As long as your application and the monitoring server share the same broker, registration is zero-config:
+
+1. On startup, each service publishes its workflow definitions to the `stepprflow.registration` broker topic.
+2. The monitoring server consumes these messages and tracks registered services.
+3. Periodic heartbeats keep the registration alive; a deregistration message is sent on shutdown.
+
+Registration is enabled by default. To disable it, set:
+
+```yaml
+stepprflow:
+  registration:
+    enabled: false
+```
+
 ### Deploy the Dashboard
 
-Add the monitoring dependency to your application OR deploy the standalone dashboard.
+Deploy the standalone monitoring server or embed it in your application. It only needs access to the same broker and MongoDB.
 
 **Option A: Standalone Dashboard (Recommended for Production)**
 
@@ -757,6 +771,8 @@ docker run -d \
   -e SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
   stepprflow-monitoring
 ```
+
+Once the monitoring server is running and connected to the same broker as your services, all workflow definitions will appear automatically -- no additional configuration required on either side.
 
 **Option B: Add to Your Application**
 
@@ -824,6 +840,6 @@ stepprflow:
 ## Next Steps
 
 - [Configure Message Brokers](./brokers.md) - Kafka & RabbitMQ deep dive
-- [Error Handling & Compensation](./error-handling.md) - Advanced error patterns
 - [Security Configuration](./security.md) - Authentication & authorization
-- [Performance Tuning](./performance.md) - Optimization guide
+- [Monitoring & Dashboard](./monitoring.md) - Setting up the monitoring dashboard
+- [Modules](./modules.md) - Detailed module descriptions

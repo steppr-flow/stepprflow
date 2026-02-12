@@ -15,6 +15,7 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 - **Security Context Propagation** - Security context flows automatically between steps
 - **Circuit Breaker Protection** - Built-in Resilience4j circuit breaker for broker failures
 - **Distributed Tracing** - Micrometer tracing integration for observability
+- **Broker-based Service Registration** - Automatic zero-config registration of workflow definitions via the shared message broker
 - **Optional Monitoring** - MongoDB persistence, REST API, WebSocket dashboard (opt-in)
 
 ## Architecture Overview
@@ -81,6 +82,9 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 | `stepprflow-spring-kafka` | Apache Kafka message broker implementation |
 | `stepprflow-spring-rabbitmq` | RabbitMQ message broker implementation |
 | `stepprflow-monitoring` | Monitoring, persistence, metrics, retry scheduling, REST API, and dashboard (opt-in) |
+| `stepprflow-ui` | Vue.js 3 + Tailwind CSS frontend (built assets embedded in monitoring) |
+| `stepprflow-samples` | Example application with Kafka and RabbitMQ profiles |
+| `stepprflow-load-tests` | Performance benchmarks (Gatling) |
 
 ## How It Works
 
@@ -215,7 +219,7 @@ stepprflow:
     max-attempts: 3
     initial-delay: 1s
 
-spring:
+stepprflow:
   kafka:
     bootstrap-servers: localhost:9092
 ```
@@ -253,6 +257,8 @@ workflowStarter.start("my-workflow", new MyPayload());
 - [Message Brokers](./brokers.md) - Kafka & RabbitMQ configuration
 - [Security Context Propagation](./security.md) - JWT and authentication propagation
 - [Monitoring & Dashboard](./monitoring.md) - Setting up the monitoring dashboard
+- [Modules](./modules.md) - Detailed module descriptions and dependency graph
+- [Development Guide](./development.md) - Local development setup and contributing
 
 ## Requirements
 
@@ -263,4 +269,4 @@ workflowStarter.start("my-workflow", new MyPayload());
 
 ## License
 
-Copyright 2024 Steppr Flow Authors. All rights reserved.
+Apache License 2.0

@@ -10,6 +10,7 @@ stepprflow/
 ├── stepprflow-spring-kafka/     # Kafka broker implementation
 ├── stepprflow-spring-rabbitmq/  # RabbitMQ broker implementation
 ├── stepprflow-monitoring/       # Monitoring, REST API, dashboard
+├── stepprflow-ui/               # Vue.js 3 + Tailwind CSS frontend
 ├── stepprflow-samples/          # Sample application (Kafka & RabbitMQ)
 └── stepprflow-load-tests/       # Performance benchmarks
 ```
@@ -25,6 +26,7 @@ stepprflow/
 - `StepExecutor` - Executes individual workflow steps
 - `WorkflowMessage` - Message format for workflow state
 - `MessageBroker` - Abstract interface for message brokers
+- `WorkflowRegistrationClient` - Broker-based registration client that automatically registers workflow definitions with the monitoring server via the shared message broker (Kafka or RabbitMQ). No HTTP or server URL configuration needed.
 - Annotations: `@Step`, `@Topic`, `@OnSuccess`, `@OnFailure`
 
 **Dependencies:** None (standalone)
@@ -64,11 +66,10 @@ stepprflow/
 
 **Configuration:**
 ```yaml
-spring:
-  kafka:
-    bootstrap-servers: localhost:9092
 stepprflow:
   broker: kafka
+  kafka:
+    bootstrap-servers: localhost:9092
 ```
 
 ---
@@ -98,12 +99,11 @@ stepprflow:
 
 **Configuration:**
 ```yaml
-spring:
+stepprflow:
+  broker: rabbitmq
   rabbitmq:
     host: localhost
     port: 5672
-stepprflow:
-  broker: rabbitmq
 ```
 
 ---
@@ -118,6 +118,7 @@ stepprflow:
 - `PayloadManagementService` - Payload editing and restoration
 - `ExecutionPersistenceService` - MongoDB persistence and event handling
 - `RetrySchedulerService` - Automatic retry scheduling
+- `RegistrationMessageHandler` - Handles incoming registration messages from services (REGISTER/HEARTBEAT/DEREGISTER)
 - `WorkflowController` - REST API for workflow operations
 - `DashboardController` - Dashboard and overview endpoints
 - `MetricsController` - Metrics and statistics endpoints
@@ -131,13 +132,22 @@ stepprflow:
 - `springdoc-openapi`
 
 **REST Endpoints:**
-- `GET /api/workflows` - List workflow executions
+- `GET /api/workflows` - List workflow executions (paginated, filterable)
 - `GET /api/workflows/{id}` - Get execution details
+- `GET /api/workflows/recent` - Get 10 most recent executions
+- `GET /api/workflows/stats` - Get aggregated statistics
 - `POST /api/workflows/{id}/resume` - Resume failed workflow
 - `DELETE /api/workflows/{id}` - Cancel workflow
 - `PATCH /api/workflows/{id}/payload` - Update payload
+- `POST /api/workflows/{id}/payload/restore` - Restore original payload
 - `GET /api/dashboard/overview` - Dashboard overview
-- `GET /api/metrics` - Workflow metrics
+- `GET /api/dashboard/workflows` - Get registered workflow definitions with step details
+- `GET /api/metrics` - Metrics dashboard (global + per workflow)
+- `GET /api/metrics/{topic}` - Get metrics for specific workflow
+- `GET /api/metrics/summary` - Get global summary
+- `GET /api/registry/workflows` - List all registered workflows
+- `GET /api/registry/workflows/{topic}` - Get specific workflow registration
+- `GET /api/registry/instances` - List all active instances
 
 ---
 
