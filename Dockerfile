@@ -47,7 +47,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 LABEL maintainer="Steppr Flow Team <contact@stepprflow.io>"
 LABEL description="Steppr Flow Monitoring Dashboard"
-LABEL org.opencontainers.image.source="https://github.com/stepprflow/stepprflow"
+LABEL org.opencontainers.image.source="https://github.com/steppr-flow/stepprflow"
 LABEL org.opencontainers.image.title="Steppr Flow Dashboard"
 LABEL org.opencontainers.image.description="Multi-broker workflow orchestration monitoring dashboard"
 LABEL org.opencontainers.image.vendor="Steppr Flow"

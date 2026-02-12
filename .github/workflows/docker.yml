@@ -10,8 +10,7 @@ on:
       - 'stepprflow-core/**'
       - 'stepprflow-spring-kafka/**'
       - 'stepprflow-spring-rabbitmq/**'
-      - 'stepprflow-spring-monitor/**'
-      - 'stepprflow-dashboard/**'
+      - 'stepprflow-monitoring/**'
       - 'stepprflow-ui/**'
       - 'Dockerfile'
       - 'docker-compose*.yml'
@@ -23,8 +22,7 @@ on:
       - 'stepprflow-core/**'
       - 'stepprflow-spring-kafka/**'
       - 'stepprflow-spring-rabbitmq/**'
-      - 'stepprflow-spring-monitor/**'
-      - 'stepprflow-dashboard/**'
+      - 'stepprflow-monitoring/**'
       - 'stepprflow-ui/**'
       - 'Dockerfile'
   workflow_dispatch:
@@ -37,7 +35,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: stepprflow/stepprflow-monitor
+  IMAGE_NAME: steppr-flow/stepprflow-monitor
 
 jobs:
   build:
