@@ -16,7 +16,7 @@
         =====================================================================
     -->
     <Match>
-        <Class name="~io\.stepprflow\.core\.StepprFlowProperties(\$.*)?"/>
+        <Class name="~io\.github\.stepprflow\.core\.StepprFlowProperties(\$.*)?"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -24,7 +24,7 @@
     </Match>
 
     <Match>
-        <Class name="io.stepprflow.dashboard.config.UiProperties"/>
+        <Class name="~io\.github\.stepprflow\.dashboard\.config\.UiProperties(\$.*)?"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -32,23 +32,7 @@
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.dashboard\.config\.UiProperties(\$.*)?"/>
-        <Or>
-            <Bug pattern="EI_EXPOSE_REP"/>
-            <Bug pattern="EI_EXPOSE_REP2"/>
-        </Or>
-    </Match>
-
-    <Match>
-        <Class name="~io\.stepprflow\.monitor\.MonitorProperties(\$.*)?"/>
-        <Or>
-            <Bug pattern="EI_EXPOSE_REP"/>
-            <Bug pattern="EI_EXPOSE_REP2"/>
-        </Or>
-    </Match>
-
-    <Match>
-        <Class name="~io\.stepprflow\.agent\.AgentProperties(\$.*)?"/>
+        <Class name="~io\.github\.stepprflow\.monitor\.MonitorProperties(\$.*)?"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -63,42 +47,42 @@
         =====================================================================
     -->
     <Match>
-        <Class name="~io\.stepprflow\.core\.service\..*"/>
+        <Class name="~io\.github\.stepprflow\.core\.service\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.core\.tracing\..*"/>
+        <Class name="~io\.github\.stepprflow\.core\.tracing\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.core\.metrics\..*"/>
+        <Class name="~io\.github\.stepprflow\.core\.metrics\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.monitor\.service\..*"/>
+        <Class name="~io\.github\.stepprflow\.monitor\.service\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.monitor\.websocket\..*"/>
+        <Class name="~io\.github\.stepprflow\.monitor\.websocket\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.monitor\.config\..*"/>
+        <Class name="~io\.github\.stepprflow\.monitor\.config\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.monitor\.controller\..*"/>
+        <Class name="~io\.github\.stepprflow\.monitor\.controller\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.monitor\.dto\..*"/>
+        <Class name="~io\.github\.stepprflow\.monitor\.dto\..*"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -106,7 +90,7 @@
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.monitor\.model\..*"/>
+        <Class name="~io\.github\.stepprflow\.monitor\.model\..*"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -114,22 +98,17 @@
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.agent\.registration\..*"/>
+        <Class name="~io\.github\.stepprflow\.dashboard\.config\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.dashboard\.config\..*"/>
+        <Class name="~io\.github\.stepprflow\.dashboard\.controller\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.dashboard\.controller\..*"/>
-        <Bug pattern="EI_EXPOSE_REP2"/>
-    </Match>
-
-    <Match>
-        <Class name="~io\.stepprflow\.broker\.kafka\..*"/>
+        <Class name="~io\.github\.stepprflow\.broker\.kafka\..*"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -137,7 +116,7 @@
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.broker\.rabbitmq\..*"/>
+        <Class name="~io\.github\.stepprflow\.broker\.rabbitmq\..*"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -152,7 +131,7 @@
         =====================================================================
     -->
     <Match>
-        <Class name="~io\.stepprflow\.core\.model\..*"/>
+        <Class name="~io\.github\.stepprflow\.core\.model\..*"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -160,7 +139,7 @@
     </Match>
 
     <Match>
-        <Class name="~io\.stepprflow\.core\.event\..*"/>
+        <Class name="~io\.github\.stepprflow\.core\.event\..*"/>
         <Or>
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
@@ -187,7 +166,7 @@
         =====================================================================
     -->
     <Match>
-        <Class name="io.stepprflow.core.metrics.WorkflowMetrics"/>
+        <Class name="io.github.stepprflow.core.metrics.WorkflowMetrics"/>
         <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
     </Match>
 

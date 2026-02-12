@@ -1,9 +1,0 @@
-[
-  {
-    "executionId": "exec-001",
-    "topic": "order-workflow",
-    "status": "COMPLETED",
-    "currentStep": 5,
-    "totalSteps": 5
-  }
-]

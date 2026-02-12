@@ -62,7 +62,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
 
       # MongoDB configuration
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGODB_USERNAME:-stepprflow}:${MONGODB_PASSWORD:-stepprflow}@mongodb:27017/stepprflow?authSource=admin
+      STEPPRFLOW_MONITOR_MONGODB_URI: mongodb://${MONGODB_USERNAME:-stepprflow}:${MONGODB_PASSWORD:-stepprflow}@mongodb:27017/stepprflow?authSource=admin
 
       # Kafka configuration (connect to your existing Kafka)
       SPRING_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-localhost:9092}
@@ -75,8 +75,8 @@ services:
       SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
 
       # Steppr Flow configuration
-      STEPPR_FLOW_MONITORING_ENABLED: "true"
-      STEPPR_FLOW_WEBSOCKET_ENABLED: "true"
+      STEPPRFLOW_MONITOR_ENABLED: "true"
+      STEPPRFLOW_MONITOR_WEB_SOCKET_ENABLED: "true"
 
       # JVM configuration
       JAVA_OPTS: >-
@@ -86,7 +86,7 @@ services:
         -Djava.security.egd=file:/dev/./urandom
 
       # Logging
-      LOGGING_LEVEL_IO_STEPPRFLOW: ${LOG_LEVEL:-INFO}
+      LOGGING_LEVEL_IO_GITHUB_STEPPRFLOW: ${LOG_LEVEL:-INFO}
     depends_on:
       mongodb:
         condition: service_healthy

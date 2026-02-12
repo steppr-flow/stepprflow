@@ -1,0 +1,22 @@
+spring:
+  autoconfigure:
+    exclude:
+      - de.flapdoodle.embed.mongo.spring.autoconfigure.EmbeddedMongoAutoConfiguration
+  data:
+    mongodb:
+      database: stepprflow-test
+      # URI will be set dynamically by Testcontainers
+
+stepprflow:
+  circuit-breaker:
+    enabled: false
+  monitor:
+    retention:
+      completed-ttl: PT1H
+      failed-ttl: PT24H
+    recent-limit: 10
+
+logging:
+  level:
+    io.github.stepprflow: DEBUG
+    org.testcontainers: INFO

@@ -155,7 +155,7 @@ stepprflow:
     consumer:
       group-id: my-app-workers
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.mycompany.model
 
   retry:
@@ -167,15 +167,6 @@ stepprflow:
   dlq:
     enabled: true
     suffix: ".dlq"
-
-  mongodb:
-    uri: mongodb://localhost:27017/stepprflow
-
-  # Agent auto-registration with dashboard
-  agent:
-    server-url: http://localhost:8090
-    auto-register: true
-    heartbeat-interval-seconds: 30
 ```
 
 ---

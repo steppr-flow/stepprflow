@@ -30,11 +30,7 @@
         </dependency>
         <dependency>
             <groupId>io.github.stepprflow</groupId>
-            <artifactId>stepprflow-spring-kafka</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.stepprflow</groupId>
-            <artifactId>stepprflow-spring-monitor</artifactId>
+            <artifactId>stepprflow-monitoring</artifactId>
         </dependency>
 
         <!-- Spring Boot for test application -->
@@ -44,8 +40,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
+            <groupId>io.github.stepprflow</groupId>
+            <artifactId>stepprflow-spring-kafka</artifactId>
             <scope>test</scope>
         </dependency>
 

@@ -1,4 +1,0 @@
-[
-  { "name": "order-workflow-cb", "state": "CLOSED", "failureRate": 2.5 },
-  { "name": "payment-workflow-cb", "state": "HALF_OPEN", "failureRate": 45.0 }
-]

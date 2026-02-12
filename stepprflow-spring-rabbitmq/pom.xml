@@ -18,6 +18,8 @@
 
     <properties>
         <main.basedir>${project.parent.basedir}</main.basedir>
+        <pitest.targetTests>io.github.stepprflow.broker.rabbitmq.*</pitest.targetTests>
+        <pitest.targetClasses>io.github.stepprflow.broker.rabbitmq.*</pitest.targetClasses>
     </properties>
 
     <dependencies>

@@ -29,7 +29,7 @@ services:
     depends_on:
       - zookeeper
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-dashboard localhost:9092 || exit 1"]
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -94,18 +94,18 @@ services:
     networks:
       - stepprflow-network
 
-  # Steppr Flow Dashboard (Monitoring Server)
-  stepprflow-dashboard:
+  # Steppr Flow Monitoring Dashboard
+  stepprflow-monitoring:
     build:
       context: .
-      dockerfile: stepprflow-dashboard/Dockerfile
-    container_name: stepprflow-dashboard
+      dockerfile: Dockerfile
+    container_name: stepprflow-monitoring
     ports:
       - "8090:8090"
     environment:
       SERVER_PORT: 8090
-      STEPPRFLOW_MONGODB_URI: mongodb://stepprflow-mongodb/stepprflow
-      STEPPRFLOW_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      STEPPRFLOW_MONITOR_MONGODB_URI: mongodb://stepprflow-mongodb/stepprflow
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_CONSUMER_GROUP: stepprflow-dashboard
       KAFKA_CONSUMER_CONCURRENCY: 3
       LOG_LEVEL: INFO
@@ -121,22 +121,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    networks:
-      - stepprflow-network
-
-  # Steppr Flow UI (Vue.js frontend served by nginx)
-  stepprflow-ui:
-    build:
-      context: ./stepprflow-ui
-      dockerfile: Dockerfile
-    container_name: stepprflow-ui
-    ports:
-      - "3000:80"
-    environment:
-      API_URL: http://stepprflow-dashboard:8090
-    depends_on:
-      stepprflow-dashboard:
-        condition: service_healthy
     networks:
       - stepprflow-network
 

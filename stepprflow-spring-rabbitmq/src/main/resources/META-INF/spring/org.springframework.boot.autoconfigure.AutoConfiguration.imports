@@ -1,1 +1,1 @@
-io.stepprflow.broker.rabbitmq.RabbitMQBrokerAutoConfiguration
+io.github.stepprflow.broker.rabbitmq.RabbitMQBrokerAutoConfiguration

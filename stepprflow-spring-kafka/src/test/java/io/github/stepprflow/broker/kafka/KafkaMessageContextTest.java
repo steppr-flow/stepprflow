@@ -211,13 +211,17 @@ class KafkaMessageContextTest {
         @Test
         @DisplayName("Should build context with all fields")
         void shouldBuildContextWithAllFields() {
-            // Given & When
+            // Given
+            Acknowledgment ack = mock(Acknowledgment.class);
+
+            // When
             KafkaMessageContext context = KafkaMessageContext.builder()
                     .destination("my-topic")
                     .messageKey("my-key")
                     .offset(999L)
                     .partition(5)
                     .headers(Map.of("h1", "v1"))
+                    .acknowledgment(ack)
                     .build();
 
             // Then
@@ -226,6 +230,7 @@ class KafkaMessageContextTest {
             assertThat(context.getOffset()).isEqualTo("999");
             assertThat(context.getPartition()).isEqualTo(5);
             assertThat(context.getHeaders()).containsEntry("h1", "v1");
+            assertThat(context.getAcknowledgment()).isSameAs(ack);
         }
     }
 }
