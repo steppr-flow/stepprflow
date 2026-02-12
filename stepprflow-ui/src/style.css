@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: oklch(0.97 0.014 233);
+  --color-primary-100: oklch(0.93 0.029 233);
+  --color-primary-200: oklch(0.88 0.056 233);
+  --color-primary-300: oklch(0.82 0.085 233);
+  --color-primary-400: oklch(0.74 0.114 233);
+  --color-primary-500: oklch(0.69 0.132 233);
+  --color-primary-600: oklch(0.60 0.132 233);
+  --color-primary-700: oklch(0.52 0.112 233);
+  --color-primary-800: oklch(0.44 0.090 233);
+  --color-primary-900: oklch(0.39 0.070 233);
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium
+         transition-all duration-150 cursor-pointer
+         focus:outline-none focus:ring-2 focus:ring-offset-2
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+@utility btn-primary {
+  @apply btn bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-400;
+}
+
+@utility btn-secondary {
+  @apply btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-300;
+}
+
+@utility btn-danger {
+  @apply btn bg-red-500 text-white hover:bg-red-600 focus:ring-red-400;
+}
+
+@utility btn-success {
+  @apply btn bg-emerald-500 text-white hover:bg-emerald-600 focus:ring-emerald-400;
+}
+
+@utility btn-sm {
+  @apply px-3 py-1.5 text-xs;
+}
+
+@utility card {
+  @apply bg-white rounded-xl border border-gray-200 p-6 shadow-sm;
+}
+
+@utility card-compact {
+  @apply bg-white rounded-xl border border-gray-200 p-4 shadow-sm;
+}
+
+@utility input {
+  @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+         placeholder:text-gray-400
+         focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100
+         transition-colors duration-150;
+}
+
+@utility input-sm {
+  @apply input px-2.5 py-1.5 text-xs;
+}
+
+@utility select {
+  @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white
+         focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100
+         transition-colors duration-150;
+}
+
+@utility select-sm {
+  @apply select px-2.5 py-1.5 text-xs;
+}
+
+@layer components {
+  .json-viewer {
+    @apply font-mono text-xs leading-relaxed bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto;
+  }
+
+  .json-key {
+    @apply text-purple-400;
+  }
+
+  .json-string {
+    @apply text-emerald-400;
+  }
+
+  .json-number {
+    @apply text-amber-400;
+  }
+
+  .json-boolean {
+    @apply text-sky-400;
+  }
+
+  .json-null {
+    @apply text-gray-500 italic;
+  }
+}
