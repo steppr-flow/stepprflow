@@ -99,6 +99,8 @@ public class WorkflowWebSocketHandler implements WorkflowBroadcaster {
      */
     @Data
     @Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
     public static class WorkflowUpdateDTO {
         private String executionId;
         private String topic;
