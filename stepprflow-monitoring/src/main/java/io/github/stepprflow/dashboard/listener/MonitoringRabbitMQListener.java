@@ -98,11 +98,6 @@ public class MonitoringRabbitMQListener {
         try {
             WorkflowMessage workflowMessage = (WorkflowMessage) messageConverter.fromMessage(message);
 
-            if (workflowMessage == null) {
-                log.warn("Received null message on monitoring queue");
-                return;
-            }
-
             // Delegate registration messages to the registration handler
             if (WorkflowRegistrationRequest.REGISTRATION_TOPIC.equals(workflowMessage.getTopic())) {
                 registrationHandler.handle(workflowMessage);
