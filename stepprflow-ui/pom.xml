@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -14,39 +12,36 @@
 
     <artifactId>stepprflow-ui</artifactId>
     <packaging>pom</packaging>
-    <name>Steppr Flow UI</name>
-    <description>Vue.js frontend for Steppr Flow dashboard - standalone frontend module</description>
+    <name>StepprFlow UI</name>
+    <description>StepprFlow monitoring dashboard frontend</description>
 
     <properties>
-        <main.basedir>${project.parent.basedir}</main.basedir>
+        <node.version>v22.13.1</node.version>
+        <npm.version>10.9.2</npm.version>
+        <frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
     </properties>
 
     <build>
         <plugins>
-            <!-- Frontend Maven Plugin for building Vue.js application -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.15.0</version>
-                <configuration>
-                    <workingDirectory>${project.basedir}</workingDirectory>
-                    <installDirectory>target</installDirectory>
-                </configuration>
+                <version>${frontend-maven-plugin.version}</version>
+
                 <executions>
-                    <!-- Install Node and npm -->
                     <execution>
-                        <id>install node and npm</id>
+                        <id>install-node-and-npm</id>
                         <goals>
                             <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
-                            <nodeVersion>v22.21.1</nodeVersion>
-                            <npmVersion>10.9.4</npmVersion>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <npmVersion>${npm.version}</npmVersion>
                         </configuration>
                     </execution>
-                    <!-- Install npm dependencies -->
+
                     <execution>
-                        <id>npm install</id>
+                        <id>npm-install</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
@@ -54,9 +49,9 @@
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
-                    <!-- Build the frontend -->
+
                     <execution>
-                        <id>npm run build</id>
+                        <id>npm-build</id>
                         <goals>
                             <goal>npm</goal>
                         </goals>
@@ -68,23 +63,4 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <!-- Profile to skip frontend build -->
-        <profile>
-            <id>skip-frontend</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
 </project>

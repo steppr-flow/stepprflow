@@ -39,10 +39,17 @@ Add the Steppr Flow starter to your `pom.xml`:
 </properties>
 
 <dependencies>
-    <!-- Steppr Flow Spring Boot Starter (includes Kafka by default) -->
+    <!-- Steppr Flow Core -->
     <dependency>
         <groupId>io.github.stepprflow</groupId>
-        <artifactId>stepprflow-spring-boot-starter</artifactId>
+        <artifactId>stepprflow-core</artifactId>
+        <version>${stepprflow.version}</version>
+    </dependency>
+
+    <!-- Kafka broker implementation -->
+    <dependency>
+        <groupId>io.github.stepprflow</groupId>
+        <artifactId>stepprflow-spring-kafka</artifactId>
         <version>${stepprflow.version}</version>
     </dependency>
 </dependencies>
@@ -52,21 +59,14 @@ Add the Steppr Flow starter to your `pom.xml`:
 
 ```xml
 <dependencies>
-    <!-- Steppr Flow Spring Boot Starter -->
+    <!-- Steppr Flow Core -->
     <dependency>
         <groupId>io.github.stepprflow</groupId>
-        <artifactId>stepprflow-spring-boot-starter</artifactId>
+        <artifactId>stepprflow-core</artifactId>
         <version>${stepprflow.version}</version>
-        <exclusions>
-            <!-- Exclude Kafka -->
-            <exclusion>
-                <groupId>io.github.stepprflow</groupId>
-                <artifactId>stepprflow-spring-kafka</artifactId>
-            </exclusion>
-        </exclusions>
     </dependency>
 
-    <!-- Add RabbitMQ -->
+    <!-- RabbitMQ broker implementation -->
     <dependency>
         <groupId>io.github.stepprflow</groupId>
         <artifactId>stepprflow-spring-rabbitmq</artifactId>
@@ -109,7 +109,7 @@ stepprflow:
 
     # Security: specify trusted packages for deserialization
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.mycompany.myapp.payload
 
   # Retry configuration
@@ -136,7 +136,7 @@ stepprflow:
 # Logging
 logging:
   level:
-    io.stepprflow: DEBUG
+    io.github.stepprflow: DEBUG
 ```
 
 ---
@@ -215,7 +215,7 @@ public class OrderPayload {
 
 ### Step 2: Create the Workflow Class
 
-Create a class that implements `Steppr Flow` and annotate it with `@Topic`:
+Create a class that implements `StepprFlow` and annotate it with `@Topic`:
 
 ```java
 package com.mycompany.myapp.workflow;
@@ -226,13 +226,13 @@ import com.mycompany.myapp.service.InventoryService;
 import com.mycompany.myapp.service.NotificationService;
 import com.mycompany.myapp.service.PaymentService;
 import com.mycompany.myapp.service.ShippingService;
-import io.stepprflow.core.Steppr Flow;
-import io.stepprflow.core.annotation.OnFailure;
-import io.stepprflow.core.annotation.OnSuccess;
-import io.stepprflow.core.annotation.Step;
-import io.stepprflow.core.annotation.Timeout;
-import io.stepprflow.core.annotation.Topic;
-import io.stepprflow.core.model.WorkflowMessage;
+import io.github.stepprflow.core.service.StepprFlow;
+import io.github.stepprflow.core.annotation.OnFailure;
+import io.github.stepprflow.core.annotation.OnSuccess;
+import io.github.stepprflow.core.annotation.Step;
+import io.github.stepprflow.core.annotation.Timeout;
+import io.github.stepprflow.core.annotation.Topic;
+import io.github.stepprflow.core.model.WorkflowMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -439,7 +439,7 @@ Inject `WorkflowStarter` to start workflows from your controllers or services:
 package com.mycompany.myapp.controller;
 
 import com.mycompany.myapp.payload.OrderPayload;
-import io.stepprflow.core.service.WorkflowStarter;
+import io.github.stepprflow.core.service.WorkflowStarter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -571,8 +571,6 @@ public class OrderController {
 Create `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
-
 services:
   # Zookeeper for Kafka
   zookeeper:
@@ -605,7 +603,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-dashboard", "localhost:9092"]
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -739,32 +737,49 @@ INFO  [order-workflow] Order workflow completed successfully: executionId=a1b2c3
 
 ## Adding Monitoring
 
+### How Registration Works
+
+Services **automatically register** their workflow definitions with the monitoring dashboard through the shared message broker (Kafka or RabbitMQ). There is no server URL to configure and no HTTP-based registration endpoint. As long as your application and the monitoring server share the same broker, registration is zero-config:
+
+1. On startup, each service publishes its workflow definitions to the `stepprflow.registration` broker topic.
+2. The monitoring server consumes these messages and tracks registered services.
+3. Periodic heartbeats keep the registration alive; a deregistration message is sent on shutdown.
+
+Registration is enabled by default. To disable it, set:
+
+```yaml
+stepprflow:
+  registration:
+    enabled: false
+```
+
 ### Deploy the Dashboard
 
-Add the monitoring dependency to your application OR deploy the standalone dashboard.
+Deploy the standalone monitoring server or embed it in your application. It only needs access to the same broker and MongoDB.
 
 **Option A: Standalone Dashboard (Recommended for Production)**
 
 ```bash
-# Build the dashboard
-cd stepprflow-dashboard
-mvn package -DskipTests
+# Build from the project root
+mvn package -pl stepprflow-monitoring -am -DskipTests
 
 # Run with Docker
-docker build -t stepprflow-dashboard .
+docker build -t stepprflow-monitoring .
 docker run -d \
   -p 8090:8090 \
-  -e MONGODB_URI=mongodb://host.docker.internal:27017/stepprflow \
-  -e KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
-  stepprflow-dashboard
+  -e SPRING_DATA_MONGODB_URI=mongodb://host.docker.internal:27017/stepprflow \
+  -e SPRING_KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
+  stepprflow-monitoring
 ```
+
+Once the monitoring server is running and connected to the same broker as your services, all workflow definitions will appear automatically -- no additional configuration required on either side.
 
 **Option B: Add to Your Application**
 
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>stepprflow-spring-monitor</artifactId>
+    <artifactId>stepprflow-monitoring</artifactId>
     <version>${stepprflow.version}</version>
 </dependency>
 ```
@@ -804,7 +819,7 @@ stepprflow:
   kafka:
     # Only trust your own packages
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.mycompany.myapp.payload
 ```
 
@@ -825,6 +840,6 @@ stepprflow:
 ## Next Steps
 
 - [Configure Message Brokers](./brokers.md) - Kafka & RabbitMQ deep dive
-- [Error Handling & Compensation](./error-handling.md) - Advanced error patterns
 - [Security Configuration](./security.md) - Authentication & authorization
-- [Performance Tuning](./performance.md) - Optimization guide
+- [Monitoring & Dashboard](./monitoring.md) - Setting up the monitoring dashboard
+- [Modules](./modules.md) - Detailed module descriptions

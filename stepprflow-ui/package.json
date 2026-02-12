@@ -1,39 +1,25 @@
 {
   "name": "stepprflow-ui",
+  "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run",
-    "test:e2e": "cypress run"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@vueuse/core": "^14.1.0",
-    "axios": "^1.6.0",
-    "date-fns": "^4.1.0",
+    "vue": "^3.5.28",
+    "vue-router": "^5.0.2",
     "pinia": "^3.0.4",
-    "vue": "^3.4.0",
-    "vue-router": "^4.6.4"
+    "axios": "^1.13.5",
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
-    "@heroicons/vue": "^2.1.0",
-    "@tailwindcss/postcss": "^4.1.18",
-    "@vitejs/plugin-vue": "^6.0.2",
-    "@vitest/coverage-v8": "^4.0.15",
-    "@vue/test-utils": "^2.4.0",
-    "autoprefixer": "^10.4.0",
-    "cypress": "^15.7.1",
-    "jsdom": "^25.0.0",
-    "msw": "^2.0.0",
-    "postcss": "^8.4.0",
-    "tailwindcss": "^4.1.18",
-    "vite": "^7.2.7",
-    "vitest": "^4.0.15"
+    "@vitejs/plugin-vue": "^6.0.4",
+    "vite": "^7.3.1",
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "autoprefixer": "^10.4.21"
   }
 }

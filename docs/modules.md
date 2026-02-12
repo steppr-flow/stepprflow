@@ -6,16 +6,13 @@ This document describes the architecture and purpose of each module in the Stepp
 
 ```
 stepprflow/
-├── stepprflow-core/           # Core workflow engine
-├── stepprflow-spring-kafka/   # Kafka broker implementation
-├── stepprflow-spring-rabbitmq/# RabbitMQ broker implementation
-├── stepprflow-spring-monitor/ # Monitoring & REST API
-├── stepprflow-spring-boot-starter/ # Auto-configuration
-├── stepprflow-dashboard/      # Standalone monitoring server
-├── stepprflow-ui/             # Vue.js dashboard frontend
-├── stepprflow-kafka-sample/   # Kafka usage example
-├── stepprflow-rabbitmq-sample/# RabbitMQ usage example
-└── stepprflow-load-tests/     # Performance benchmarks
+├── stepprflow-core/             # Core workflow engine
+├── stepprflow-spring-kafka/     # Kafka broker implementation
+├── stepprflow-spring-rabbitmq/  # RabbitMQ broker implementation
+├── stepprflow-monitoring/       # Monitoring, REST API, dashboard
+├── stepprflow-ui/               # Vue.js 3 + Tailwind CSS frontend
+├── stepprflow-samples/          # Sample application (Kafka & RabbitMQ)
+└── stepprflow-load-tests/       # Performance benchmarks
 ```
 
 ## Core Modules
@@ -29,6 +26,7 @@ stepprflow/
 - `StepExecutor` - Executes individual workflow steps
 - `WorkflowMessage` - Message format for workflow state
 - `MessageBroker` - Abstract interface for message brokers
+- `WorkflowRegistrationClient` - Broker-based registration client that automatically registers workflow definitions with the monitoring server via the shared message broker (Kafka or RabbitMQ). No HTTP or server URL configuration needed.
 - Annotations: `@Step`, `@Topic`, `@OnSuccess`, `@OnFailure`
 
 **Dependencies:** None (standalone)
@@ -68,12 +66,10 @@ stepprflow/
 
 **Configuration:**
 ```yaml
-spring:
+stepprflow:
+  broker: kafka
   kafka:
     bootstrap-servers: localhost:9092
-stepprflow:
-  kafka:
-    enabled: true
 ```
 
 ---
@@ -90,7 +86,7 @@ stepprflow:
 
 **Dependencies:**
 - `stepprflow-core`
-- `spring-amqp`
+- `spring-boot-starter-amqp`
 
 **Usage:**
 ```xml
@@ -103,20 +99,18 @@ stepprflow:
 
 **Configuration:**
 ```yaml
-spring:
+stepprflow:
+  broker: rabbitmq
   rabbitmq:
     host: localhost
     port: 5672
-stepprflow:
-  rabbitmq:
-    enabled: true
 ```
 
 ---
 
-### stepprflow-spring-monitor
+### stepprflow-monitoring
 
-**Purpose:** Monitoring capabilities, REST API, and WebSocket support.
+**Purpose:** Monitoring, persistence (MongoDB), REST API, WebSocket, and dashboard.
 
 **Key Components:**
 - `WorkflowQueryService` - Query operations for workflow executions
@@ -124,6 +118,7 @@ stepprflow:
 - `PayloadManagementService` - Payload editing and restoration
 - `ExecutionPersistenceService` - MongoDB persistence and event handling
 - `RetrySchedulerService` - Automatic retry scheduling
+- `RegistrationMessageHandler` - Handles incoming registration messages from services (REGISTER/HEARTBEAT/DEREGISTER)
 - `WorkflowController` - REST API for workflow operations
 - `DashboardController` - Dashboard and overview endpoints
 - `MetricsController` - Metrics and statistics endpoints
@@ -133,87 +128,34 @@ stepprflow:
 - `stepprflow-core`
 - `spring-data-mongodb`
 - `spring-websocket`
+- `spring-kafka` (for monitoring Kafka listener)
 - `springdoc-openapi`
 
 **REST Endpoints:**
-- `GET /api/workflows` - List workflow executions
+- `GET /api/workflows` - List workflow executions (paginated, filterable)
 - `GET /api/workflows/{id}` - Get execution details
+- `GET /api/workflows/recent` - Get 10 most recent executions
+- `GET /api/workflows/stats` - Get aggregated statistics
 - `POST /api/workflows/{id}/resume` - Resume failed workflow
-- `POST /api/workflows/{id}/cancel` - Cancel workflow
+- `DELETE /api/workflows/{id}` - Cancel workflow
 - `PATCH /api/workflows/{id}/payload` - Update payload
-- `GET /api/metrics/dashboard` - Dashboard metrics
+- `POST /api/workflows/{id}/payload/restore` - Restore original payload
+- `GET /api/dashboard/overview` - Dashboard overview
+- `GET /api/dashboard/workflows` - Get registered workflow definitions with step details
+- `GET /api/metrics` - Metrics dashboard (global + per workflow)
+- `GET /api/metrics/{topic}` - Get metrics for specific workflow
+- `GET /api/metrics/summary` - Get global summary
+- `GET /api/registry/workflows` - List all registered workflows
+- `GET /api/registry/workflows/{topic}` - Get specific workflow registration
+- `GET /api/registry/instances` - List all active instances
 
 ---
 
-### stepprflow-spring-boot-starter
+## Optional Modules (profile: `full`)
 
-**Purpose:** Spring Boot starter for easy integration.
+### stepprflow-samples
 
-**Key Components:**
-- `AgentAutoConfiguration` - Auto-configures all Steppr Flow components
-- `AgentProperties` - Configuration properties
-- `WorkflowRegistrationClient` - Registers workflows with central server
-
-**Dependencies:**
-- `stepprflow-core`
-- `stepprflow-spring-monitor`
-
-**Usage:**
-```xml
-<dependency>
-    <groupId>io.github.stepprflow</groupId>
-    <artifactId>stepprflow-spring-boot-starter</artifactId>
-    <version>${stepprflow.version}</version>
-</dependency>
-```
-
----
-
-## Application Modules
-
-### stepprflow-dashboard
-
-**Purpose:** Standalone monitoring server application.
-
-**Description:** A complete Spring Boot application that provides centralized monitoring for all Steppr Flow-enabled microservices. Deploy alongside Kafka and MongoDB.
-
-**Features:**
-- REST API for workflow monitoring
-- WebSocket for real-time updates
-- MongoDB persistence
-- Kafka consumer for workflow events
-
-**Dependencies:**
-- `stepprflow-spring-monitor`
-- `stepprflow-spring-kafka`
-
----
-
-### stepprflow-ui
-
-**Purpose:** Vue.js dashboard frontend.
-
-**Technology Stack:**
-- Vue 3 with Composition API
-- Pinia for state management
-- Vue Router
-- Tailwind CSS
-- Vite build tool
-
-**Features:**
-- Real-time workflow monitoring
-- Execution history and details
-- Payload editor
-- Metrics dashboard
-- Circuit breaker status
-
----
-
-## Sample Modules
-
-### stepprflow-kafka-sample
-
-**Purpose:** Example application demonstrating Kafka integration.
+**Purpose:** Example application demonstrating both Kafka and RabbitMQ integration.
 
 **Scenario:** E-commerce order processing workflow with steps:
 1. Validate inventory
@@ -221,13 +163,9 @@ stepprflow:
 3. Prepare shipping
 4. Send notification
 
----
-
-### stepprflow-rabbitmq-sample
-
-**Purpose:** Example application demonstrating RabbitMQ integration.
-
-**Scenario:** Same e-commerce workflow as Kafka sample, using RabbitMQ.
+**Profiles:**
+- `kafka` - Run with Apache Kafka
+- `rabbitmq` - Run with RabbitMQ
 
 ---
 
@@ -246,34 +184,26 @@ stepprflow:
 
 ```
                     ┌─────────────────────┐
-                    │   stepprflow-core  │
+                    │   stepprflow-core    │
                     └──────────┬──────────┘
            ┌──────────────────┼──────────────────┐
            │                  │                  │
            ▼                  ▼                  ▼
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-│ spring-kafka    │ │ spring-rabbitmq │ │ spring-monitor  │
-└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
-         │                   │                   │
-         └──────────────┬────┴───────────────────┘
-                        │
-                        ▼
-              ┌─────────────────────┐
-              │ spring-boot-starter │
-              └─────────────────────┘
-                        │
-          ┌─────────────┴─────────────┐
-          │                           │
-          ▼                           ▼
-┌─────────────────┐         ┌─────────────────┐
-│    dashboard    │         │ kafka/rabbitmq  │
-│   (standalone)  │         │    samples      │
-└─────────────────┘         └─────────────────┘
+│  spring-kafka   │ │ spring-rabbitmq │ │   monitoring    │
+└────────┬────────┘ └────────┬────────┘ └─────────────────┘
+         │                   │
+         └──────────┬────────┘
+                    │
+                    ▼
+          ┌─────────────────┐
+          │     samples     │
+          └─────────────────┘
 ```
 
 ## Maven Profiles
 
-- **Default build:** Core modules only
+- **Default build:** Core modules only (`stepprflow-core`, `stepprflow-spring-kafka`, `stepprflow-spring-rabbitmq`, `stepprflow-monitoring`)
 - **`full` profile:** Includes samples and load tests
 
 ```bash

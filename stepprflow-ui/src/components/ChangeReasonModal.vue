@@ -1,75 +1,53 @@
 <template>
   <Teleport to="body">
-    <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
-      <!-- Backdrop -->
-      <div class="fixed inset-0 bg-gray-900/30" @click="cancel" />
+    <Transition name="modal">
+      <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center">
+        <div class="fixed inset-0 bg-black/40" @click="$emit('cancel')" />
+        <div class="relative z-10 w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
+          <h3 class="text-lg font-semibold text-gray-900">Change Reason</h3>
+          <p class="mt-1 text-sm text-gray-500">Provide a reason for this payload change.</p>
 
-      <!-- Modal -->
-      <div class="flex min-h-full items-center justify-center p-4">
-        <div class="relative bg-white rounded-lg shadow-lg w-full max-w-sm">
-          <!-- Header -->
-          <div class="px-4 py-3 border-b border-gray-100">
-            <h3 class="text-sm font-medium text-gray-800">Payload Change</h3>
-          </div>
-
-          <!-- Content -->
-          <div class="px-4 py-3">
-            <!-- Change Summary -->
-            <div class="mb-3 p-2.5 bg-gray-50 border border-gray-100 rounded">
-              <div class="text-[10px] text-gray-400 mb-1">Field</div>
-              <code class="text-xs font-medium text-primary-600">{{ fieldPath }}</code>
-
-              <div class="mt-2 flex items-center space-x-2 text-xs">
-                <div>
-                  <div class="text-[10px] text-gray-400 mb-0.5">Old</div>
-                  <span class="px-1.5 py-0.5 bg-red-50 text-red-600 rounded text-[10px]">{{ formatValue(oldValue) }}</span>
-                </div>
-                <svg class="w-3 h-3 text-gray-300 mt-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-                <div>
-                  <div class="text-[10px] text-gray-400 mb-0.5">New</div>
-                  <span class="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px]">{{ formatValue(newValue) }}</span>
-                </div>
+          <!-- Change summary -->
+          <div class="mt-4 rounded-lg bg-gray-50 border border-gray-200 p-3 text-sm">
+            <div class="flex items-center gap-2 text-gray-600">
+              <span class="font-medium">Field:</span>
+              <code class="rounded bg-gray-200 px-1.5 py-0.5 text-xs font-mono">{{ fieldPath }}</code>
+            </div>
+            <div class="mt-1.5 grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-gray-400">From:</span>
+                <span class="ml-1 font-mono text-red-600">{{ formatValue(oldValue) }}</span>
+              </div>
+              <div>
+                <span class="text-gray-400">To:</span>
+                <span class="ml-1 font-mono text-emerald-600">{{ formatValue(newValue) }}</span>
               </div>
             </div>
-
-            <!-- Reason Input -->
-            <div>
-              <label for="reason" class="block text-[11px] font-medium text-gray-500 mb-1">
-                Reason <span class="text-gray-300">(optional)</span>
-              </label>
-              <textarea
-                id="reason"
-                ref="reasonInput"
-                v-model="reason"
-                rows="2"
-                class="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 resize-none"
-                placeholder="Explain why this change is needed..."
-                @keydown.enter.ctrl="confirm"
-                @keydown.escape="cancel"
-              />
-            </div>
           </div>
 
-          <!-- Footer -->
-          <div class="px-4 py-3 border-t border-gray-100 flex justify-end space-x-2">
+          <!-- Reason input -->
+          <textarea
+            ref="reasonInput"
+            v-model="reason"
+            class="input mt-4 min-h-[80px] resize-y"
+            placeholder="Why are you making this change?"
+            @keydown.meta.enter="submit"
+            @keydown.ctrl.enter="submit"
+          />
+
+          <div class="mt-4 flex gap-3">
+            <button class="btn-secondary flex-1" @click="$emit('cancel')">Cancel</button>
             <button
-              @click="cancel"
-              class="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded hover:bg-gray-50"
+              class="btn-primary flex-1"
+              :disabled="!reason.trim()"
+              @click="submit"
             >
-              Cancel
-            </button>
-            <button
-              @click="confirm"
-              class="px-3 py-1.5 text-xs font-medium text-white bg-primary-500 rounded hover:bg-primary-600"
-            >
-              Apply
+              Apply Change
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>
 
@@ -79,8 +57,8 @@ import { ref, watch, nextTick } from 'vue'
 const props = defineProps({
   show: { type: Boolean, default: false },
   fieldPath: { type: String, default: '' },
-  oldValue: { type: [String, Number, Boolean, Object, Array], default: null },
-  newValue: { type: [String, Number, Boolean, Object, Array], default: null }
+  oldValue: { default: null },
+  newValue: { default: null }
 })
 
 const emit = defineEmits(['confirm', 'cancel'])
@@ -88,27 +66,33 @@ const emit = defineEmits(['confirm', 'cancel'])
 const reason = ref('')
 const reasonInput = ref(null)
 
-watch(() => props.show, (newVal) => {
-  if (newVal) {
+watch(() => props.show, (val) => {
+  if (val) {
     reason.value = ''
-    nextTick(() => {
-      reasonInput.value?.focus()
-    })
+    nextTick(() => reasonInput.value?.focus())
   }
 })
 
-function formatValue(value) {
-  if (value === null) return 'null'
-  if (typeof value === 'string') return `"${value}"`
-  if (typeof value === 'object') return JSON.stringify(value)
-  return String(value)
+function formatValue(val) {
+  if (val === null || val === undefined) return 'null'
+  if (typeof val === 'string') return `"${val}"`
+  return String(val)
 }
 
-function confirm() {
-  emit('confirm', reason.value)
-}
-
-function cancel() {
-  emit('cancel')
+function submit() {
+  if (reason.value.trim()) {
+    emit('confirm', reason.value.trim())
+  }
 }
 </script>
+
+<style>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+</style>

@@ -1,5 +1,4 @@
 services:
-  # Zookeeper (required for Confluent Kafka)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: stepprflow-zookeeper
@@ -9,7 +8,6 @@ services:
     networks:
       - stepprflow-network
 
-  # Apache Kafka (Confluent Platform)
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: stepprflow-kafka
@@ -29,7 +27,7 @@ services:
     depends_on:
       - zookeeper
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-dashboard localhost:9092 || exit 1"]
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -37,7 +35,6 @@ services:
     networks:
       - stepprflow-network
 
-  # MongoDB
   mongodb:
     image: mongo:7.0
     container_name: stepprflow-mongodb
@@ -56,56 +53,18 @@ services:
     networks:
       - stepprflow-network
 
-  # Mongo Express (MongoDB GUI)
-  mongo-express:
-    image: mongo-express:latest
-    container_name: stepprflow-mongo-express
-    ports:
-      - "8091:8081"
-    environment:
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    networks:
-      - stepprflow-network
-
-  # RabbitMQ
-  rabbitmq:
-    image: rabbitmq:3.13-management-alpine
-    container_name: stepprflow-rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    networks:
-      - stepprflow-network
-
-  # Steppr Flow Dashboard (Monitoring Server)
-  stepprflow-dashboard:
+  stepprflow-monitoring:
+    profiles: ["monitoring", "full"]
     build:
       context: .
-      dockerfile: stepprflow-dashboard/Dockerfile
-    container_name: stepprflow-dashboard
+      dockerfile: Dockerfile
+    container_name: stepprflow-monitoring
     ports:
       - "8090:8090"
     environment:
       SERVER_PORT: 8090
-      STEPPRFLOW_MONGODB_URI: mongodb://stepprflow-mongodb/stepprflow
-      STEPPRFLOW_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      STEPPRFLOW_MONITOR_MONGODB_URI: mongodb://stepprflow-mongodb/stepprflow
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_CONSUMER_GROUP: stepprflow-dashboard
       KAFKA_CONSUMER_CONCURRENCY: 3
       LOG_LEVEL: INFO
@@ -124,18 +83,16 @@ services:
     networks:
       - stepprflow-network
 
-  # Steppr Flow UI (Vue.js frontend served by nginx)
   stepprflow-ui:
+    profiles: ["ui", "full"]
     build:
       context: ./stepprflow-ui
       dockerfile: Dockerfile
     container_name: stepprflow-ui
     ports:
       - "3000:80"
-    environment:
-      API_URL: http://stepprflow-dashboard:8090
     depends_on:
-      stepprflow-dashboard:
+      stepprflow-monitoring:
         condition: service_healthy
     networks:
       - stepprflow-network
@@ -143,7 +100,6 @@ services:
 volumes:
   kafka-data:
   mongodb-data:
-  rabbitmq-data:
 
 networks:
   stepprflow-network:

@@ -20,37 +20,26 @@ Apache Kafka is the default broker for high-throughput, distributed workflows.
 
 ```yaml
 stepprflow:
-  broker:
-    type: kafka
-
-spring:
+  broker: kafka
   kafka:
     bootstrap-servers: localhost:9092
-
     consumer:
       group-id: ${spring.application.name}-workers
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-        spring.json.value.default.type: io.stepprflow.core.model.WorkflowMessage
-
+      concurrency: 3
     producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
-
-    # Optional: Listener configuration
-    listener:
-      concurrency: 3
-      ack-mode: manual
+    trusted-packages:
+      - io.github.stepprflow.core.model
+      - com.mycompany.model
 ```
 
 ### Advanced Configuration
 
 ```yaml
+# Advanced Kafka properties are passed through Spring Kafka's native configuration.
+# These complement the stepprflow.kafka.* properties above.
 spring:
   kafka:
     # SSL Configuration
@@ -102,24 +91,22 @@ RabbitMQ is ideal for simpler deployments and when you need flexible routing.
 
 ```yaml
 stepprflow:
-  broker:
-    type: rabbitmq
-  rabbitmq:
-    exchange: stepprflow-exchange
-    exchange-type: direct
-
-spring:
+  broker: rabbitmq
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
     virtual-host: /
+    exchange: stepprflow-exchange
+    prefetch-count: 10
 ```
 
 ### Advanced Configuration
 
 ```yaml
+# Advanced RabbitMQ properties are passed through Spring AMQP's native configuration.
+# These complement the stepprflow.rabbitmq.* properties above.
 spring:
   rabbitmq:
     # Connection settings
@@ -145,13 +132,6 @@ spring:
         max-concurrency: 10
         prefetch: 1
         acknowledge-mode: manual
-
-stepprflow:
-  rabbitmq:
-    exchange: stepprflow-exchange
-    exchange-type: topic  # direct, topic, fanout, headers
-    durable: true
-    auto-delete: false
 ```
 
 ### Queue Naming
@@ -202,11 +182,13 @@ To switch brokers, change the dependency and configuration:
 2. Update configuration:
 ```yaml
 stepprflow:
-  broker:
-    type: rabbitmq  # Changed from 'kafka'
-
-# Remove spring.kafka.* properties
-# Add spring.rabbitmq.* properties
+  broker: rabbitmq  # Changed from 'kafka'
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+# Remove stepprflow.kafka.* properties
 ```
 
 3. **No code changes required** - Your workflows remain the same!
@@ -253,7 +235,7 @@ Register your broker with auto-configuration:
 
 ```java
 @Configuration
-@ConditionalOnProperty(name = "stepprflow.broker.type", havingValue = "custom")
+@ConditionalOnProperty(name = "stepprflow.broker", havingValue = "custom")
 public class CustomBrokerAutoConfiguration {
 
     @Bean

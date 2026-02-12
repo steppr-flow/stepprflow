@@ -10,14 +10,13 @@
 
 ```
 stepprflow-parent/
-├── stepprflow-core              # Foundation (annotations, abstractions, models)
+├── stepprflow-core              # Foundation (annotations, abstractions, models, registration)
 ├── stepprflow-spring-kafka      # Kafka implementation
 ├── stepprflow-spring-rabbitmq   # RabbitMQ implementation
-├── stepprflow-spring-boot-starter  # Starter for apps (includes core + kafka + monitor + agent)
-├── stepprflow-spring-monitor    # Monitoring, MongoDB persistence, REST API, WebSocket
-├── stepprflow-dashboard         # Standalone monitoring server (Docker)
-├── stepprflow-ui                # Vue.js frontend
-└── stepprflow-samples           # Examples (Kafka/RabbitMQ profiles)
+├── stepprflow-monitoring        # Monitoring server (MongoDB, REST API, WebSocket, Dashboard UI)
+├── stepprflow-ui                # Vue.js frontend (built into stepprflow-monitoring)
+├── stepprflow-samples           # Examples (Kafka/RabbitMQ profiles)
+└── stepprflow-load-tests        # Performance benchmarks (Gatling)
 ```
 
 ---
@@ -25,34 +24,22 @@ stepprflow-parent/
 ## Dependency Graph
 
 ```
-                         ┌─────────────────┐
-                         │ stepprflow-core │
-                         └────────┬────────┘
-                                  │
-              ┌───────────────────┼───────────────────┐
-              │                   │                   │
-              ▼                   ▼                   ▼
-   ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
-   │ stepprflow-      │ │ stepprflow-      │ │ stepprflow-      │
-   │ spring-kafka     │ │ spring-rabbitmq  │ │ spring-monitor   │
-   └────────┬─────────┘ └────────┬─────────┘ └────────┬─────────┘
-            │                    │                    │
-            │                    │                    │
-            └──────────┬─────────┴──────────┬─────────┘
-                       │                    │
-                       ▼                    ▼
-          ┌──────────────────────┐ ┌──────────────────────┐
-          │ stepprflow-spring-   │ │ stepprflow-dashboard │
-          │ boot-starter         │ │ (Docker container)   │
-          └──────────┬───────────┘ └──────────────────────┘
-                     │
-         ┌───────────┴───────────┐
-         │                       │
-         ▼                       ▼
-┌──────────────────────┐ ┌──────────────────────┐
-│ User applications    │ │ stepprflow-samples   │
-│                      │ │ (kafka/rmq profiles) │
-└──────────────────────┘ └──────────────────────┘
+                         ┌─────────────────────┐
+                         │   stepprflow-core    │
+                         └──────────┬──────────┘
+              ┌──────────────────────┼──────────────────────┐
+              │                      │                      │
+              ▼                      ▼                      ▼
+   ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+   │  spring-kafka    │   │ spring-rabbitmq  │   │   monitoring     │
+   └────────┬─────────┘   └────────┬─────────┘   │  (+ Vue.js UI)  │
+            │                      │              └──────────────────┘
+            └──────────┬───────────┘
+                       │
+                       ▼
+             ┌──────────────────┐
+             │     samples      │
+             └──────────────────┘
 ```
 
 ---
@@ -61,13 +48,11 @@ stepprflow-parent/
 
 | Module | Responsibility |
 |--------|----------------|
-| **core** | Annotations (`@Topic`, `@Step`), interfaces (`MessageBroker`, `StepprFlow`), models (`WorkflowMessage`), base services |
+| **core** | Annotations (`@Topic`, `@Step`), interfaces (`MessageBroker`, `StepprFlow`), models (`WorkflowMessage`), workflow engine, **broker-based registration client** |
 | **spring-kafka** | `KafkaMessageBroker`, `KafkaMessageListener`, Kafka auto-configuration |
 | **spring-rabbitmq** | `RabbitMQMessageBroker`, `RabbitMQMessageListener`, RabbitMQ auto-configuration |
-| **spring-monitor** | MongoDB persistence, REST API (`/api/workflows`, `/api/registry`), real-time WebSocket, metrics |
-| **spring-boot-starter** | Aggregator: includes core + kafka + monitor + auto-registration agent with dashboard |
-| **dashboard** | Spring Boot monitoring application deployable in Docker (includes monitor + UI) |
-| **ui** | Vue.js interface for workflow visualization |
+| **monitoring** | MongoDB persistence, REST API, real-time WebSocket, metrics, retry scheduling, **registration handler**, Vue.js dashboard |
+| **ui** | Vue.js 3 + Tailwind CSS frontend (built assets embedded in monitoring) |
 | **samples** | Usage examples (`kafka` and `rabbitmq` profiles) |
 
 ---
@@ -85,13 +70,13 @@ stepprflow-parent/
    MessageBroker.send() → Kafka Topic / RabbitMQ Queue
 
 2. CONSUMPTION
-   KafkaMessageListener receives message
+   MessageListener receives message
                           │
                           ├──────────────────────────────┐
                           │                              │
                           ▼                              ▼
    StepExecutor.execute()              ExecutionPersistenceService
-   - Loads WorkflowDefinition          - Saves to MongoDB
+   - Loads WorkflowDefinition          - Saves to MongoDB (opt-in)
    - Deserializes payload              - Step history tracking
    - Invokes @Step method
    - Handles success/failure
@@ -108,6 +93,49 @@ stepprflow-parent/
 
 ---
 
+## Service Registration Flow
+
+Services automatically register their workflow definitions with the monitoring server via the message broker. No HTTP configuration needed — zero additional config.
+
+```
+                    stepprflow.registration topic
+                    ═══════════════════════════════
+
+  ┌───────────────────┐        ┌──────────┐        ┌───────────────────┐
+  │  Service Agent    │  send  │  Broker  │  recv  │    Monitoring     │
+  │  (core +          │───────►│  Kafka / │───────►│  Registration     │
+  │   kafka/rabbitmq) │        │ RabbitMQ │        │  MessageHandler   │
+  └───────────────────┘        └──────────┘        └───────────────────┘
+
+  Lifecycle:
+  ┌──────────┐   @PostConstruct    ┌───────────┐   every 30s   ┌───────────┐
+  │  Startup ├────────────────────►│ REGISTER  ├──────────────►│ HEARTBEAT │
+  └──────────┘                     └───────────┘               └─────┬─────┘
+                                                                     │
+                                         ┌───────────┐   @PreDestroy │
+                                         │DEREGISTER │◄──────────────┘
+                                         └───────────┘
+
+  Messages use WorkflowMessage envelope with metadata:
+  ┌─────────────────────────────────────────────────┐
+  │  topic: "stepprflow.registration"               │
+  │  metadata:                                      │
+  │    registration.action: REGISTER|HEARTBEAT|     │
+  │                         DEREGISTER              │
+  │    registration.instanceId: <uuid>              │
+  │  payload: WorkflowRegistrationRequest (REGISTER)│
+  │           null (HEARTBEAT/DEREGISTER)           │
+  │  status: COMPLETED (ignored by step listeners)  │
+  └─────────────────────────────────────────────────┘
+
+  Crash detection:
+  - If no heartbeat received for 90s → instance marked stale
+  - Cleanup scheduler runs every 30s
+  - Workflow marked INACTIVE when all instances removed
+```
+
+---
+
 ## Core Data Model
 
 ### WorkflowMessage
@@ -117,7 +145,7 @@ correlationId    : Trace ID
 topic            : Workflow name
 currentStep      : Current step (1-based)
 totalSteps       : Total number of steps
-status           : PENDING | IN_PROGRESS | COMPLETED | FAILED | RETRY_PENDING
+status           : PENDING | IN_PROGRESS | COMPLETED | FAILED | CANCELLED | RETRY_PENDING | TIMED_OUT | PAUSED | SKIPPED | PASSED
 payload          : Business data (JSON)
 retryInfo        : Attempts, delay, previous error
 errorInfo        : Code, message, stacktrace
@@ -145,7 +173,13 @@ metadata         : Additional context
 
 ## Essential Configuration
 
+### Service (agent)
+
 ```yaml
+spring:
+  application:
+    name: my-service
+
 stepprflow:
   enabled: true
   broker: kafka  # or rabbitmq
@@ -155,8 +189,14 @@ stepprflow:
     consumer:
       group-id: my-app-workers
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.mycompany.model
+
+  # Registration is automatic when a MessageBroker bean is present.
+  # No server URL needed — registration goes through the broker.
+  registration:
+    enabled: true                # default
+    heartbeat-interval-seconds: 30  # default
 
   retry:
     max-attempts: 3
@@ -167,15 +207,20 @@ stepprflow:
   dlq:
     enabled: true
     suffix: ".dlq"
+```
 
-  mongodb:
-    uri: mongodb://localhost:27017/stepprflow
+### Monitoring server
 
-  # Agent auto-registration with dashboard
-  agent:
-    server-url: http://localhost:8090
-    auto-register: true
-    heartbeat-interval-seconds: 30
+```yaml
+stepprflow:
+  monitor:
+    enabled: true
+    mongodb:
+      uri: mongodb://localhost:27017/stepprflow
+      database: stepprflow
+    registry:
+      instance-timeout: 90s    # stale after 90s without heartbeat
+      cleanup-interval: 30s    # cleanup check every 30s
 ```
 
 ---
@@ -229,9 +274,9 @@ public class OrderWorkflow implements StepprFlow {
 | Persistence | MongoDB |
 | Metrics | Micrometer |
 | Resilience | Resilience4j |
-| Frontend | Vue.js 3 |
+| Frontend | Vue.js 3 + Tailwind CSS |
 | Build | Maven |
-| Tests | Testcontainers |
+| Tests | JUnit 5, Testcontainers, Pitest |
 
 ---
 
@@ -242,6 +287,7 @@ public class OrderWorkflow implements StepprFlow {
 - **State Machine**: `WorkflowStatus` transitions
 - **Strategy**: `MessageBroker` abstracts Kafka/RabbitMQ
 - **Exponential Backoff Retry**: Transient failure handling
-- **Circuit Breaker**: Protection against failure cascades
+- **Circuit Breaker**: Protection against failure cascades (Resilience4j)
 - **Dead Letter Queue**: Failed message isolation
-- **Saga (coming-soon)**: Workflow steps as compensable actions
+- **Broker-based Registration**: Zero-config service discovery via the shared message broker
+- **Heartbeat / Stale Detection**: Automatic crash detection and workflow deactivation

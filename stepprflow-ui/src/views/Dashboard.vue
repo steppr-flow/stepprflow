@@ -1,125 +1,90 @@
 <template>
-  <div class="space-y-5">
-    <!-- Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-lg font-semibold text-gray-900">Dashboard</h1>
-        <p class="text-xs text-gray-500">Monitor workflow executions</p>
-      </div>
-      <button @click="refresh" class="btn-sm flex items-center space-x-1.5">
-        <svg class="w-3.5 h-3.5" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <span>Refresh</span>
-      </button>
-    </div>
+  <div class="space-y-6">
+    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-3 lg:grid-cols-6 gap-3">
+    <!-- Stats cards -->
+    <div class="grid grid-cols-3 gap-4 xl:grid-cols-6">
       <StatsCard
-        :value="stats.total"
         label="Total"
+        :value="s.total ?? 0"
+        icon="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5"
         variant="default"
       />
       <StatsCard
-        :value="stats.pending"
-        label="Pending"
-        variant="warning"
+        label="Active"
+        :value="s.active ?? 0"
+        icon="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
+        variant="primary"
       />
       <StatsCard
-        :value="stats.inProgress"
-        label="In Progress"
-        variant="info"
-      />
-      <StatsCard
-        :value="stats.completed"
         label="Completed"
+        :value="s.completed ?? 0"
+        icon="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         variant="success"
       />
       <StatsCard
-        :value="stats.failed"
         label="Failed"
+        :value="s.failed ?? 0"
+        icon="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
         variant="danger"
       />
       <StatsCard
-        :value="stats.retryPending"
-        label="Retry"
+        label="Pending"
+        :value="s.pending ?? 0"
+        icon="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
         variant="warning"
+      />
+      <StatsCard
+        label="Cancelled"
+        :value="s.cancelled ?? 0"
+        icon="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+        variant="info"
       />
     </div>
 
-    <!-- Recent Executions & Workflows -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <!-- Recent Executions -->
-      <div class="card-compact">
-        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h2 class="text-sm font-medium text-gray-800">Recent Executions</h2>
-          <router-link to="/executions" class="text-xs text-primary-600 hover:text-primary-700">
-            View all →
-          </router-link>
-        </div>
-        <div class="divide-y divide-gray-50">
-          <div
-            v-for="execution in recentExecutions"
-            :key="execution.executionId"
-            class="px-4 py-2.5 hover:bg-gray-50 cursor-pointer"
-            @click="goToExecution(execution.executionId)"
+    <div class="grid gap-6 lg:grid-cols-2">
+      <!-- Recent executions -->
+      <div class="card">
+        <h2 class="mb-4 text-sm font-semibold text-gray-900">Recent Executions</h2>
+        <div v-if="store.recentExecutions.length === 0" class="text-sm text-gray-400">No recent executions</div>
+        <div class="space-y-2">
+          <router-link
+            v-for="exec in store.recentExecutions"
+            :key="exec.executionId"
+            :to="`/executions/${exec.executionId}`"
+            class="flex items-center justify-between rounded-lg border border-gray-100 p-3 transition-colors hover:bg-gray-50"
           >
-            <div class="flex items-center justify-between">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center space-x-2">
-                  <code class="text-xs text-gray-600 truncate">{{ execution.executionId?.substring(0, 8) }}</code>
-                  <StatusBadge :status="execution.status" />
-                </div>
-                <div class="mt-0.5 flex items-center space-x-3 text-[11px] text-gray-400">
-                  <span>{{ execution.topic }}</span>
-                  <span>{{ execution.currentStep }}/{{ execution.totalSteps }}</span>
-                </div>
-              </div>
-              <div class="text-[11px] text-gray-400">
-                {{ formatDate(execution.createdAt) }}
-              </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-gray-900">{{ exec.topic }}</p>
+              <p class="truncate text-xs text-gray-500 font-mono">{{ exec.executionId }}</p>
             </div>
-          </div>
-          <div v-if="!recentExecutions.length" class="p-6 text-center text-xs text-gray-400">
-            No recent executions
-          </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span v-if="exec.currentStep != null" class="text-xs text-gray-400">
+                {{ exec.currentStep }}/{{ exec.totalSteps }}
+              </span>
+              <StatusBadge :status="exec.status" />
+            </div>
+          </router-link>
         </div>
       </div>
 
-      <!-- Registered Workflows -->
-      <div class="card-compact">
-        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h2 class="text-sm font-medium text-gray-800">Registered Workflows</h2>
-          <router-link to="/workflows" class="text-xs text-primary-600 hover:text-primary-700">
-            View all →
-          </router-link>
-        </div>
-        <div class="divide-y divide-gray-50">
+      <!-- Registered workflows -->
+      <div class="card">
+        <h2 class="mb-4 text-sm font-semibold text-gray-900">Registered Workflows</h2>
+        <div v-if="store.workflows.length === 0" class="text-sm text-gray-400">No workflows registered</div>
+        <div class="space-y-2">
           <div
-            v-for="workflow in workflows"
-            :key="workflow.topic"
-            class="px-4 py-2.5 hover:bg-gray-50"
+            v-for="wf in store.workflows"
+            :key="wf.topic + wf.serviceName"
+            class="flex items-center justify-between rounded-lg border border-gray-100 p-3"
           >
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="flex items-center space-x-1.5">
-                  <div
-                    class="w-1.5 h-1.5 rounded-full"
-                    :class="workflow.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-gray-300'"
-                  />
-                  <code class="text-xs font-medium text-gray-700">{{ workflow.topic }}</code>
-                </div>
-                <p class="mt-0.5 text-[11px] text-gray-400 truncate max-w-[200px]">{{ workflow.description || 'No description' }}</p>
-              </div>
-              <div class="text-right">
-                <div class="text-lg font-semibold text-gray-600">{{ workflow.stepCount || workflow.steps }}</div>
-                <div class="text-[10px] text-gray-400">steps</div>
-              </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-gray-900">{{ wf.topic }}</p>
+              <p class="text-xs text-gray-500">{{ wf.serviceName }}</p>
             </div>
-          </div>
-          <div v-if="!workflows.length" class="p-6 text-center text-xs text-gray-400">
-            No workflows registered
+            <div class="flex items-center gap-2 text-xs text-gray-400">
+              <span>{{ wf.stepCount ?? '?' }} steps</span>
+            </div>
           </div>
         </div>
       </div>
@@ -129,42 +94,21 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useWorkflowStore } from '@/stores/workflow'
+import { useWorkflowStore } from '@/stores/workflow.js'
 import StatsCard from '@/components/StatsCard.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
-import { formatDistanceToNow } from 'date-fns'
 
-const router = useRouter()
 const store = useWorkflowStore()
-
-const stats = computed(() => store.stats)
-const recentExecutions = computed(() => store.recentExecutions)
-const workflows = computed(() => store.workflows)
-const loading = computed(() => store.loading)
+const s = computed(() => store.stats || {})
 
 let interval
 
 onMounted(() => {
-  store.fetchDashboard()
-  // Auto-refresh every 5 seconds
-  interval = setInterval(() => store.fetchDashboard(), 5000)
+  store.fetchOverview()
+  interval = setInterval(() => store.fetchOverview(), 5000)
 })
 
 onUnmounted(() => {
   clearInterval(interval)
 })
-
-function refresh() {
-  store.fetchDashboard()
-}
-
-function goToExecution(id) {
-  router.push(`/executions/${id}`)
-}
-
-function formatDate(date) {
-  if (!date) return '-'
-  return formatDistanceToNow(new Date(date), { addSuffix: true })
-}
 </script>

@@ -1,14 +1,12 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="flex min-h-screen">
     <Sidebar />
-    <main class="pl-48 min-h-screen">
-      <div class="p-6">
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" />
-          </transition>
-        </router-view>
-      </div>
+    <main class="flex-1 ml-64 p-8">
+      <router-view v-slot="{ Component }">
+        <transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
     </main>
   </div>
 </template>
@@ -20,7 +18,7 @@ import Sidebar from '@/components/Sidebar.vue'
 <style>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.15s ease;
 }
 
 .fade-enter-from,

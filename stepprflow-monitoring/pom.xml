@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.stepprflow</groupId>
+        <artifactId>stepprflow-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>stepprflow-monitoring</artifactId>
+    <name>Steppr Flow Monitoring</name>
+    <description>Monitoring, persistence (MongoDB), dashboard, and REST API for Steppr Flow workflows</description>
+
+    <properties>
+        <main.basedir>${project.parent.basedir}</main.basedir>
+    </properties>
+
+    <dependencies>
+        <!-- Core module -->
+        <dependency>
+            <groupId>io.github.stepprflow</groupId>
+            <artifactId>stepprflow-core</artifactId>
+        </dependency>
+
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- MongoDB -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+        <!-- WebSocket -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <!-- Scheduling -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Actuator for metrics endpoint -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Kafka broker (provides MessageBroker + KafkaTemplate) -->
+        <dependency>
+            <groupId>io.github.stepprflow</groupId>
+            <artifactId>stepprflow-spring-kafka</artifactId>
+        </dependency>
+
+        <!-- RabbitMQ broker (optional - activated with stepprflow.broker=rabbitmq) -->
+        <dependency>
+            <groupId>io.github.stepprflow</groupId>
+            <artifactId>stepprflow-spring-rabbitmq</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- OpenAPI / Swagger documentation -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- SpotBugs annotations for suppressing false positives -->
+        <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>4.8.6</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo.spring3x</artifactId>
+            <version>4.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- Inherit parent excludes -->
+                        <exclude>**/*Properties.class</exclude>
+                        <exclude>**/*Properties$*.class</exclude>
+                        <exclude>**/*Config.class</exclude>
+                        <exclude>**/*Configuration.class</exclude>
+                        <exclude>**/*AutoConfiguration.class</exclude>
+                        <exclude>**/model/*Info.class</exclude>
+                        <exclude>**/dto/*.class</exclude>
+                        <exclude>**/*$Builder.class</exclude>
+                        <exclude>**/*$Builder$*.class</exclude>
+                        <exclude>**/*Application.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.65</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <element>CLASS</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                    </limits>
+                                    <excludes>
+                                        <exclude>io.github.stepprflow.core.broker.MessageBroker</exclude>
+                                        <exclude>io.github.stepprflow.core.broker.MessageContext</exclude>
+                                        <exclude>io.github.stepprflow.core.service.WorkflowExecutionStore</exclude>
+                                        <exclude>io.github.stepprflow.core.service.WorkflowStarter</exclude>
+                                        <exclude>io.github.stepprflow.core.event.*</exclude>
+                                        <exclude>io.github.stepprflow.core.metrics.MetricsSummary</exclude>
+                                        <exclude>*Exception</exclude>
+                                        <exclude>*Listener</exclude>
+                                        <exclude>*WebSocketHandler</exclude>
+                                        <exclude>*Controller</exclude>
+                                        <exclude>io.github.stepprflow.monitor.websocket.WorkflowWebSocketHandler.WorkflowUpdateDTO</exclude>
+                                        <exclude>io.github.stepprflow.monitor.model.WorkflowExecution.ExecutionAttempt</exclude>
+                                        <exclude>io.github.stepprflow.monitor.model.WorkflowExecution.StepExecution</exclude>
+                                        <exclude>io.github.stepprflow.monitor.model.WorkflowExecution.PayloadChange</exclude>
+                                        <exclude>io.github.stepprflow.monitor.model.RegisteredWorkflow.StepInfo</exclude>
+                                        <exclude>io.github.stepprflow.monitor.model.RegisteredWorkflow.ServiceInstance</exclude>
+                                        <exclude>io.github.stepprflow.monitor.model.WorkflowExecution</exclude>
+                                        <exclude>io.github.stepprflow.monitor.model.RegisteredWorkflow</exclude>
+                                        <exclude>io.github.stepprflow.monitor.service.WorkflowRegistryService</exclude>
+                                    </excludes>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals><goal>repackage</goal></goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>io.github.stepprflow.dashboard.StepprFlowDashboardApplication</mainClass>
+                    <layers><enabled>true</enabled></layers>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

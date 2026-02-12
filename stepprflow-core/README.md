@@ -1,15 +1,17 @@
 # Steppr Flow Core
 
-Spring Boot framework for orchestrating asynchronous multi-step workflows via message brokers (Kafka or RabbitMQ).
+Spring Boot framework for orchestrating asynchronous multi-step workflows via pluggable message brokers.
 
 ## Features
 
-- Multi-step workflows with asynchronous execution via Kafka
+- Multi-step workflows with asynchronous execution
 - Declarative annotations (`@Topic`, `@Step`, `@OnSuccess`, `@OnFailure`)
+- Pluggable message broker abstraction (add `stepprflow-spring-kafka` or `stepprflow-spring-rabbitmq`)
 - Automatic retry with exponential backoff
 - Dead Letter Queue (DLQ) for failed messages
 - Security context propagation between steps
 - Configurable timeout per step or workflow
+- Automatic broker-based registration with heartbeat and crash detection
 
 ## Installation
 
@@ -23,7 +25,7 @@ Spring Boot framework for orchestrating asynchronous multi-step workflows via me
 </dependency>
 ```
 
-> **Note:** For most use cases, you should use `stepprflow-spring-boot-starter` which includes this module along with auto-configuration.
+> **Note:** You also need a broker module: add `stepprflow-spring-kafka` for Kafka or `stepprflow-spring-rabbitmq` for RabbitMQ.
 
 ## Quick Start
 
@@ -39,24 +41,9 @@ stepprflow:
     initial-delay: 1s
     max-delay: 5m
     multiplier: 2.0
-
-  # For Kafka (default broker)
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: my-app-workers
-    trusted-packages:
-      - io.stepprflow.core.model
-      - com.mycompany.workflow
-
-  # Or for RabbitMQ (set broker: rabbitmq)
-  # broker: rabbitmq
-  # rabbitmq:
-  #   host: localhost
-  #   port: 5672
-  #   username: guest
-  #   password: guest
 ```
+
+Broker-specific configuration is provided by the broker module you include (`stepprflow-spring-kafka` or `stepprflow-spring-rabbitmq`).
 
 ### 2. Create a Payload
 
@@ -217,7 +204,7 @@ future.thenAccept(executionId -> {
 
 | Annotation | Target | Description |
 |------------|--------|-------------|
-| `@Topic` | Class | Defines the Kafka topic for the workflow |
+| `@Topic` | Class | Defines the message destination for the workflow |
 | `@Step` | Method | Defines a workflow step |
 | `@OnSuccess` | Method | Callback executed on success |
 | `@OnFailure` | Method | Callback executed on failure |
@@ -266,4 +253,4 @@ stepprflow:
 
 - Java 21+
 - Spring Boot 3.5.x+
-- Apache Kafka 3.x+
+- A broker module: `stepprflow-spring-kafka` or `stepprflow-spring-rabbitmq`

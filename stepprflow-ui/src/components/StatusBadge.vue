@@ -1,10 +1,10 @@
 <template>
   <span
-    class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
-    :class="statusClasses"
+    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+    :class="classes"
   >
-    <span v-if="showDot" class="w-1 h-1 rounded-full mr-1" :class="dotClass" />
-    {{ displayText }}
+    <span v-if="dot" class="mr-1.5 h-1.5 w-1.5 rounded-full" :class="dotClass" />
+    {{ label }}
   </span>
 </template>
 
@@ -13,57 +13,21 @@ import { computed } from 'vue'
 
 const props = defineProps({
   status: { type: String, required: true },
-  showDot: { type: Boolean, default: true },
-  size: { type: String, default: 'md' }
+  dot: { type: Boolean, default: true }
 })
 
-const statusConfig = {
-  PENDING: {
-    bg: 'bg-amber-50',
-    text: 'text-amber-600',
-    dot: 'bg-amber-400',
-    label: 'Pending'
-  },
-  IN_PROGRESS: {
-    bg: 'bg-sky-50',
-    text: 'text-sky-600',
-    dot: 'bg-sky-400',
-    label: 'Running'
-  },
-  COMPLETED: {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-600',
-    dot: 'bg-emerald-400',
-    label: 'Done'
-  },
-  FAILED: {
-    bg: 'bg-red-50',
-    text: 'text-red-600',
-    dot: 'bg-red-400',
-    label: 'Failed'
-  },
-  RETRY_PENDING: {
-    bg: 'bg-orange-50',
-    text: 'text-orange-600',
-    dot: 'bg-orange-400',
-    label: 'Retry'
-  },
-  CANCELLED: {
-    bg: 'bg-gray-100',
-    text: 'text-gray-500',
-    dot: 'bg-gray-400',
-    label: 'Cancelled'
-  },
-  PASSED: {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-600',
-    dot: 'bg-emerald-400',
-    label: 'Passed'
-  }
+const statusMap = {
+  PENDING:       { label: 'Pending',       bg: 'bg-gray-100 text-gray-700',     dot: 'bg-gray-500' },
+  IN_PROGRESS:   { label: 'In Progress',   bg: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-500' },
+  COMPLETED:     { label: 'Completed',     bg: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  PASSED:        { label: 'Passed',       bg: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  FAILED:        { label: 'Failed',        bg: 'bg-red-100 text-red-700',       dot: 'bg-red-500' },
+  RETRY_PENDING: { label: 'Retry Pending', bg: 'bg-amber-100 text-amber-700',   dot: 'bg-amber-500' },
+  CANCELLED:     { label: 'Cancelled',     bg: 'bg-gray-100 text-gray-500',     dot: 'bg-gray-400' }
 }
 
-const config = computed(() => statusConfig[props.status] || statusConfig.PENDING)
-const statusClasses = computed(() => `${config.value.bg} ${config.value.text}`)
+const config = computed(() => statusMap[props.status] || statusMap.PENDING)
+const classes = computed(() => config.value.bg)
 const dotClass = computed(() => config.value.dot)
-const displayText = computed(() => config.value.label)
+const label = computed(() => config.value.label)
 </script>

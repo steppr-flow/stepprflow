@@ -31,7 +31,7 @@ stepprflow:
     exchange: stepprflow.workflows
     prefetch-count: 10
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.yourcompany.workflow
 ```
 
@@ -49,7 +49,7 @@ stepprflow:
 | `stepprflow.rabbitmq.exchange` | Exchange name | `stepprflow.workflows` |
 | `stepprflow.rabbitmq.prefetch-count` | Prefetch count | `10` |
 | `stepprflow.rabbitmq.dlq-suffix` | DLQ suffix | `.dlq` |
-| `stepprflow.rabbitmq.trusted-packages` | Packages for deserialization | `[io.stepprflow.core.model]` |
+| `stepprflow.rabbitmq.trusted-packages` | Packages for deserialization | `[io.github.stepprflow.core.model]` |
 
 ## Features
 

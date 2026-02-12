@@ -12,11 +12,11 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 - **Message Broker Abstraction** - Switch between Kafka and RabbitMQ without code changes
 - **Automatic Retry with Backoff** - Configurable exponential backoff retry strategy
 - **Dead Letter Queue (DLQ)** - Failed messages are automatically routed to DLQ
-- **Real-time Monitoring Dashboard** - Track workflow executions in real-time via WebSocket
 - **Security Context Propagation** - Security context flows automatically between steps
 - **Circuit Breaker Protection** - Built-in Resilience4j circuit breaker for broker failures
 - **Distributed Tracing** - Micrometer tracing integration for observability
-- **Payload Modification** - Modify workflow payloads from the dashboard for recovery scenarios
+- **Broker-based Service Registration** - Automatic zero-config registration of workflow definitions via the shared message broker
+- **Optional Monitoring** - MongoDB persistence, REST API, WebSocket dashboard (opt-in)
 
 ## Architecture Overview
 
@@ -35,7 +35,7 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 │           │                     │                     │                 │
 │           ▼                     ▼                     ▼                 │
 │  ┌─────────────────────────────────────────────────────────────────┐    │
-│  │                    stepprflow-spring-boot-starter              │    │
+│  │                       stepprflow-core                           │    │
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │    │
 │  │  │WorkflowStart│  │ StepExecutor│  │ WorkflowRegistry        │  │    │
 │  │  └─────────────┘  └─────────────┘  └─────────────────────────┘  │    │
@@ -47,7 +47,7 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         Message Broker Layer                            │
 │  ┌────────────────────────────┐    ┌────────────────────────────┐       │
-│  │   stepprflow-spring-kafka │ OR │ stepprflow-spring-rabbitmq│       │
+│  │  stepprflow-spring-kafka  │ OR │ stepprflow-spring-rabbitmq │       │
 │  └────────────────────────────┘    └────────────────────────────┘       │
 │                     │                          │                        │
 │                     ▼                          ▼                        │
@@ -58,13 +58,14 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
                                  │
                                  ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        Monitoring & Dashboard                           │
-│  ┌───────────────────────────┐  ┌────────────────────────────────────┐  │
-│  │ stepprflow-spring-monitor│  │       stepprflow-dashboard        │  │
-│  │  • Execution persistence  │  │  • REST API                        │  │
-│  │  • Metrics collection     │  │  • WebSocket broadcasts            │  │
-│  │  • Retry scheduling       │  │  • Vue.js UI (stepprflow-ui)      │  │
-│  └───────────────────────────┘  └────────────────────────────────────┘  │
+│                   Monitoring (opt-in: stepprflow-monitoring)            │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │  • Execution persistence (MongoDB)                                │  │
+│  │  • Metrics collection                                             │  │
+│  │  • Retry scheduling                                               │  │
+│  │  • REST API + WebSocket broadcasts                                │  │
+│  │  • Dashboard UI                                                   │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
 │                     │                          │                        │
 │                     ▼                          ▼                        │
 │              ┌──────────┐              ┌────────────┐                   │
@@ -78,12 +79,12 @@ Steppr Flow is designed to help you orchestrate complex business processes acros
 | Module | Description |
 |--------|-------------|
 | `stepprflow-core` | Core framework: annotations, models, interfaces, workflow engine |
-| `stepprflow-spring-boot-starter` | Spring Boot auto-configuration starter (includes Kafka by default) |
 | `stepprflow-spring-kafka` | Apache Kafka message broker implementation |
 | `stepprflow-spring-rabbitmq` | RabbitMQ message broker implementation |
-| `stepprflow-spring-monitor` | Workflow monitoring, persistence, metrics, and retry scheduling |
-| `stepprflow-dashboard` | Standalone monitoring server with REST API and WebSocket |
-| `stepprflow-ui` | Vue.js dashboard UI for real-time workflow monitoring |
+| `stepprflow-monitoring` | Monitoring, persistence, metrics, retry scheduling, REST API, and dashboard (opt-in) |
+| `stepprflow-ui` | Vue.js 3 + Tailwind CSS frontend (built assets embedded in monitoring) |
+| `stepprflow-samples` | Example application with Kafka and RabbitMQ profiles |
+| `stepprflow-load-tests` | Performance benchmarks (Gatling) |
 
 ## How It Works
 
@@ -195,10 +196,16 @@ The workflow automatically:
 
 ### 1. Add Dependency
 
+**Core + Kafka:**
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>stepprflow-spring-boot-starter</artifactId>
+    <artifactId>stepprflow-core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+<dependency>
+    <groupId>io.github.stepprflow</groupId>
+    <artifactId>stepprflow-spring-kafka</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -212,7 +219,7 @@ stepprflow:
     max-attempts: 3
     initial-delay: 1s
 
-spring:
+stepprflow:
   kafka:
     bootstrap-servers: localhost:9092
 ```
@@ -248,15 +255,18 @@ workflowStarter.start("my-workflow", new MyPayload());
 
 - [Getting Started Guide](./getting-started.md) - Complete setup tutorial
 - [Message Brokers](./brokers.md) - Kafka & RabbitMQ configuration
+- [Security Context Propagation](./security.md) - JWT and authentication propagation
 - [Monitoring & Dashboard](./monitoring.md) - Setting up the monitoring dashboard
+- [Modules](./modules.md) - Detailed module descriptions and dependency graph
+- [Development Guide](./development.md) - Local development setup and contributing
 
 ## Requirements
 
 - Java 21+
 - Spring Boot 3.5+
 - Apache Kafka 3.x+ or RabbitMQ 3.x+
-- MongoDB 7.0+ (for monitoring)
+- MongoDB 7.0+ (only if using `stepprflow-monitoring`)
 
 ## License
 
-Copyright 2024 Steppr Flow Authors. All rights reserved.
+Apache License 2.0

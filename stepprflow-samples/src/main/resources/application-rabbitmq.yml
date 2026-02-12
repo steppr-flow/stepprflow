@@ -13,5 +13,5 @@ stepprflow:
     exchange: stepprflow.workflows
     prefetch-count: 10
     trusted-packages:
-      - io.stepprflow.core.model
-      - io.stepprflow.sample.model
+      - io.github.stepprflow.core.model
+      - io.github.stepprflow.sample.model

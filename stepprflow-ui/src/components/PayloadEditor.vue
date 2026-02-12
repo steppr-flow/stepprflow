@@ -1,43 +1,51 @@
 <template>
-  <div class="payload-editor">
-    <!-- Tree view of payload with editable values -->
-    <div class="space-y-1">
+  <div class="space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-medium text-gray-700">Payload</h3>
+      <div class="flex items-center gap-2">
+        <button
+          v-if="hasChanges"
+          class="btn-secondary btn-sm"
+          @click="$emit('restore')"
+        >
+          Restore original
+        </button>
+        <button
+          class="btn-secondary btn-sm"
+          :class="{ '!bg-primary-50 !text-primary-700 !border-primary-300': editMode }"
+          @click="editMode = !editMode"
+        >
+          {{ editMode ? 'Done editing' : 'Edit' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 overflow-auto max-h-[600px]">
       <PayloadNode
-        v-for="key in orderedKeys"
-        :key="key"
-        :fieldKey="key"
-        :value="payload[key]"
-        :path="key"
-        :editable="editable"
-        :depth="0"
-        @update="handleUpdate"
+        v-if="payload !== null && payload !== undefined"
+        :value="payload"
+        :path="''"
+        :edit-mode="editMode"
+        @update="onFieldUpdate"
       />
+      <p v-else class="text-sm text-gray-400 italic">No payload</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 import PayloadNode from './PayloadNode.vue'
 
-const props = defineProps({
-  payload: { type: Object, required: true },
-  editable: { type: Boolean, default: false }
+defineProps({
+  payload: { type: [Object, Array, String, Number, Boolean], default: null },
+  hasChanges: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['update'])
+const emit = defineEmits(['update', 'restore'])
+const editMode = ref(false)
 
-// Use Object.keys() to preserve the order from the backend
-const orderedKeys = computed(() => Object.keys(props.payload))
-
-function handleUpdate(path, newValue, oldValue) {
-  emit('update', path, newValue, oldValue)
+function onFieldUpdate(path, value) {
+  emit('update', path, value)
 }
 </script>
-
-<style scoped>
-.payload-editor {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.875rem;
-}
-</style>

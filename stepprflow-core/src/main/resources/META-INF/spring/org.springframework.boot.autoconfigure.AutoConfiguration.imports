@@ -1,3 +1,4 @@
-io.stepprflow.core.StepprFlowAutoConfiguration
-io.stepprflow.core.tracing.TracingAutoConfiguration
-io.stepprflow.core.metrics.WorkflowMetricsAutoConfiguration
+io.github.stepprflow.core.StepprFlowAutoConfiguration
+io.github.stepprflow.core.tracing.TracingAutoConfiguration
+io.github.stepprflow.core.metrics.WorkflowMetricsAutoConfiguration
+io.github.stepprflow.core.registration.RegistrationAutoConfiguration

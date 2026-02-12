@@ -1,40 +1,30 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src')
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8090',
+        changeOrigin: true
+      },
+      '/ws': {
+        target: 'http://localhost:8090',
+        ws: true,
+        changeOrigin: true
+      }
     }
   },
   build: {
     outDir: 'dist',
-    emptyOutDir: true
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8084',
-        changeOrigin: true
-      },
-      '/ws': {
-        target: 'ws://localhost:8084',
-        ws: true
-      }
-    }
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.js'],
-    include: ['src/**/*.{test,spec}.{js,ts}'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.{js,vue}'],
-      exclude: ['src/test/**', 'src/main.js']
-    }
+    sourcemap: false
   }
 })

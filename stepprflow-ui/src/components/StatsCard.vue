@@ -1,56 +1,64 @@
 <template>
-  <div class="bg-white border border-gray-100 rounded-lg px-3 py-2.5">
-    <div class="text-[11px] text-gray-400 mb-0.5">{{ label }}</div>
-    <div class="text-xl font-semibold" :class="colorClass">{{ animatedValue }}</div>
+  <div class="card-compact flex items-center gap-4">
+    <div
+      class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
+      :class="variantClasses.bg"
+    >
+      <svg class="h-6 w-6" :class="variantClasses.icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" :d="icon" />
+      </svg>
+    </div>
+    <div class="min-w-0">
+      <p class="truncate text-sm text-gray-500">{{ label }}</p>
+      <p class="text-2xl font-semibold" :class="variantClasses.text">{{ displayValue }}</p>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 
 const props = defineProps({
-  value: { type: Number, default: 0 },
   label: { type: String, required: true },
-  subtitle: { type: String, default: '' },
-  variant: { type: String, default: 'default' },
-  iconPath: { type: String, default: 'M13 10V3L4 14h7v7l9-11h-7z' },
-  showProgress: { type: Boolean, default: false },
-  progress: { type: Number, default: 0 }
+  value: { type: Number, default: 0 },
+  icon: { type: String, required: true },
+  variant: { type: String, default: 'default' }
 })
 
-const animatedValue = ref(0)
+const displayValue = ref(0)
 
 const variants = {
-  default: { color: 'text-gray-700' },
-  primary: { color: 'text-primary-600' },
-  success: { color: 'text-emerald-600' },
-  warning: { color: 'text-amber-600' },
-  danger: { color: 'text-red-600' },
-  info: { color: 'text-sky-600' }
+  default: { bg: 'bg-gray-100', icon: 'text-gray-600', text: 'text-gray-900' },
+  primary: { bg: 'bg-primary-100', icon: 'text-primary-600', text: 'text-primary-700' },
+  success: { bg: 'bg-emerald-100', icon: 'text-emerald-600', text: 'text-emerald-700' },
+  danger: { bg: 'bg-red-100', icon: 'text-red-600', text: 'text-red-700' },
+  warning: { bg: 'bg-amber-100', icon: 'text-amber-600', text: 'text-amber-700' },
+  info: { bg: 'bg-sky-100', icon: 'text-sky-600', text: 'text-sky-700' }
 }
 
-const colorClass = computed(() => variants[props.variant]?.color || variants.default.color)
+const variantClasses = variants[props.variant] || variants.default
 
-// Animate number on mount and value change
-const animateValue = (target) => {
-  const start = animatedValue.value
-  const duration = 500
-  const startTime = performance.now()
+function animateValue(from, to) {
+  if (from === to) return
+  const duration = 400
+  const start = performance.now()
 
-  const animate = (currentTime) => {
-    const elapsed = currentTime - startTime
+  function tick(now) {
+    const elapsed = now - start
     const progress = Math.min(elapsed / duration, 1)
-    const easeOutQuad = 1 - (1 - progress) * (1 - progress)
-    animatedValue.value = Math.floor(start + (target - start) * easeOutQuad)
-
-    if (progress < 1) {
-      requestAnimationFrame(animate)
-    }
+    const eased = 1 - Math.pow(1 - progress, 3)
+    displayValue.value = Math.round(from + (to - from) * eased)
+    if (progress < 1) requestAnimationFrame(tick)
   }
 
-  requestAnimationFrame(animate)
+  requestAnimationFrame(tick)
 }
 
-onMounted(() => animateValue(props.value))
-watch(() => props.value, animateValue)
+watch(() => props.value, (newVal, oldVal) => {
+  animateValue(oldVal ?? 0, newVal ?? 0)
+})
+
+onMounted(() => {
+  animateValue(0, props.value ?? 0)
+})
 </script>

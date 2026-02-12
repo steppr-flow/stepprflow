@@ -1,36 +1,31 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '@/views/Dashboard.vue'
-import Executions from '@/views/Executions.vue'
-import ExecutionDetail from '@/views/ExecutionDetail.vue'
-import Workflows from '@/views/Workflows.vue'
-import Metrics from '@/views/Metrics.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Dashboard',
-    component: Dashboard
+    component: () => import('@/views/Dashboard.vue')
   },
   {
     path: '/executions',
     name: 'Executions',
-    component: Executions
+    component: () => import('@/views/Executions.vue')
   },
   {
     path: '/executions/:id',
     name: 'ExecutionDetail',
-    component: ExecutionDetail,
+    component: () => import('@/views/ExecutionDetail.vue'),
     props: true
   },
   {
     path: '/workflows',
     name: 'Workflows',
-    component: Workflows
+    component: () => import('@/views/Workflows.vue')
   },
   {
     path: '/metrics',
     name: 'Metrics',
-    component: Metrics
+    component: () => import('@/views/Metrics.vue')
   }
 ]
 

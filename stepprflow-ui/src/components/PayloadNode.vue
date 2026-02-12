@@ -1,95 +1,64 @@
 <template>
-  <div class="payload-node">
-    <!-- Key and value row -->
-    <div
-      class="flex items-start py-1 hover:bg-gray-50 rounded px-2 -mx-2"
-      :style="{ paddingLeft: `${depth * 16 + 8}px` }"
-    >
-      <!-- Expand/collapse for objects and arrays -->
-      <button
-        v-if="isExpandable"
+  <div class="font-mono text-sm">
+    <!-- Object -->
+    <template v-if="isObject">
+      <div
+        class="flex items-center gap-1 cursor-pointer select-none hover:bg-gray-100 rounded px-1 -mx-1"
         @click="expanded = !expanded"
-        class="mr-1 text-gray-400 hover:text-gray-600 focus:outline-none flex-shrink-0 w-4"
       >
-        <svg v-if="expanded" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+        <svg
+          class="h-3.5 w-3.5 text-gray-400 transition-transform"
+          :class="{ 'rotate-90': expanded }"
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
         </svg>
-        <svg v-else class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-        </svg>
-      </button>
-      <span v-else class="w-4 mr-1 flex-shrink-0"></span>
-
-      <!-- Key -->
-      <span class="text-primary-700 font-medium flex-shrink-0">{{ fieldKey }}</span>
-      <span class="text-gray-400 mx-1">:</span>
-
-      <!-- Value -->
-      <div class="flex-1 min-w-0">
-        <!-- Editable primitive value -->
-        <template v-if="!isExpandable">
-          <div v-if="editable && isEditing" class="flex items-center space-x-2">
-            <input
-              ref="inputRef"
-              v-model="editValue"
-              @keyup.enter="saveEdit"
-              @keyup.escape="cancelEdit"
-              @blur="saveEdit"
-              class="flex-1 px-2 py-0.5 text-sm border border-primary-300 rounded focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              :class="inputClass"
-            />
-          </div>
-          <div v-else class="flex items-center group">
-            <span :class="valueClass">{{ displayValue }}</span>
-            <button
-              v-if="editable"
-              @click="startEdit"
-              class="ml-2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-primary-600 transition-opacity"
-              title="Edit value"
-            >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </button>
-          </div>
-        </template>
-
-        <!-- Object/Array indicator -->
-        <template v-else>
-          <span class="text-gray-500">
-            {{ isArray ? `Array(${value.length})` : `Object(${Object.keys(value).length})` }}
-          </span>
-        </template>
+        <span class="text-gray-500">{{ isArray ? '[' : '{' }}</span>
+        <span v-if="!expanded" class="text-gray-400 text-xs ml-1">
+          {{ isArray ? `${Object.keys(value).length} items` : `${Object.keys(value).length} keys` }}
+          {{ isArray ? ']' : '}' }}
+        </span>
       </div>
-    </div>
+      <div v-if="expanded" class="ml-4 border-l border-gray-200 pl-3 space-y-0.5">
+        <div v-for="(val, key) in value" :key="key" class="flex items-start gap-1">
+          <span class="text-purple-600 shrink-0">{{ isArray ? `[${key}]` : key }}:</span>
+          <PayloadNode
+            :value="val"
+            :path="childPath(key)"
+            :edit-mode="editMode"
+            @update="(p, v) => $emit('update', p, v)"
+          />
+        </div>
+      </div>
+      <div v-if="expanded" class="text-gray-500">{{ isArray ? ']' : '}' }}</div>
+    </template>
 
-    <!-- Children -->
-    <div v-if="isExpandable && expanded">
-      <template v-if="isArray">
-        <PayloadNode
-          v-for="(item, index) in value"
-          :key="index"
-          :fieldKey="`[${index}]`"
-          :value="item"
-          :path="`${path}[${index}]`"
-          :editable="editable"
-          :depth="depth + 1"
-          @update="(p, v, o) => $emit('update', p, v, o)"
+    <!-- Primitive with inline edit -->
+    <template v-else>
+      <span v-if="!editing" :class="valueClass" class="group inline-flex items-center gap-1">
+        {{ displayValue }}
+        <button
+          v-if="editMode"
+          class="hidden group-hover:inline-flex h-4 w-4 items-center justify-center rounded text-gray-400 hover:text-primary-600 hover:bg-primary-50"
+          @click.stop="startEdit"
+        >
+          <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z" />
+          </svg>
+        </button>
+      </span>
+      <span v-else class="inline-flex items-center gap-1">
+        <input
+          ref="editInput"
+          v-model="editValue"
+          class="input-sm max-w-[200px]"
+          @keydown.enter="commitEdit"
+          @keydown.escape="editing = false"
         />
-      </template>
-      <template v-else>
-        <PayloadNode
-          v-for="childKey in orderedChildKeys"
-          :key="childKey"
-          :fieldKey="childKey"
-          :value="value[childKey]"
-          :path="`${path}.${childKey}`"
-          :editable="editable"
-          :depth="depth + 1"
-          @update="(p, v, o) => $emit('update', p, v, o)"
-        />
-      </template>
-    </div>
+        <button class="btn-primary btn-sm !px-1.5 !py-0.5 text-xs" @click="commitEdit">OK</button>
+        <button class="btn-secondary btn-sm !px-1.5 !py-0.5 text-xs" @click="editing = false">X</button>
+      </span>
+    </template>
   </div>
 </template>
 
@@ -97,101 +66,54 @@
 import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps({
-  fieldKey: { type: [String, Number], required: true },
   value: { type: [Object, Array, String, Number, Boolean, null], default: null },
-  path: { type: String, required: true },
-  editable: { type: Boolean, default: false },
-  depth: { type: Number, default: 0 }
+  path: { type: String, default: '' },
+  editMode: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['update'])
 
 const expanded = ref(true)
-const isEditing = ref(false)
+const editing = ref(false)
 const editValue = ref('')
-const inputRef = ref(null)
+const editInput = ref(null)
 
+const isObject = computed(() => props.value !== null && typeof props.value === 'object')
 const isArray = computed(() => Array.isArray(props.value))
-const isObject = computed(() => props.value !== null && typeof props.value === 'object' && !isArray.value)
-const isExpandable = computed(() => isArray.value || isObject.value)
 
-// Use Object.keys() to preserve key order for nested objects
-const orderedChildKeys = computed(() => isObject.value ? Object.keys(props.value) : [])
-
-const valueType = computed(() => {
-  if (props.value === null) return 'null'
-  if (typeof props.value === 'boolean') return 'boolean'
-  if (typeof props.value === 'number') return 'number'
-  if (typeof props.value === 'string') return 'string'
-  return 'object'
+const valueClass = computed(() => {
+  if (props.value === null || props.value === undefined) return 'text-gray-400 italic'
+  if (typeof props.value === 'string') return 'text-emerald-600'
+  if (typeof props.value === 'number') return 'text-amber-600'
+  if (typeof props.value === 'boolean') return 'text-sky-600'
+  return 'text-gray-700'
 })
 
 const displayValue = computed(() => {
-  if (props.value === null) return 'null'
+  if (props.value === null || props.value === undefined) return 'null'
   if (typeof props.value === 'string') return `"${props.value}"`
   return String(props.value)
 })
 
-const valueClass = computed(() => {
-  const classes = {
-    null: 'text-gray-400 italic',
-    boolean: 'text-purple-600',
-    number: 'text-blue-600',
-    string: 'text-green-700'
-  }
-  return classes[valueType.value] || 'text-gray-700'
-})
-
-const inputClass = computed(() => {
-  const classes = {
-    boolean: 'text-purple-600',
-    number: 'text-blue-600',
-    string: 'text-green-700'
-  }
-  return classes[valueType.value] || 'text-gray-700'
-})
+function childPath(key) {
+  return props.path ? `${props.path}.${key}` : String(key)
+}
 
 function startEdit() {
-  // Remove quotes for string display in input
-  if (typeof props.value === 'string') {
-    editValue.value = props.value
-  } else {
-    editValue.value = props.value === null ? '' : String(props.value)
-  }
-  isEditing.value = true
-  nextTick(() => {
-    inputRef.value?.focus()
-    inputRef.value?.select()
-  })
+  editValue.value = props.value === null ? '' : String(props.value)
+  editing.value = true
+  nextTick(() => editInput.value?.focus())
 }
 
-function saveEdit() {
-  if (!isEditing.value) return
-
-  let newValue = editValue.value
-  const oldValue = props.value
-
-  // Try to preserve the original type
+function commitEdit() {
+  let parsed = editValue.value
   if (typeof props.value === 'number') {
-    const num = Number(newValue)
-    if (!isNaN(num)) {
-      newValue = num
-    }
+    const num = Number(parsed)
+    if (!isNaN(num)) parsed = num
   } else if (typeof props.value === 'boolean') {
-    newValue = newValue.toLowerCase() === 'true'
-  } else if (props.value === null && newValue === '') {
-    newValue = null
+    parsed = parsed === 'true'
   }
-
-  // Only emit if value changed
-  if (newValue !== props.value) {
-    emit('update', props.path, newValue, oldValue)
-  }
-
-  isEditing.value = false
-}
-
-function cancelEdit() {
-  isEditing.value = false
+  emit('update', props.path, parsed)
+  editing.value = false
 }
 </script>

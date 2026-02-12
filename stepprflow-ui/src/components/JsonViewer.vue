@@ -1,52 +1,41 @@
 <template>
-  <div class="json-viewer">
-    <pre v-html="formattedJson"></pre>
-  </div>
+  <div class="json-viewer" v-html="highlighted" />
 </template>
 
 <script setup>
 import { computed } from 'vue'
 
 const props = defineProps({
-  data: { type: [Object, Array, String, Number, Boolean, null], default: null }
+  data: { type: [Object, Array, String, Number, Boolean], default: null },
+  indent: { type: Number, default: 2 }
 })
 
-const formattedJson = computed(() => {
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+const highlighted = computed(() => {
   if (props.data === null || props.data === undefined) {
     return '<span class="json-null">null</span>'
   }
 
-  try {
-    const json = typeof props.data === 'string' ? JSON.parse(props.data) : props.data
-    return syntaxHighlight(JSON.stringify(json, null, 2))
-  } catch (e) {
-    return String(props.data)
-  }
-})
+  const raw = typeof props.data === 'string' ? props.data : JSON.stringify(props.data, null, props.indent)
 
-function syntaxHighlight(json) {
-  return json
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(
-      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
-      (match) => {
-        let cls = 'json-number'
-        if (/^"/.test(match)) {
-          if (/:$/.test(match)) {
-            cls = 'json-key'
-            match = match.replace(/"/g, '')
-          } else {
-            cls = 'json-string'
-          }
-        } else if (/true|false/.test(match)) {
-          cls = 'json-boolean'
-        } else if (/null/.test(match)) {
-          cls = 'json-null'
-        }
-        return `<span class="${cls}">${match}</span>`
-      }
-    )
-}
+  return escapeHtml(raw).replace(
+    /("(?:\\.|[^"\\])*")\s*:/g,
+    '<span class="json-key">$1</span>:'
+  ).replace(
+    /:\s*("(?:\\.|[^"\\])*")/g,
+    ': <span class="json-string">$1</span>'
+  ).replace(
+    /:\s*(-?\d+\.?\d*(?:[eE][+-]?\d+)?)/g,
+    ': <span class="json-number">$1</span>'
+  ).replace(
+    /:\s*(true|false)/g,
+    ': <span class="json-boolean">$1</span>'
+  ).replace(
+    /:\s*(null)/g,
+    ': <span class="json-null">$1</span>'
+  )
+})
 </script>

@@ -1,121 +1,96 @@
 @import "tailwindcss";
 
-/* ============================================================================
-   Theme Configuration (Tailwind v4)
-   ============================================================================ */
 @theme {
-  /* Primary color palette */
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
-  --color-primary-950: #082f49;
-
-  /* Custom animations */
-  --animate-pulse-slow: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-
-  @keyframes pulse-slow {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+  --color-primary-50: oklch(0.97 0.014 233);
+  --color-primary-100: oklch(0.93 0.029 233);
+  --color-primary-200: oklch(0.88 0.056 233);
+  --color-primary-300: oklch(0.82 0.085 233);
+  --color-primary-400: oklch(0.74 0.114 233);
+  --color-primary-500: oklch(0.69 0.132 233);
+  --color-primary-600: oklch(0.60 0.132 233);
+  --color-primary-700: oklch(0.52 0.112 233);
+  --color-primary-800: oklch(0.44 0.090 233);
+  --color-primary-900: oklch(0.39 0.070 233);
 }
 
-/* ============================================================================
-   Base Styles
-   ============================================================================ */
-@layer base {
-  :root {
-    --color-bg-primary: #ffffff;
-    --color-bg-secondary: #f8fafc;
-    --color-bg-tertiary: #f1f5f9;
-  }
+@utility btn {
+  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium
+         transition-all duration-150 cursor-pointer
+         focus:outline-none focus:ring-2 focus:ring-offset-2
+         disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
-/* ============================================================================
-   Component Styles
-   ============================================================================ */
+@utility btn-primary {
+  @apply btn bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-400;
+}
+
+@utility btn-secondary {
+  @apply btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-gray-300;
+}
+
+@utility btn-danger {
+  @apply btn bg-red-500 text-white hover:bg-red-600 focus:ring-red-400;
+}
+
+@utility btn-success {
+  @apply btn bg-emerald-500 text-white hover:bg-emerald-600 focus:ring-emerald-400;
+}
+
+@utility btn-sm {
+  @apply px-3 py-1.5 text-xs;
+}
+
+@utility card {
+  @apply bg-white rounded-xl border border-gray-200 p-6 shadow-sm;
+}
+
+@utility card-compact {
+  @apply bg-white rounded-xl border border-gray-200 p-4 shadow-sm;
+}
+
+@utility input {
+  @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+         placeholder:text-gray-400
+         focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100
+         transition-colors duration-150;
+}
+
+@utility input-sm {
+  @apply input px-2.5 py-1.5 text-xs;
+}
+
+@utility select {
+  @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white
+         focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100
+         transition-colors duration-150;
+}
+
+@utility select-sm {
+  @apply select px-2.5 py-1.5 text-xs;
+}
+
 @layer components {
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white;
-  }
-
-  .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500;
-  }
-
-  .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-400;
-  }
-
-  .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white focus:ring-red-500;
-  }
-
-  .btn-success {
-    @apply bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500;
-  }
-
-  .card {
-    @apply bg-white border border-gray-200 rounded-xl shadow-sm;
-  }
-
-  .input {
-    @apply w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
-  }
-
-  .select {
-    @apply w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all cursor-pointer;
-  }
-
-  /* Code block styling */
   .json-viewer {
-    @apply font-mono text-sm bg-slate-50 border border-slate-200 rounded-lg p-4 overflow-auto max-h-96;
+    @apply font-mono text-xs leading-relaxed bg-gray-900 text-gray-100 rounded-lg p-4 overflow-auto;
   }
 
   .json-key {
-    @apply text-purple-700;
+    @apply text-purple-400;
   }
 
   .json-string {
-    @apply text-emerald-700;
+    @apply text-emerald-400;
   }
 
   .json-number {
-    @apply text-amber-700;
+    @apply text-amber-400;
   }
 
   .json-boolean {
-    @apply text-sky-700;
+    @apply text-sky-400;
   }
 
   .json-null {
-    @apply text-gray-400;
+    @apply text-gray-500 italic;
   }
-}
-
-/* ============================================================================
-   Custom Scrollbar
-   ============================================================================ */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }

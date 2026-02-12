@@ -67,13 +67,12 @@ mvn -pl stepprflow-spring-kafka -am clean install
 
 1. Start infrastructure:
 ```bash
-cd stepprflow-kafka-sample
 docker-compose up -d
 ```
 
-2. Run the application:
+2. Run the application with the `kafka` profile:
 ```bash
-mvn spring-boot:run
+mvn -pl stepprflow-samples spring-boot:run -Dspring-boot.run.profiles=kafka
 ```
 
 3. Test the API:
@@ -87,13 +86,12 @@ curl -X POST http://localhost:8080/api/orders \
 
 1. Start infrastructure:
 ```bash
-cd stepprflow-rabbitmq-sample
 docker-compose up -d
 ```
 
-2. Run the application:
+2. Run the application with the `rabbitmq` profile:
 ```bash
-mvn spring-boot:run
+mvn -pl stepprflow-samples spring-boot:run -Dspring-boot.run.profiles=rabbitmq
 ```
 
 ## Running the Dashboard
@@ -101,12 +99,11 @@ mvn spring-boot:run
 ### Option 1: Standalone Dashboard
 
 ```bash
-cd stepprflow-dashboard
 docker-compose up -d  # Start Kafka & MongoDB
-mvn spring-boot:run
+mvn -pl stepprflow-monitoring spring-boot:run
 ```
 
-Access at: http://localhost:8080
+Access at: http://localhost:8090
 
 ### Option 2: With Docker
 
@@ -328,7 +325,7 @@ mvn checkstyle:check -Dcheckstyle.consoleOutput=true
 ### Port conflicts
 
 Default ports:
-- Dashboard: 8080
+- Dashboard: 8090
 - MongoDB: 27017
 - Kafka: 9092
 - RabbitMQ: 5672, 15672
@@ -340,4 +337,4 @@ Default ports:
 3. Run all checks: `mvn verify`
 4. Create a pull request
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
+See the contributing section above for guidelines.

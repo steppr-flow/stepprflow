@@ -1,8 +1,9 @@
 # Monitoring & Dashboard
 
-Steppr Flow provides comprehensive monitoring capabilities through two modules:
-- **stepprflow-spring-monitor** - Embeddable monitoring library for your Spring Boot applications
-- **stepprflow-dashboard** - Standalone monitoring server with Vue.js UI
+Steppr Flow provides comprehensive monitoring capabilities through the **stepprflow-monitoring** module, which includes:
+- Embeddable monitoring library for your Spring Boot applications
+- Standalone monitoring server with Vue.js UI
+- Workflow registry with broker-based service discovery
 
 ---
 
@@ -12,22 +13,25 @@ Steppr Flow provides comprehensive monitoring capabilities through two modules:
 ┌──────────────────────────────────────────────────────────────────┐
 │                     Your Application                             │
 │  ┌──────────────────────────────────────────────────────────┐    │
-│  │             stepprflow-spring-monitor                   │    │
-│  │  • Execution persistence (MongoDB)                       │    │
-│  │  • REST API endpoints                                    │    │
-│  │  • WebSocket broadcasts                                  │    │
-│  │  • Retry scheduling                                      │    │
-│  │  • Metrics collection                                    │    │
+│  │             stepprflow-core (registration)               │    │
+│  │  • Auto-registers workflows via message broker           │    │
+│  │  • Sends REGISTER / HEARTBEAT / DEREGISTER messages      │    │
+│  │  • Uses stepprflow.registration topic                    │    │
 │  └──────────────────────────────────────────────────────────┘    │
-└──────────────────────────┬───────────────────────────────────────┘
-                           │ Message Broker
-                           ▼
+└──────────────────────┬───────────────────────────────────────────┘
+                       │ Message Broker (Kafka / RabbitMQ)
+                       ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                 stepprflow-dashboard                           │
+│                 stepprflow-monitoring                            │
 │  ┌─────────────────────────────────────────────────────────┐    │
-│  │  • Kafka message listener                               │    │
-│  │  • REST API proxy                                       │    │
-│  │  • Vue.js UI (stepprflow-ui)                           │    │
+│  │  • Execution persistence (MongoDB)                      │    │
+│  │  • REST API endpoints                                   │    │
+│  │  • WebSocket broadcasts                                 │    │
+│  │  • Retry scheduling                                     │    │
+│  │  • Metrics collection                                   │    │
+│  │  • Broker message listener                              │    │
+│  │  • Workflow registry (broker-based)                      │    │
+│  │  • Vue.js UI (stepprflow-ui)                            │    │
 │  └─────────────────────────────────────────────────────────┘    │
 │                           │                                     │
 │                           ▼                                     │
@@ -39,16 +43,16 @@ Steppr Flow provides comprehensive monitoring capabilities through two modules:
 
 ---
 
-## stepprflow-spring-monitor
+## stepprflow-monitoring
 
-This module adds monitoring capabilities directly to your workflow application.
+This module provides monitoring capabilities, a workflow registry, and a built-in Vue.js dashboard UI.
 
 ### Dependencies
 
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>stepprflow-spring-monitor</artifactId>
+    <artifactId>stepprflow-monitoring</artifactId>
     <version>${stepprflow.version}</version>
 </dependency>
 ```
@@ -79,8 +83,8 @@ stepprflow:
 
     # Workflow registry for multi-instance deployments
     registry:
-      instance-timeout: 5m                     # Mark instances stale after 5 minutes
-      cleanup-interval: 1m                     # Run cleanup every minute
+      instance-timeout: 90s                    # Mark instances stale after 90 seconds
+      cleanup-interval: 30s                    # Run cleanup every 30 seconds
 
 # MongoDB connection
 spring:
@@ -113,7 +117,7 @@ The monitor module exposes REST endpoints for workflow management.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `topic` | string | - | Filter by workflow topic |
-| `statuses` | string | - | Filter by status (comma-separated: PENDING,IN_PROGRESS,COMPLETED,FAILED,CANCELLED) |
+| `statuses` | string | - | Filter by status (comma-separated: PENDING, IN_PROGRESS, COMPLETED, FAILED, CANCELLED, RETRY_PENDING, TIMED_OUT, PAUSED, SKIPPED, PASSED) |
 | `page` | int | 0 | Page number (0-based) |
 | `size` | int | 20 | Page size (1-100) |
 | `sortBy` | string | createdAt | Sort field (createdAt, updatedAt, status, topic, currentStep) |
@@ -122,14 +126,14 @@ The monitor module exposes REST endpoints for workflow management.
 ### Example: List Failed Executions
 
 ```bash
-curl "http://localhost:8080/api/workflows?statuses=FAILED&size=50&sortBy=updatedAt"
+curl "http://localhost:8090/api/workflows?statuses=FAILED&size=50&sortBy=updatedAt"
 ```
 
 ### Example: Resume with Modified Payload
 
 ```bash
 # Update incorrect email in payload
-curl -X PATCH "http://localhost:8080/api/workflows/exec-123/payload" \
+curl -X PATCH "http://localhost:8090/api/workflows/exec-123/payload" \
   -H "Content-Type: application/json" \
   -d '{
     "fieldPath": "customer.email",
@@ -139,7 +143,7 @@ curl -X PATCH "http://localhost:8080/api/workflows/exec-123/payload" \
   }'
 
 # Resume execution
-curl -X POST "http://localhost:8080/api/workflows/exec-123/resume"
+curl -X POST "http://localhost:8090/api/workflows/exec-123/resume"
 ```
 
 ---
@@ -230,7 +234,7 @@ The monitor broadcasts workflow updates via WebSocket using STOMP protocol.
 import { Client } from '@stomp/stompjs';
 
 const client = new Client({
-  brokerURL: 'ws://localhost:8080/ws/workflow',
+  brokerURL: 'ws://localhost:8090/ws/workflow',
   onConnect: () => {
     // Subscribe to all updates
     client.subscribe('/topic/workflow/updates', (message) => {
@@ -265,56 +269,54 @@ client.activate();
 
 ---
 
-## stepprflow-dashboard
+## Running the Monitoring Dashboard
 
-The standalone dashboard server aggregates monitoring data from multiple services and provides a unified UI.
+The `stepprflow-monitoring` module includes a built-in Vue.js dashboard UI.
 
-### Running the Dashboard
-
-**With Docker Compose:**
+### With Docker Compose
 
 ```yaml
 services:
-  stepprflow-dashboard:
+  stepprflow-monitoring:
     build:
       context: .
-      dockerfile: stepprflow-dashboard/Dockerfile
+      dockerfile: Dockerfile
     ports:
-      - "9000:9000"
+      - "8090:8090"
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/stepprflow
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - STEPPRFLOW_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     depends_on:
       - mongo
       - kafka
 ```
 
-**Standalone JAR:**
+### Standalone JAR
 
 ```bash
-java -jar stepprflow-dashboard.jar \
+java -jar stepprflow-monitoring.jar \
   --spring.data.mongodb.uri=mongodb://localhost:27017/stepprflow \
-  --spring.kafka.bootstrap-servers=localhost:9092
+  --stepprflow.kafka.bootstrap-servers=localhost:9092
 ```
 
 ### Dashboard Configuration
 
 ```yaml
 server:
-  port: 9000
+  port: 8090
 
 spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/stepprflow
 
+stepprflow:
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: stepprflow-dashboard
+      group-id: stepprflow-monitoring
 
-# UI configuration
-stepprflow:
+  # UI configuration
   ui:
     enabled: true
     base-path: /                               # UI base path
@@ -395,14 +397,52 @@ Each modification is tracked:
 
 ## Workflow Registry
 
-For multi-instance deployments, Steppr Flow maintains a registry of active workflow instances.
+For multi-instance deployments, Steppr Flow maintains a registry of active workflow instances. Registration is performed automatically via the message broker -- no HTTP-based registration or `stepprflow.agent.server-url` configuration is needed.
+
+### How It Works
+
+When a `MessageBroker` bean is present in the application context, the `RegistrationAutoConfiguration` activates and creates a `WorkflowRegistrationClient`. This client:
+
+1. **On startup** (after a 5-second delay): collects all workflow definitions from the local `WorkflowRegistry` and sends a `REGISTER` message on the `stepprflow.registration` topic via the broker.
+2. **Periodically**: sends `HEARTBEAT` messages at a configurable interval to indicate the instance is alive.
+3. **On shutdown**: sends a `DEREGISTER` message so the monitoring dashboard can immediately remove the instance.
+
+The `stepprflow-monitoring` module listens on the `stepprflow.registration` topic and maintains the registry in MongoDB.
+
+### Service-Side Configuration (stepprflow-core)
+
+These properties control the registration client in your workflow application:
+
+```yaml
+stepprflow:
+  registration:
+    enabled: true                              # Enable/disable registration (default: true)
+    heartbeat-interval-seconds: 30             # Heartbeat interval in seconds (default: 30)
+```
+
+Registration is automatic when:
+- A `MessageBroker` bean is present (e.g., from `stepprflow-spring-kafka` or `stepprflow-spring-rabbitmq`)
+- `stepprflow.registration.enabled` is `true` (the default)
+
+### Monitoring-Side Configuration (stepprflow-monitoring)
+
+These properties control how the monitoring dashboard manages the registry:
+
+```yaml
+stepprflow:
+  monitor:
+    registry:
+      instance-timeout: 90s                    # Mark instances stale after this duration (default: 90s)
+      cleanup-interval: 30s                    # How often to check for stale instances (default: 30s)
+```
 
 ### Features
 
-- **Auto-registration** when application starts
+- **Auto-registration** via broker when application starts (no HTTP calls needed)
 - **Heartbeat** to keep instance alive
 - **Stale instance cleanup** after timeout
 - **Step metadata** for all registered workflows
+- **Automatic reactivation** when a previously inactive workflow re-registers
 
 ### Registry API
 

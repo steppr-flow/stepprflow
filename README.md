@@ -16,33 +16,61 @@ Steppr Flow enables you to build resilient, async multi-step workflows with supp
 - **Annotation-driven workflows** - Define workflows using simple annotations
 - **Multi-broker support** - Kafka (default) and RabbitMQ implementations
 - **Automatic retries** - Built-in retry handling with exponential backoff
+- **Dead Letter Queue (DLQ)** - Failed messages are automatically routed to DLQ
+- **Security context propagation** - Security context flows automatically between steps
 - **Step-by-step execution** - Each workflow step executes independently
-- **Built-in persistence** - MongoDB persistence for workflow state and replay
-- **Resume failed workflows** - Replay failed steps from where they stopped
-- **Real-time monitoring** - REST API and WebSocket for workflow tracking
+- **Circuit breaker protection** - Built-in Resilience4j circuit breaker for broker failures
+- **Distributed tracing** - Micrometer tracing integration for observability
+- **Automatic service registration** - Zero-config broker-based registration with heartbeat and crash detection
+- **Optional monitoring** - MongoDB persistence, REST API, and dashboard (opt-in)
 
 ## Modules
 
 | Module | Description |
 |--------|-------------|
-| `stepprflow-core` | Core framework, annotations, and abstractions |
+| `stepprflow-core` | Core framework: annotations, models, interfaces, workflow engine |
 | `stepprflow-spring-kafka` | Apache Kafka message broker implementation |
 | `stepprflow-spring-rabbitmq` | RabbitMQ message broker implementation |
-| `stepprflow-spring-monitor` | Monitoring, persistence, and REST API |
-| `stepprflow-spring-boot-starter` | Spring Boot auto-configuration (includes all above) |
-| `stepprflow-dashboard` | Standalone monitoring server |
-| `stepprflow-ui` | Vue.js dashboard UI for workflow monitoring |
+| `stepprflow-monitoring` | Monitoring, persistence (MongoDB), REST API, and dashboard (opt-in) |
 
 ## Quick Start
 
 ### 1. Add Dependencies
 
-**Maven :**
+**Maven (Kafka - default):**
 ```xml
 <dependency>
     <groupId>io.github.stepprflow</groupId>
-    <artifactId>stepprflow-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
+    <artifactId>stepprflow-core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+<dependency>
+    <groupId>io.github.stepprflow</groupId>
+    <artifactId>stepprflow-spring-kafka</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
+**Maven (RabbitMQ):**
+```xml
+<dependency>
+    <groupId>io.github.stepprflow</groupId>
+    <artifactId>stepprflow-core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+<dependency>
+    <groupId>io.github.stepprflow</groupId>
+    <artifactId>stepprflow-spring-rabbitmq</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
+**Optional monitoring (adds MongoDB persistence + dashboard):**
+```xml
+<dependency>
+    <groupId>io.github.stepprflow</groupId>
+    <artifactId>stepprflow-monitoring</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -117,7 +145,7 @@ stepprflow:
     consumer:
       group-id: my-app-workers
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.mycompany.workflow.payload
 ```
 
@@ -131,25 +159,8 @@ stepprflow:
     username: guest
     password: guest
     trusted-packages:
-      - io.stepprflow.core.model
+      - io.github.stepprflow.core.model
       - com.mycompany.workflow.payload
-```
-
-### 5. Requirements
-
-The starter includes MongoDB persistence. Make sure MongoDB is running:
-
-```bash
-docker run -d --name mongodb -p 27017:27017 mongo:latest
-```
-
-MongoDB connection defaults to `mongodb://localhost:27017/stepprflow`. To customize:
-
-```yaml
-stepprflow:
-  mongodb:
-    uri: mongodb://custom-host:27017/mydb
-    database: mydb
 ```
 
 ## Annotations
@@ -228,12 +239,12 @@ public void onFailed(WorkflowMessage message) {
 ├─────────────────────────────────────────────────────────────┤
 │  WorkflowStarter  │  @Topic Workflows  │  Step Handlers     │
 ├─────────────────────────────────────────────────────────────┤
-│                    stepprflow-core                         │
+│                    stepprflow-core                          │
 │  ┌──────────────┐  ┌────────────────┐  ┌──────────────┐     │
 │  │ StepExecutor │  │WorkflowRegistry│  │MessageBroker │     │
 │  └──────────────┘  └────────────────┘  └──────────────┘     │
 ├─────────────────────────────────────────────────────────────┤
-│  stepprflow-spring-kafka  │  stepprflow-spring-rabbitmq   │
+│  stepprflow-spring-kafka  │  stepprflow-spring-rabbitmq     │
 ├─────────────────────────────────────────────────────────────┤
 │          Apache Kafka       │        RabbitMQ               │
 └─────────────────────────────────────────────────────────────┘
@@ -256,16 +267,16 @@ mvn clean install
 # Run tests
 mvn test
 
-# Skip tests
-mvn install -DskipTests
+# Build with samples and load tests
+mvn clean install -Pfull
 ```
 
 ## Requirements
 
 - Java 21+
 - Spring Boot 3.5+
-- MongoDB 6.x+ (for persistence)
 - Apache Kafka 3.x or RabbitMQ 3.12+
+- MongoDB 7.0+ (only if using `stepprflow-monitoring`)
 - Docker (for integration tests)
 
 ## License

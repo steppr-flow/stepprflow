@@ -23,13 +23,13 @@
     </properties>
 
     <dependencies>
-        <!-- Steppr Flow Spring Boot Starter (includes persistence, metrics, resume/retry) -->
+        <!-- Steppr Flow Core -->
         <dependency>
             <groupId>io.github.stepprflow</groupId>
-            <artifactId>stepprflow-spring-boot-starter</artifactId>
+            <artifactId>stepprflow-core</artifactId>
         </dependency>
 
-        <!-- Kafka broker (activated with -Pkafka or spring.profiles.active=kafka) -->
+        <!-- Kafka broker (activated when stepprflow-spring-kafka is on the classpath) -->
         <dependency>
             <groupId>io.github.stepprflow</groupId>
             <artifactId>stepprflow-spring-kafka</artifactId>
@@ -68,7 +68,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>io.stepprflow.sample.SampleApplication</mainClass>
+                    <mainClass>io.github.stepprflow.sample.SampleApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>

@@ -59,10 +59,7 @@
         <module>stepprflow-core</module>
         <module>stepprflow-spring-kafka</module>
         <module>stepprflow-spring-rabbitmq</module>
-        <module>stepprflow-spring-boot-starter</module>
-        <module>stepprflow-spring-monitor</module>
-        <module>stepprflow-ui</module>
-        <module>stepprflow-dashboard</module>
+        <module>stepprflow-monitoring</module>
     </modules>
 
     <profiles>
@@ -72,6 +69,7 @@
             <modules>
                 <module>stepprflow-samples</module>
                 <module>stepprflow-load-tests</module>
+                <module>stepprflow-ui</module>
             </modules>
         </profile>
 
@@ -181,6 +179,8 @@
         <!-- Pitest (mutation testing) -->
         <pitest.version>1.17.4</pitest.version>
         <pitest-junit5.version>1.2.1</pitest-junit5.version>
+        <pitest.targetTests>io.github.stepprflow.*</pitest.targetTests>
+        <pitest.targetClasses>io.github.stepprflow.*</pitest.targetClasses>
 
         <!-- Root directory for multi-module project -->
         <main.basedir>${project.basedir}</main.basedir>
@@ -224,17 +224,7 @@
             </dependency>
             <dependency>
                 <groupId>io.github.stepprflow</groupId>
-                <artifactId>stepprflow-spring-boot-starter</artifactId>
-                <version>${stepprflow.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stepprflow</groupId>
-                <artifactId>stepprflow-spring-monitor</artifactId>
-                <version>${stepprflow.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.stepprflow</groupId>
-                <artifactId>stepprflow-ui</artifactId>
+                <artifactId>stepprflow-monitoring</artifactId>
                 <version>${stepprflow.version}</version>
             </dependency>
         </dependencies>
@@ -351,14 +341,14 @@
                                         </limits>
                                         <excludes>
                                             <!-- Exclude interfaces and abstract classes -->
-                                            <exclude>io.stepprflow.core.broker.MessageBroker</exclude>
-                                            <exclude>io.stepprflow.core.broker.MessageContext</exclude>
-                                            <exclude>io.stepprflow.core.service.WorkflowExecutionStore</exclude>
-                                            <exclude>io.stepprflow.core.service.WorkflowStarter</exclude>
+                                            <exclude>io.github.stepprflow.core.broker.MessageBroker</exclude>
+                                            <exclude>io.github.stepprflow.core.broker.MessageContext</exclude>
+                                            <exclude>io.github.stepprflow.core.service.WorkflowExecutionStore</exclude>
+                                            <exclude>io.github.stepprflow.core.service.WorkflowStarter</exclude>
                                             <!-- Exclude event records (no executable code) -->
-                                            <exclude>io.stepprflow.core.event.*</exclude>
+                                            <exclude>io.github.stepprflow.core.event.*</exclude>
                                             <!-- Exclude metrics summary records -->
-                                            <exclude>io.stepprflow.core.metrics.MetricsSummary</exclude>
+                                            <exclude>io.github.stepprflow.core.metrics.MetricsSummary</exclude>
                                             <!-- Exclude exception classes -->
                                             <exclude>*Exception</exclude>
                                             <!-- Exclude listener classes -->
@@ -367,18 +357,6 @@
                                             <exclude>*WebSocketHandler</exclude>
                                             <!-- Exclude controllers (tested via integration tests) -->
                                             <exclude>*Controller</exclude>
-                                            <!-- Exclude all inner classes -->
-                                            <exclude>io.stepprflow.monitor.websocket.WorkflowWebSocketHandler.WorkflowUpdateDTO</exclude>
-                                            <exclude>io.stepprflow.monitor.model.WorkflowExecution.ExecutionAttempt</exclude>
-                                            <exclude>io.stepprflow.monitor.model.WorkflowExecution.StepExecution</exclude>
-                                            <exclude>io.stepprflow.monitor.model.WorkflowExecution.PayloadChange</exclude>
-                                            <exclude>io.stepprflow.monitor.model.RegisteredWorkflow.StepInfo</exclude>
-                                            <exclude>io.stepprflow.monitor.model.RegisteredWorkflow.ServiceInstance</exclude>
-                                            <!-- Exclude model classes with defensive copy boilerplate -->
-                                            <exclude>io.stepprflow.monitor.model.WorkflowExecution</exclude>
-                                            <exclude>io.stepprflow.monitor.model.RegisteredWorkflow</exclude>
-                                            <!-- Exclude service classes that require complex integration tests -->
-                                            <exclude>io.stepprflow.monitor.service.WorkflowRegistryService</exclude>
                                         </excludes>
                                     </rule>
                                 </rules>
@@ -513,11 +491,11 @@
                     <configuration>
                         <!-- Target classes to mutate -->
                         <targetClasses>
-                            <param>io.stepprflow.*</param>
+                            <param>${pitest.targetClasses}</param>
                         </targetClasses>
                         <!-- Target tests -->
                         <targetTests>
-                            <param>io.stepprflow.*</param>
+                            <param>${pitest.targetTests}</param>
                         </targetTests>
                         <!-- Exclude classes from mutation -->
                         <excludedClasses>
@@ -537,6 +515,7 @@
                         <excludedTestClasses>
                             <param>**.*IT</param>
                             <param>**.*IntegrationTest</param>
+                            <param>**.*FailureScenarioTest</param>
                         </excludedTestClasses>
                         <!-- Mutation operators -->
                         <mutators>
