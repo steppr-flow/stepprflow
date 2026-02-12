@@ -3,6 +3,8 @@ package io.github.stepprflow.dashboard.listener;
 import io.github.stepprflow.core.StepprFlowProperties;
 import io.github.stepprflow.core.event.WorkflowMessageEvent;
 import io.github.stepprflow.core.model.WorkflowMessage;
+import io.github.stepprflow.core.model.WorkflowRegistrationRequest;
+import io.github.stepprflow.monitor.service.RegistrationMessageHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
@@ -14,6 +16,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +35,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConditionalOnClass(name = "org.springframework.amqp.rabbit.core.RabbitTemplate")
+@ConditionalOnProperty(name = "stepprflow.broker", havingValue = "rabbitmq")
 @EnableConfigurationProperties(StepprFlowProperties.class)
 @Slf4j
 public class MonitoringRabbitMQListener {
@@ -41,17 +45,21 @@ public class MonitoringRabbitMQListener {
 
     private final ApplicationEventPublisher eventPublisher;
     private final MessageConverter messageConverter;
+    private final RegistrationMessageHandler registrationHandler;
 
     /**
      * Creates the monitoring RabbitMQ listener.
      *
-     * @param eventPublisher the event publisher
-     * @param messageConverter the message converter
+     * @param eventPublisher      the event publisher
+     * @param messageConverter    the message converter
+     * @param registrationHandler the registration message handler
      */
     public MonitoringRabbitMQListener(ApplicationEventPublisher eventPublisher,
-                                      MessageConverter messageConverter) {
+                                      MessageConverter messageConverter,
+                                      RegistrationMessageHandler registrationHandler) {
         this.eventPublisher = eventPublisher;
         this.messageConverter = messageConverter;
+        this.registrationHandler = registrationHandler;
     }
 
     /**
@@ -92,6 +100,12 @@ public class MonitoringRabbitMQListener {
 
             if (workflowMessage == null) {
                 log.warn("Received null message on monitoring queue");
+                return;
+            }
+
+            // Delegate registration messages to the registration handler
+            if (WorkflowRegistrationRequest.REGISTRATION_TOPIC.equals(workflowMessage.getTopic())) {
+                registrationHandler.handle(workflowMessage);
                 return;
             }
 

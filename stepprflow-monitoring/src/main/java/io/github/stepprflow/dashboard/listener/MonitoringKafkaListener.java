@@ -2,6 +2,8 @@ package io.github.stepprflow.dashboard.listener;
 
 import io.github.stepprflow.core.event.WorkflowMessageEvent;
 import io.github.stepprflow.core.model.WorkflowMessage;
+import io.github.stepprflow.core.model.WorkflowRegistrationRequest;
+import io.github.stepprflow.monitor.service.RegistrationMessageHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Component;
 public class MonitoringKafkaListener {
 
     private final ApplicationEventPublisher eventPublisher;
+    private final RegistrationMessageHandler registrationHandler;
 
     /**
      * Listen to all workflow topics for monitoring.
@@ -44,6 +47,13 @@ public class MonitoringKafkaListener {
 
         if (message == null) {
             log.warn("Received null message on topic {}", record.topic());
+            ack.acknowledge();
+            return;
+        }
+
+        // Delegate registration messages to the registration handler
+        if (WorkflowRegistrationRequest.REGISTRATION_TOPIC.equals(record.topic())) {
+            registrationHandler.handle(message);
             ack.acknowledge();
             return;
         }

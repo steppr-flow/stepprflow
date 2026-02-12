@@ -2,7 +2,9 @@ package io.github.stepprflow.dashboard.listener;
 
 import io.github.stepprflow.core.event.WorkflowMessageEvent;
 import io.github.stepprflow.core.model.WorkflowMessage;
+import io.github.stepprflow.core.model.WorkflowRegistrationRequest;
 import io.github.stepprflow.core.model.WorkflowStatus;
+import io.github.stepprflow.monitor.service.RegistrationMessageHandler;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,8 +18,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.kafka.support.Acknowledgment;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
@@ -31,6 +36,9 @@ class MonitoringKafkaListenerTest {
     private ApplicationEventPublisher eventPublisher;
 
     @Mock
+    private RegistrationMessageHandler registrationHandler;
+
+    @Mock
     private Acknowledgment acknowledgment;
 
     @Captor
@@ -40,7 +48,7 @@ class MonitoringKafkaListenerTest {
 
     @BeforeEach
     void setUp() {
-        listener = new MonitoringKafkaListener(eventPublisher);
+        listener = new MonitoringKafkaListener(eventPublisher, registrationHandler);
     }
 
     @Nested
@@ -218,6 +226,32 @@ class MonitoringKafkaListenerTest {
             verify(eventPublisher).publishEvent(eventCaptor.capture());
 
             assertThat(eventCaptor.getValue().getSource()).isEqualTo(listener);
+        }
+
+        @Test
+        @DisplayName("should delegate registration messages to handler")
+        void shouldDelegateRegistrationMessages() {
+            // Given
+            WorkflowMessage message = WorkflowMessage.builder()
+                    .executionId("exec-reg")
+                    .topic(WorkflowRegistrationRequest.REGISTRATION_TOPIC)
+                    .serviceName("test-service")
+                    .status(WorkflowStatus.COMPLETED)
+                    .metadata(Map.of(
+                            WorkflowRegistrationRequest.METADATA_ACTION,
+                            WorkflowRegistrationRequest.ACTION_HEARTBEAT))
+                    .build();
+
+            ConsumerRecord<String, WorkflowMessage> record = new ConsumerRecord<>(
+                    WorkflowRegistrationRequest.REGISTRATION_TOPIC, 0, 0L, null, message);
+
+            // When
+            listener.onMessage(record, acknowledgment);
+
+            // Then
+            verify(registrationHandler).handle(message);
+            verify(acknowledgment).acknowledge();
+            verifyNoInteractions(eventPublisher);
         }
     }
 }

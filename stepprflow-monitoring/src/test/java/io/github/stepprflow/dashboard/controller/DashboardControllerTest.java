@@ -688,7 +688,7 @@ class DashboardControllerTest {
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
-                    null, null, 0, 20, "createdAt", Sort.Direction.DESC);
+                    null, null, 0, 20, "createdAt", "desc");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -702,7 +702,7 @@ class DashboardControllerTest {
             when(queryService.findExecutions(eq(null), eq(List.of(WorkflowStatus.FAILED)), any(PageRequest.class)))
                     .thenReturn(page);
 
-            controller.listExecutions(null, "FAILED", 0, 20, "createdAt", Sort.Direction.DESC);
+            controller.listExecutions(null, "FAILED", 0, 20, "createdAt", "DESC");
 
             // Verifies that the method parses the status correctly
         }
@@ -711,7 +711,7 @@ class DashboardControllerTest {
         @DisplayName("Should throw for invalid sortBy field")
         void shouldThrowForInvalidSortByField() {
             assertThatThrownBy(() -> controller.listExecutions(
-                    null, null, 0, 20, "invalidField", Sort.Direction.DESC))
+                    null, null, 0, 20, "invalidField", "desc"))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Invalid sortBy field");
         }
@@ -724,7 +724,7 @@ class DashboardControllerTest {
                     .thenReturn(page);
 
             // Negative page should be clamped to 0, size > 100 should be clamped to 100
-            controller.listExecutions(null, null, -1, 200, "createdAt", Sort.Direction.ASC);
+            controller.listExecutions(null, null, -1, 200, "createdAt", "asc");
 
             // No exception means clamping worked
         }

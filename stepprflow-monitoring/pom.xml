@@ -64,17 +64,16 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Kafka (optional - for standalone dashboard mode with MonitoringKafkaListener) -->
+        <!-- Kafka broker (provides MessageBroker + KafkaTemplate) -->
         <dependency>
-            <groupId>org.springframework.kafka</groupId>
-            <artifactId>spring-kafka</artifactId>
-            <optional>true</optional>
+            <groupId>io.github.stepprflow</groupId>
+            <artifactId>stepprflow-spring-kafka</artifactId>
         </dependency>
 
-        <!-- RabbitMQ (optional - for standalone dashboard mode with MonitoringRabbitMQListener) -->
+        <!-- RabbitMQ broker (optional - activated with stepprflow.broker=rabbitmq) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
+            <groupId>io.github.stepprflow</groupId>
+            <artifactId>stepprflow-spring-rabbitmq</artifactId>
             <optional>true</optional>
         </dependency>
 

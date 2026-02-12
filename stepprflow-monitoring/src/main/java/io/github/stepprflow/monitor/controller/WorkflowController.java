@@ -81,7 +81,7 @@ public class WorkflowController {
             @Parameter(description = "Filter by workflow topic")
             @RequestParam(required = false) String topic,
             @Parameter(description = "Filter by statuses (comma-separated)")
-            @RequestParam(required = false) String statuses,
+            @RequestParam(name = "status", required = false) String statuses,
             @Parameter(description = "Page number (0-based)")
             @RequestParam(defaultValue = "0")
             @Min(value = 0, message = "Page number must be >= 0") int page,
@@ -90,9 +90,9 @@ public class WorkflowController {
             @Min(value = 1, message = "Page size must be >= 1")
             @Max(value = 100, message = "Page size must be <= 100") int size,
             @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction")
-            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+            @RequestParam(name = "sort", defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc or desc)")
+            @RequestParam(defaultValue = "desc") String direction) {
 
         // Validate sortBy field
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
@@ -100,7 +100,8 @@ public class WorkflowController {
                     "Invalid sortBy field: " + sortBy + ". Allowed: " + ALLOWED_SORT_FIELDS);
         }
 
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
 
         List<WorkflowStatus> statusList = null;
         if (statuses != null && !statuses.isBlank()) {

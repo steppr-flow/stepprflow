@@ -102,7 +102,7 @@ class WorkflowControllerTest {
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
-                    null, null, 0, 20, "createdAt", Sort.Direction.DESC);
+                    null, null, 0, 20, "createdAt", "desc");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
@@ -117,7 +117,7 @@ class WorkflowControllerTest {
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
-                    "test-topic", null, 0, 20, "createdAt", Sort.Direction.DESC);
+                    "test-topic", null, 0, 20, "createdAt", "desc");
 
             verify(queryService).findExecutions(eq("test-topic"), eq(null), any(PageRequest.class));
         }
@@ -130,7 +130,7 @@ class WorkflowControllerTest {
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
-                    null, "FAILED", 0, 20, "createdAt", Sort.Direction.DESC);
+                    null, "FAILED", 0, 20, "createdAt", "DESC");
 
             verify(queryService).findExecutions(eq(null), eq(List.of(WorkflowStatus.FAILED)), any(PageRequest.class));
         }
@@ -143,7 +143,7 @@ class WorkflowControllerTest {
                     .thenReturn(page);
 
             ResponseEntity<Page<WorkflowExecution>> response = controller.listExecutions(
-                    "test-topic", "COMPLETED", 0, 20, "createdAt", Sort.Direction.DESC);
+                    "test-topic", "COMPLETED", 0, 20, "createdAt", "desc");
 
             verify(queryService).findExecutions(eq("test-topic"), eq(List.of(WorkflowStatus.COMPLETED)), any(PageRequest.class));
         }
@@ -155,7 +155,7 @@ class WorkflowControllerTest {
             when(queryService.findExecutions(any(), any(), any(PageRequest.class)))
                     .thenReturn(page);
 
-            controller.listExecutions(null, null, 2, 50, "updatedAt", Sort.Direction.ASC);
+            controller.listExecutions(null, null, 2, 50, "updatedAt", "asc");
 
             verify(queryService).findExecutions(eq(null), eq(null),
                     eq(PageRequest.of(2, 50, Sort.by(Sort.Direction.ASC, "updatedAt"))));

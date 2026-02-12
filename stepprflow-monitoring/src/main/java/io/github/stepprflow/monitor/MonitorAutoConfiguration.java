@@ -2,13 +2,11 @@ package io.github.stepprflow.monitor;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import io.github.stepprflow.core.metrics.WorkflowMetrics;
 import io.github.stepprflow.monitor.config.OpenApiConfig;
 import io.github.stepprflow.monitor.config.WebSocketConfig;
 import io.github.stepprflow.monitor.controller.CircuitBreakerController;
 import io.github.stepprflow.monitor.controller.GlobalExceptionHandler;
 import io.github.stepprflow.monitor.controller.HealthController;
-import io.github.stepprflow.monitor.controller.MetricsController;
 import io.github.stepprflow.monitor.controller.OutboxController;
 import io.github.stepprflow.monitor.controller.RegistryController;
 import io.github.stepprflow.monitor.controller.WorkflowController;
@@ -41,7 +39,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * Auto-configuration for StepprFlow Monitor module.
  * Runs before Spring Boot's MongoDB auto-configuration to use StepprFlow properties.
  */
-@AutoConfiguration(before = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
+@AutoConfiguration(
+        before = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class},
+        after = io.github.stepprflow.core.metrics.WorkflowMetricsAutoConfiguration.class
+)
 @EnableConfigurationProperties(MonitorProperties.class)
 @ConditionalOnProperty(prefix = "stepprflow.monitor", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableMongoRepositories(basePackageClasses = {WorkflowExecutionRepository.class, OutboxMessageRepository.class})
@@ -86,11 +87,4 @@ public class MonitorAutoConfiguration {
         return new SimpleMongoClientDatabaseFactory(mongoClient, properties.getMongodb().getDatabase());
     }
 
-    /**
-     * Creates MetricsController.
-     */
-    @Bean
-    public MetricsController metricsController(WorkflowMetrics workflowMetrics) {
-        return new MetricsController(workflowMetrics);
-    }
 }

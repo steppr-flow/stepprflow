@@ -211,7 +211,7 @@ class WorkflowControllerValidationTest {
         void shouldRejectNegativePage() throws Exception {
             mockMvc.perform(get("/api/workflows")
                             .param("page", "-1")
-                            .param("sortBy", "createdAt"))
+                            .param("sort", "createdAt"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -220,7 +220,7 @@ class WorkflowControllerValidationTest {
         void shouldRejectPageSizeLessThanOne() throws Exception {
             mockMvc.perform(get("/api/workflows")
                             .param("size", "0")
-                            .param("sortBy", "createdAt"))
+                            .param("sort", "createdAt"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -229,7 +229,7 @@ class WorkflowControllerValidationTest {
         void shouldRejectPageSizeGreaterThanMax() throws Exception {
             mockMvc.perform(get("/api/workflows")
                             .param("size", "101")
-                            .param("sortBy", "createdAt"))
+                            .param("sort", "createdAt"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -242,7 +242,7 @@ class WorkflowControllerValidationTest {
             mockMvc.perform(get("/api/workflows")
                             .param("page", "0")
                             .param("size", "50")
-                            .param("sortBy", "createdAt"))
+                            .param("sort", "createdAt"))
                     .andExpect(status().isOk());
         }
 
@@ -260,7 +260,7 @@ class WorkflowControllerValidationTest {
         @DisplayName("Should reject invalid sortBy field")
         void shouldRejectInvalidSortByField() throws Exception {
             mockMvc.perform(get("/api/workflows")
-                            .param("sortBy", "invalidField"))
+                            .param("sort", "invalidField"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -273,7 +273,7 @@ class WorkflowControllerValidationTest {
             // Test valid sortBy values
             for (String sortBy : new String[]{"createdAt", "updatedAt", "status", "topic", "currentStep"}) {
                 mockMvc.perform(get("/api/workflows")
-                                .param("sortBy", sortBy))
+                                .param("sort", sortBy))
                         .andExpect(status().isOk());
             }
         }

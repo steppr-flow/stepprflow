@@ -25,6 +25,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         registry.addViewController(properties.getBasePath() + "/")
                 .setViewName("forward:/index.html");
+
+        // Forward SPA routes to index.html for client-side routing.
+        // Matches paths without a dot (excludes static files like .js, .css).
+        // API/actuator/ws endpoints take priority via RequestMappingHandlerMapping.
+        registry.addViewController("/{path:[^\\.]*}")
+                .setViewName("forward:/index.html");
+        registry.addViewController("/{path:[^\\.]*}/{subpath:[^\\.]*}")
+                .setViewName("forward:/index.html");
     }
 
     @Override

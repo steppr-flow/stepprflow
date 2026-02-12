@@ -88,12 +88,12 @@ public class MonitorProperties {
          * Timeout after which an instance without heartbeat is considered stale.
          * Stale instances are automatically removed during cleanup.
          */
-        private Duration instanceTimeout = Duration.ofMinutes(5);
+        private Duration instanceTimeout = Duration.ofSeconds(90);
 
         /**
          * Interval for running the stale instance cleanup job.
          */
-        private Duration cleanupInterval = Duration.ofMinutes(1);
+        private Duration cleanupInterval = Duration.ofSeconds(30);
     }
 
     @Data

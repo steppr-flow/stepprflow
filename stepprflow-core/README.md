@@ -11,6 +11,7 @@ Spring Boot framework for orchestrating asynchronous multi-step workflows via pl
 - Dead Letter Queue (DLQ) for failed messages
 - Security context propagation between steps
 - Configurable timeout per step or workflow
+- Automatic broker-based registration with heartbeat and crash detection
 
 ## Installation
 

@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.ArrayList;
@@ -261,6 +262,7 @@ public class WorkflowExecution {
      *
      * @return an Optional containing the current attempt
      */
+    @JsonIgnore
     public Optional<ExecutionAttempt> getCurrentAttempt() {
         if (this.executionAttempts == null || this.executionAttempts.isEmpty()) {
             return Optional.empty();

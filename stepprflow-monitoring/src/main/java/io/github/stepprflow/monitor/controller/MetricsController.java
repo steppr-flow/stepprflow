@@ -8,12 +8,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,19 +21,17 @@ import java.util.stream.Collectors;
 /**
  * REST API for workflow metrics.
  * Exposes metrics for all workflows that have recorded activity.
- *
- * This class uses @Controller (not @RestController) combined with @ResponseBody.
- * It is created as a bean by MonitorAutoConfiguration which requires MeterRegistry.
+ * Returns empty metrics if WorkflowMetrics is not available.
  */
-@Controller
-@ResponseBody
+@RestController
 @RequestMapping("/api/metrics")
 @Tag(name = "Metrics", description = "Workflow performance metrics")
 public class MetricsController {
 
     private final WorkflowMetrics workflowMetrics;
 
-    public MetricsController(WorkflowMetrics workflowMetrics) {
+    @Autowired
+    public MetricsController(@Autowired(required = false) WorkflowMetrics workflowMetrics) {
         this.workflowMetrics = workflowMetrics;
     }
 
@@ -41,6 +39,10 @@ public class MetricsController {
     @ApiResponse(responseCode = "200", description = "Metrics dashboard retrieved successfully")
     @GetMapping
     public ResponseEntity<MetricsDashboard> getMetricsDashboard() {
+        if (workflowMetrics == null) {
+            return ResponseEntity.ok(MetricsDashboard.builder()
+                    .workflowMetrics(List.of()).build());
+        }
         MetricsSummary global = workflowMetrics.getGlobalSummary();
 
         List<WorkflowMetricsDto> byTopicService = workflowMetrics.getActiveWorkflowKeys().stream()
@@ -83,6 +85,10 @@ public class MetricsController {
     @GetMapping("/{topic}")
     public ResponseEntity<WorkflowMetricsDto> getWorkflowMetrics(
             @Parameter(description = "Workflow topic name") @PathVariable String topic) {
+        if (workflowMetrics == null) {
+            return ResponseEntity.ok(WorkflowMetricsDto.builder()
+                    .topic(topic).build());
+        }
         MetricsSummary summary = workflowMetrics.getSummary(topic);
 
         WorkflowMetricsDto dto = WorkflowMetricsDto.builder()
@@ -105,6 +111,9 @@ public class MetricsController {
     @ApiResponse(responseCode = "200", description = "Global summary retrieved successfully")
     @GetMapping("/summary")
     public ResponseEntity<MetricsSummary> getGlobalSummary() {
+        if (workflowMetrics == null) {
+            return ResponseEntity.ok(new MetricsSummary());
+        }
         return ResponseEntity.ok(workflowMetrics.getGlobalSummary());
     }
 }

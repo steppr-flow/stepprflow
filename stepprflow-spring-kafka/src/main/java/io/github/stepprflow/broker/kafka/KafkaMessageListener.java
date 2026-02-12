@@ -2,6 +2,7 @@ package io.github.stepprflow.broker.kafka;
 
 import io.github.stepprflow.core.event.WorkflowMessageEvent;
 import io.github.stepprflow.core.model.WorkflowMessage;
+import io.github.stepprflow.core.model.WorkflowRegistrationRequest;
 import io.github.stepprflow.core.model.WorkflowStatus;
 import io.github.stepprflow.core.service.StepExecutor;
 import io.github.stepprflow.core.service.WorkflowRegistry;
@@ -34,6 +35,12 @@ public class KafkaMessageListener {
             groupId = "${stepprflow.kafka.consumer.group-id:stepprflow-workflow-processor}"
     )
     public void onMessage(ConsumerRecord<String, WorkflowMessage> record, Acknowledgment ack) {
+        // Skip registration messages — handled by the monitoring module
+        if (WorkflowRegistrationRequest.REGISTRATION_TOPIC.equals(record.topic())) {
+            ack.acknowledge();
+            return;
+        }
+
         WorkflowMessage message = record.value();
 
         if (message == null) {

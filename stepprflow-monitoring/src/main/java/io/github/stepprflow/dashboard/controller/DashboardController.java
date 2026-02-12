@@ -115,6 +115,19 @@ public class DashboardController {
         return ResponseEntity.ok(getCombinedWorkflowDefinitions(topic, serviceName, status));
     }
 
+    @Operation(summary = "Get execution by ID",
+            description = "Retrieve a specific workflow execution by its unique identifier")
+    @ApiResponse(responseCode = "200", description = "Execution found")
+    @ApiResponse(responseCode = "404", description = "Execution not found")
+    @GetMapping("/executions/{executionId}")
+    public ResponseEntity<WorkflowExecution> getExecution(
+            @Parameter(description = "Unique execution identifier")
+            @org.springframework.web.bind.annotation.PathVariable String executionId) {
+        return queryService.getExecution(executionId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @Operation(summary = "List executions",
             description = "Get a paginated list of workflow executions with optional filtering")
     @ApiResponse(responseCode = "200", description = "List of executions")
@@ -123,15 +136,15 @@ public class DashboardController {
             @Parameter(description = "Filter by workflow topic")
             @RequestParam(required = false) String topic,
             @Parameter(description = "Filter by statuses (comma-separated)")
-            @RequestParam(required = false) String statuses,
+            @RequestParam(name = "status", required = false) String statuses,
             @Parameter(description = "Page number (0-based)")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size (1-100)")
             @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "Sort field")
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @Parameter(description = "Sort direction")
-            @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+            @RequestParam(name = "sort", defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "Sort direction (asc or desc)")
+            @RequestParam(defaultValue = "desc") String direction) {
 
         // Validate sortBy field
         if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
@@ -143,7 +156,8 @@ public class DashboardController {
         page = Math.max(0, page);
         size = Math.max(1, Math.min(100, size));
 
-        PageRequest pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
 
         List<WorkflowStatus> statusList = null;
         if (statuses != null && !statuses.isBlank()) {
@@ -246,6 +260,28 @@ public class DashboardController {
             }
         }
 
+        // Finally, discover workflows from actual executions
+        for (String topic : queryService.getDistinctTopics()) {
+            String key = topic + ":discovered";
+            if (workflowsByKey.values().stream().noneMatch(w -> topic.equals(w.get("topic")))) {
+                String workflowStatus = "ACTIVE";
+                if (!matchesFilters(topic, "discovered", workflowStatus,
+                        topicFilter, serviceNameFilter, statusFilter)) {
+                    continue;
+                }
+                Map<String, Object> summary = queryService.getTopicSummary(topic);
+                Map<String, Object> workflow = new HashMap<>();
+                workflow.put("topic", topic);
+                workflow.put("serviceName", "discovered");
+                workflow.put("description", "Discovered from executions");
+                workflow.put("status", workflowStatus);
+                workflow.put("steps", summary.getOrDefault("steps", List.of()));
+                workflow.put("stepCount", summary.getOrDefault("totalSteps", 0));
+                workflow.put("executionCount", summary.get("total"));
+                workflowsByKey.put(key, workflow);
+            }
+        }
+
         return new ArrayList<>(workflowsByKey.values());
     }
 
@@ -312,6 +348,21 @@ public class DashboardController {
                     workflow.put("stepCount", def.getTotalSteps());
                     workflowsByKey.put(key, workflow);
                 }
+            }
+        }
+
+        // Finally, discover workflows from actual executions
+        for (String topic : queryService.getDistinctTopics()) {
+            if (workflowsByKey.values().stream().noneMatch(w -> topic.equals(w.get("topic")))) {
+                Map<String, Object> summary = queryService.getTopicSummary(topic);
+                Map<String, Object> workflow = new HashMap<>();
+                workflow.put("topic", topic);
+                workflow.put("serviceName", "discovered");
+                workflow.put("description", "Discovered from executions");
+                workflow.put("status", "ACTIVE");
+                workflow.put("stepCount", summary.getOrDefault("totalSteps", 0));
+                workflow.put("executionCount", summary.get("total"));
+                workflowsByKey.put(topic + ":discovered", workflow);
             }
         }
 

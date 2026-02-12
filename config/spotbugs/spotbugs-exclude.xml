@@ -47,6 +47,14 @@
         =====================================================================
     -->
     <Match>
+        <Class name="~io\.github\.stepprflow\.core\.registration\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <Match>
         <Class name="~io\.github\.stepprflow\.core\.service\..*"/>
         <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>

@@ -174,7 +174,7 @@ class WorkflowControllerIT extends MongoDBTestContainerConfig {
 
             // When & Then
             mockMvc.perform(get("/api/workflows")
-                            .param("statuses", "COMPLETED"))
+                            .param("status", "COMPLETED"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(2)))
                     .andExpect(jsonPath("$.content[*].status", everyItem(is("COMPLETED"))));
@@ -193,7 +193,7 @@ class WorkflowControllerIT extends MongoDBTestContainerConfig {
             // When & Then
             mockMvc.perform(get("/api/workflows")
                             .param("topic", "order-workflow")
-                            .param("statuses", "PENDING"))
+                            .param("status", "PENDING"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].executionId").value("e1"));
@@ -212,7 +212,7 @@ class WorkflowControllerIT extends MongoDBTestContainerConfig {
 
             // When & Then
             mockMvc.perform(get("/api/workflows")
-                            .param("sortBy", "createdAt")
+                            .param("sort", "createdAt")
                             .param("direction", "DESC"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].executionId").value("newest"))

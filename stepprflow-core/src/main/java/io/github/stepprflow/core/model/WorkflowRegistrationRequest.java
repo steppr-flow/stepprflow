@@ -19,6 +19,24 @@ import java.util.List;
 @AllArgsConstructor
 public class WorkflowRegistrationRequest {
 
+    /** Topic used for registration messages via the broker. */
+    public static final String REGISTRATION_TOPIC = "stepprflow.registration";
+
+    /** Metadata key for the registration action (REGISTER, HEARTBEAT, DEREGISTER). */
+    public static final String METADATA_ACTION = "registration.action";
+
+    /** Metadata key for the service instance ID. */
+    public static final String METADATA_INSTANCE_ID = "registration.instanceId";
+
+    /** Action value: register workflows. */
+    public static final String ACTION_REGISTER = "REGISTER";
+
+    /** Action value: heartbeat. */
+    public static final String ACTION_HEARTBEAT = "HEARTBEAT";
+
+    /** Action value: deregister on shutdown. */
+    public static final String ACTION_DEREGISTER = "DEREGISTER";
+
     /**
      * Service name (application name).
      */
