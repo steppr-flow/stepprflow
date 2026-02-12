@@ -22,8 +22,6 @@ jobs:
       kafka: ${{ steps.changes.outputs.kafka }}
       rabbitmq: ${{ steps.changes.outputs.rabbitmq }}
       monitor: ${{ steps.changes.outputs.monitor }}
-      starter: ${{ steps.changes.outputs.starter }}
-      dashboard: ${{ steps.changes.outputs.dashboard }}
       ui: ${{ steps.changes.outputs.ui }}
       samples: ${{ steps.changes.outputs.samples }}
       backend-any: ${{ steps.changes.outputs.backend-any }}
@@ -51,31 +49,18 @@ jobs:
               - 'stepprflow-core/**'
               - 'pom.xml'
             monitor:
-              - 'stepprflow-spring-monitor/**'
-              - 'stepprflow-core/**'
-              - 'pom.xml'
-            starter:
-              - 'stepprflow-spring-boot-starter/**'
-              - 'stepprflow-core/**'
-              - 'pom.xml'
-            dashboard:
-              - 'stepprflow-dashboard/**'
-              - 'stepprflow-spring-monitor/**'
-              - 'stepprflow-spring-kafka/**'
+              - 'stepprflow-monitoring/**'
               - 'stepprflow-core/**'
               - 'pom.xml'
             ui:
               - 'stepprflow-ui/**'
             samples:
-              - 'stepprflow-kafka-sample/**'
-              - 'stepprflow-rabbitmq-sample/**'
+              - 'stepprflow-samples/**'
             backend-any:
               - 'stepprflow-core/**'
               - 'stepprflow-spring-kafka/**'
               - 'stepprflow-spring-rabbitmq/**'
-              - 'stepprflow-spring-monitor/**'
-              - 'stepprflow-spring-boot-starter/**'
-              - 'stepprflow-dashboard/**'
+              - 'stepprflow-monitoring/**'
               - 'pom.xml'
 
   # ===========================================
