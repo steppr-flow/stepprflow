@@ -15,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +39,9 @@ class WorkflowQueryServiceTest {
 
     @Mock
     private WorkflowExecutionRepository repository;
+
+    @Mock
+    private MongoTemplate mongoTemplate;
 
     @InjectMocks
     private WorkflowQueryService queryService;
@@ -220,6 +226,123 @@ class WorkflowQueryServiceTest {
             List<WorkflowExecution> result = queryService.getRecentExecutions();
 
             assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("getDistinctTopics() method")
+    class GetDistinctTopicsTests {
+
+        @Test
+        @DisplayName("Should return distinct topics")
+        void shouldReturnDistinctTopics() {
+            when(mongoTemplate.findDistinct(any(Query.class), eq("topic"),
+                    eq(WorkflowExecution.class), eq(String.class)))
+                    .thenReturn(List.of("order-workflow", "payment-workflow"));
+
+            List<String> result = queryService.getDistinctTopics();
+
+            assertThat(result).containsExactly("order-workflow", "payment-workflow");
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no topics")
+        void shouldReturnEmptyListWhenNoTopics() {
+            when(mongoTemplate.findDistinct(any(Query.class), eq("topic"),
+                    eq(WorkflowExecution.class), eq(String.class)))
+                    .thenReturn(List.of());
+
+            List<String> result = queryService.getDistinctTopics();
+
+            assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("getTopicSummary() method")
+    class GetTopicSummaryTests {
+
+        @BeforeEach
+        void setUp() {
+            when(repository.countByTopicAndStatus(eq("order-workflow"), any()))
+                    .thenReturn(0L);
+        }
+
+        @Test
+        @DisplayName("Should return summary with completed execution reference")
+        void shouldReturnSummaryWithCompletedRef() {
+            when(repository.countByTopicAndStatus("order-workflow", WorkflowStatus.COMPLETED))
+                    .thenReturn(10L);
+            when(repository.countByTopicAndStatus("order-workflow", WorkflowStatus.FAILED))
+                    .thenReturn(2L);
+            when(repository.countByTopicAndStatus("order-workflow", WorkflowStatus.IN_PROGRESS))
+                    .thenReturn(1L);
+
+            WorkflowExecution ref = WorkflowExecution.builder()
+                    .executionId("ref-1")
+                    .topic("order-workflow")
+                    .totalSteps(3)
+                    .stepHistory(List.of(
+                            WorkflowExecution.StepExecution.builder()
+                                    .stepId(1).stepLabel("Validate").build(),
+                            WorkflowExecution.StepExecution.builder()
+                                    .stepId(2).stepLabel(null).build()
+                    ))
+                    .build();
+            Page<WorkflowExecution> completedPage = new PageImpl<>(List.of(ref));
+            when(repository.findByTopicAndStatus(eq("order-workflow"), eq(WorkflowStatus.COMPLETED), any()))
+                    .thenReturn(completedPage);
+
+            Map<String, Object> summary = queryService.getTopicSummary("order-workflow");
+
+            assertThat(summary).containsEntry("topic", "order-workflow");
+            assertThat(summary).containsEntry("completed", 10L);
+            assertThat(summary).containsEntry("failed", 2L);
+            assertThat(summary).containsEntry("inProgress", 1L);
+            assertThat(summary).containsEntry("totalSteps", 3);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> steps = (List<Map<String, Object>>) summary.get("steps");
+            assertThat(steps).hasSize(2);
+            assertThat(steps.get(0)).containsEntry("label", "Validate");
+            assertThat(steps.get(1)).containsEntry("label", "Step 2");
+        }
+
+        @Test
+        @DisplayName("Should fallback to most recent execution when no completed")
+        void shouldFallbackToRecentWhenNoCompleted() {
+            WorkflowExecution ref = WorkflowExecution.builder()
+                    .executionId("ref-2")
+                    .topic("order-workflow")
+                    .totalSteps(2)
+                    .stepHistory(List.of(
+                            WorkflowExecution.StepExecution.builder()
+                                    .stepId(1).stepLabel("Init").build()
+                    ))
+                    .build();
+            when(repository.findByTopicAndStatus(eq("order-workflow"), eq(WorkflowStatus.COMPLETED), any()))
+                    .thenReturn(Page.empty());
+            when(repository.findByTopic(eq("order-workflow"), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(ref)));
+
+            Map<String, Object> summary = queryService.getTopicSummary("order-workflow");
+
+            assertThat(summary).containsEntry("totalSteps", 2);
+        }
+
+        @Test
+        @DisplayName("Should return summary without steps when no executions at all")
+        void shouldReturnSummaryWithoutStepsWhenNoExecutions() {
+            when(repository.findByTopicAndStatus(eq("order-workflow"), eq(WorkflowStatus.COMPLETED), any()))
+                    .thenReturn(Page.empty());
+            when(repository.findByTopic(eq("order-workflow"), any(Pageable.class)))
+                    .thenReturn(Page.empty());
+
+            Map<String, Object> summary = queryService.getTopicSummary("order-workflow");
+
+            assertThat(summary).containsEntry("topic", "order-workflow");
+            assertThat(summary).doesNotContainKey("totalSteps");
+            assertThat(summary).doesNotContainKey("steps");
         }
     }
 }
